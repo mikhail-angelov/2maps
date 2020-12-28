@@ -1,0 +1,29 @@
+{
+  "name": "mapnn-tiles",
+  "version": "1.0.0",
+  "description": "map tiles for old NN maps",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhail-angelov/mapnn-tiles.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mikhail-angelov/mapnn-tiles/issues"
+  },
+  "homepage": "https://github.com/mikhail-angelov/mapnn-tiles#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "sqlite3": "^5.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  }
+}

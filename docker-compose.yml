@@ -1,0 +1,55 @@
+version: '3.7'
+
+services:
+    
+  logger:
+    image: umputun/docker-logger
+    restart: unless-stopped
+    logging: &default_logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    environment:
+        - LOG_FILES=true
+        - LOG_SYSLOG=false
+        - EXCLUDE=docker-logger
+        - MAX_FILES=10
+        - MAX_SIZE=50
+        - MAX_AGE=20
+        - DEBUG=false
+    volumes:
+        - ./logs:/srv/logs
+        - /var/run/docker.sock:/var/run/docker.sock
+  nginx:
+    image: nginx:latest
+    restart: unless-stopped
+    networks:
+      - webnet
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mapnn
+    links:
+      - mapnn:mapnn
+    logging: *default_logging
+    volumes:
+        - ./data/nginx.conf:/etc/nginx/nginx.conf:ro
+        - ./tmp:/var/www/cache/tmp
+  mapnn:
+    image: mangelov/mapnn-tiles:latest
+    container_name: "mapnn"
+    restart: unless-stopped
+    networks:
+      - webnet
+    ports:
+      - "3000"
+    logging: *default_logging
+    env_file:
+      - .env
+    command: node src/index.js
+    volumes:
+        - ./data:/opt/app/data:ro
+
+networks:
+  webnet:
