@@ -49,7 +49,7 @@ services:
       - .env
     command: node src/index.js
     volumes:
-        - ./data:/opt/app/data:ro
+        - ./data:/opt/app/data:rw
 
 networks:
   webnet:
