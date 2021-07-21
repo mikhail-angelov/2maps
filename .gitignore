@@ -2,4 +2,8 @@ data/
 node_modules/
 logs/
 .env
+env.json
+index.html
+main.css
 info.txt
+.vercel

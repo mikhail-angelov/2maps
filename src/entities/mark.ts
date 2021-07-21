@@ -20,4 +20,7 @@ export class Mark {
 
     @Column()
     lng!: number;
+    
+    @Column()
+    timestamp!: number;
 }

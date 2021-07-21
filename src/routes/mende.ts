@@ -3,16 +3,16 @@ import express from 'express';
 import { Connection } from "typeorm";
 import { EtoMesto } from '../entities/etoMesto'
 
-export class MendeTiles extends CommonRoutesConfig {
+export class MendeTiles implements CommonRoutesConfig {
   db: Connection
-  constructor(app: express.Application, db: Connection) {
-    super(app, 'MendeTiles');
+  constructor(db: Connection) {
     this.db = db;
   }
 
-  configureRoutes() {
+  getRoutes() {
+    const router = express.Router();
     // (we'll add the actual route configuration here next)
-    this.app.get("/map/mende/:z/:x/:y.jpg", (req, res) => {
+    router.get("/:z/:x/:y.jpg", (req, res) => {
       const { x, y, z } = req.params;
       const zoom = 17 - +z;
       if (!x || !y || zoom > 7 || zoom < 3) {
@@ -22,7 +22,7 @@ export class MendeTiles extends CommonRoutesConfig {
       console.log("map", req.params);
       this.onTile(+x, +y, 17 - +z, res);
     });
-    return this.app;
+    return router;
   }
 
   async onTile(x: number, y: number, z: number, res: express.Response) {

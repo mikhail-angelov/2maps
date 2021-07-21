@@ -7,17 +7,21 @@ interface InitParams {
     mendDB: string;
     userDB: string;
 }
+export enum DB {
+    Users='users',
+    Mende='mende'
+}
 export const initDbConnections = async ({ mendDB, userDB }: InitParams) => {
     const connections = await createConnections([
         {
-            name: "mende",
+            name: DB.Mende,
             type: "sqlite",
             database: mendDB,
             entities: [EtoMesto],
             synchronize: false,
             logger: 'debug'
         }, {
-            name: "users",
+            name: DB.Users,
             type: "sqlite",
             database: userDB,
             entities: [User, Mark],
