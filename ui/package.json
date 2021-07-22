@@ -1,0 +1,32 @@
+{
+  "name": "mapnn",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "build": "ejs ./index.ejs -f env.json -o ./public/index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikhail-angelov/mapnn.git"
+  },
+  "keywords": [
+    "map",
+    "nizhniy novgorod"
+  ],
+  "author": "Mikhail Angelov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mikhail-angelov/mapnn/issues"
+  },
+  "homepage": "https://github.com/mikhail-angelov/mapnn#readme",
+  "devDependencies": {
+    "ejs": "^3.1.5",
+    "less": "^3.13.0",
+    "workbox-cli": "^6.1.1"
+  }
+}

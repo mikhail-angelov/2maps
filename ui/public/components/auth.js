@@ -1,0 +1,166 @@
+import { html, Component, render, useState, useEffect } from "../libs/htm.js";
+import { isMobile, post } from "../utils.js";
+
+const check = async () => {
+  try {
+    const res = await post(`${window.apiHost}/auth/check`, {})
+    return res.auth === 'ok'
+  } catch (e) {
+    return false
+  }
+}
+const login = async (credentials) => {
+  const res = await post(`${window.apiHost}/auth/login`, credentials)
+  return res.auth === 'ok'
+}
+const logout = async () => {
+  const res = await post(`${window.apiHost}/auth/logout`, {})
+  return false
+}
+const signUp = async (data) => {
+  const res = await post(`${window.apiHost}/auth/sign-up`, data)
+  return res.auth === 'ok'
+}
+
+
+const Login = ({ onLogin, toSignUp, error }) => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const login = (e) => {
+    e.preventDefault()
+    onLogin({ email, password })
+  }
+
+  return html`<form class="auth-form" onSubmit=${login}>
+    <div class="title">Login to Map NN</div>
+    <div class="label">Email</div>
+    <input class="form-input" value=${email} onChange=${(e) => setEmail(e.target.value)}/>
+    <div class="label">Password</div>
+    <input class="form-input" value=${password} onChange=${(e) => setPassword(e.target.value)} type="password"></input>
+    ${error && html`<div class=error>${error}</div>`}
+    <div class="row">
+      <button class="form-button primary">Login</button>
+      <button class="form-button" onClick=${toSignUp}>Sign Up</button>
+    </div>
+  </form>`;
+
+};
+
+const SignUp = ({ onSignUp, toLogin, error }) => {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const signUp = (e) => {
+    e.preventDefault()
+    onSignUp({ name, email, password })
+  }
+
+  return html`<form class="auth-form" onSubmit=${signUp} >
+    <div class="title">Sign Up to Map NN</div>
+    <div class="label">Name</div>
+    <input class="form-input" value=${name} onChange=${(e) => setName(e.target.value)}/>
+    <div class="label">Email</div>
+    <input class="form-input" value=${email} onChange=${(e) => setEmail(e.target.value)}/>
+    <div class="label">Password</div>
+    <input class="form-input" value=${password} onChange=${(e) => setPassword(e.target.value)} type="password"></input>
+    ${error && html`<div class=error>${error}</div>`}
+    <div class="row">
+      <button class="form-button primary">Sign Up</button>
+      <button class="form-button" onClick=${toLogin}>Back</button>
+    </div>
+  </form>`;
+
+};
+
+export const createAuth = (onAuthChanged) => {
+  const auth = {
+    showLogin: () => { },
+    showSignUp: () => { },
+    logout: () => { },
+  }
+
+  class Auth extends Component {
+    componentDidMount() {
+      auth.showLogin = this.showLogin.bind(this);
+      auth.showSignUp = this.showSignUp.bind(this);
+      auth.logout = this.logout.bind(this);
+      check().then(onAuthChanged)
+
+      this.setState({
+        show: false,
+        ui: 'login',
+        error: '',
+      });
+    }
+
+    logout() {
+      logout()
+      onAuthChanged(false)
+    }
+    showLogin() {
+      this.setState({ show: true, ui: 'login' });
+    }
+    showSignUp() {
+      this.setState({ show: true, ui: 'signUp' });
+    }
+
+    async onLogin(credentials) {
+      try {
+        const data = await login(credentials)
+        console.log('login', data)
+        if (data) {
+          this.setState({ show: false })
+          onAuthChanged(true)
+        } else {
+          this.setState({ error: 'invalid login' })
+        }
+      } catch (e) {
+        console.log('login error', e)
+        this.setState({ error: e.toString() })
+      }
+    }
+    async onSignUp(credentials) {
+      try {
+        const data = await signUp(credentials)
+        console.log('onSignUp', data)
+        if (data) {
+          this.setState({ show: false })
+          onAuthChanged(true)
+        } else {
+          this.setState({ error: 'invalid sign up' })
+        }
+      } catch (e) {
+        console.log('onSignUp error', e)
+        this.setState({ error: e.toString() })
+      }
+    }
+
+    render({ }, { show, ui, error }) {
+
+      const onClose = () => this.setState({ show: false })
+      let content = null
+      if (ui === 'login') {
+        content = html`<${Login} onLogin=${this.onLogin.bind(this)} toSignUp=${() => this.setState({ ui: 'signUp' })} error=${error}/>`
+      } else if (ui === 'signUp') {
+        content = html`<${SignUp} onSignUp=${this.onSignUp.bind(this)} toLogin=${() => this.setState({ ui: 'login' })} error=${error}/>`
+      }
+
+      return show && content ?
+        html`<div class=${show ? "modal" : "modal"}>
+          <div class="modal-content">
+          <button class="close-button" onClick=${onClose}>✕</button>
+          ${content}
+          </div>
+        </div>`:
+        html`<div></div>`;
+    }
+  }
+
+  render(html`<${Auth} />`, document.getElementById("auth"));
+
+  return auth
+
+};
+

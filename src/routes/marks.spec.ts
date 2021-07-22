@@ -18,16 +18,16 @@ describe('marks', () => {
         marks = new Marks(getConnection(DB.Users), auth)
         // add marks
         const db = await getConnection('users')
-        const user = await db.getRepository(User).save({id:'123',name:'test',email:'test', password:'test'})
+        const user = await db.getRepository(User).save({id:'aaade243-0fb7-480f-801c-bc64566209cc',name:'test',email:'test', password:'test'})
         userId = user.id
         await db.getRepository(Mark).save([{
             id:'123567',
             userId,
             name:'test',
             description:'',
-            timestamp: 1,
-            lat:1,
-            lng:1,
+            lat: 56.32323794803307,
+            lng:43.989515211547825,
+            timestamp:1626944504856,
         }])
     })
     afterEach(async () => {

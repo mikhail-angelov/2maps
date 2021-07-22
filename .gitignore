@@ -1,6 +1,7 @@
 data/
 node_modules/
 logs/
+dist/
 .env
 env.json
 index.html

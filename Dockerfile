@@ -4,6 +4,7 @@ ENV NODE_ENV=production
 
 WORKDIR /opt/app
 COPY ./package*.json /opt/app/
-COPY ./src src
+COPY ./dist dist
+COPY ./ui/public ui/public
 
 RUN npm ci --only=production

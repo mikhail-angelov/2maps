@@ -46,8 +46,9 @@ export class Auth implements CommonRoutesConfig {
     router.post("/login", async (req, res) => {
       try {
         const token = await this.login(req.body)
-        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000, sameSite: false }).json({ auth: 'ok' })
+        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok' })
       } catch (e) {
+        console.log('login error', e)
         res.status(401).json({ error: 'invalid login' })
       }
     });
@@ -57,18 +58,21 @@ export class Auth implements CommonRoutesConfig {
     });
     router.post("/check", async (req, res) => {
       try {
-        const testToken = req.cookies[JWT_COOKIES] || ''
+        const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
         const [token, decodedToken] = await this.check(testToken)
-        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000, sameSite: false }).json(decodedToken)
-      } catch (_) {
+        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000}).json({ auth: 'ok' })
+      } catch (e) {
+        console.log('check error', e)
         res.status(401).json({ error: 'invalid auth' })
       }
     });
     router.post("/sign-up", async (req, res) => {
       try {
+        console.log('req.body', req.body)
         const token = await this.register(req.body)
-        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000, sameSite: false }).json({ auth: 'ok' })
+        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok' })
       } catch (e) {
+        console.log('sign up error', e)
         res.status(401).json({ error: 'invalid sign up' })
       }
     });
@@ -77,6 +81,7 @@ export class Auth implements CommonRoutesConfig {
         await this.forgetPassword(req.body)
         res.status(200).json({ auth: 'ok' })
       } catch (e) {
+        console.log('forget error', e)
         res.status(401).json({ error: 'invalid reset' })
       }
 
@@ -86,6 +91,7 @@ export class Auth implements CommonRoutesConfig {
         const token = await this.resetPassword(req.body)
         res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000, sameSite: false }).json({ auth: 'ok' })
       } catch (e) {
+        console.log('reset error', e)
         res.status(401).json({ error: 'invalid reset' })
       }
     });
@@ -98,23 +104,22 @@ export class Auth implements CommonRoutesConfig {
       throw "invalid login"
     }
     const payload: JwtPayload = { id: user.id, email }
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
   }
 
   async check(testToken: string) {
     const decodedToken: any = jwt.verify(testToken, JWT_SECRET)
     const payload: JwtPayload = { id: decodedToken.id, email: decodedToken.email }
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
     return [token, decodedToken]
   }
   async authMiddleware(req: CRequest, res: express.Response, next: express.NextFunction) {
-    const testToken = req.cookies[JWT_COOKIES]
+    const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
     const decoded = jwt.verify(testToken, JWT_SECRET)
     req.user = decoded
     next()
   }
   async register({ name, email, password }: SignUp) {
-
     let user = await this.db.getRepository(User).findOne({ email })
     if (user || !name || !password) {
       throw "invalid user"
@@ -124,8 +129,8 @@ export class Auth implements CommonRoutesConfig {
     user = await this.db.getRepository(User).save({ name, email, password: saltedPass })
 
     const payload: JwtPayload = { id: user.id, email }
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 });
-    this.sender.sendEmail(email, 'MWelcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    this.sender.sendEmail(email, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
     return token
   }
   async forgetPassword({ email }: Forget) {

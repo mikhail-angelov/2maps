@@ -1,0 +1,21 @@
+{
+    "short_name": "MapsNN",
+    "name": "Old NN maps",
+    "icons": [
+      {
+        "src": "/assets/icons/icon192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/assets/icons/icon512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ],
+    "start_url": ".",
+    "background_color": "#d8e8c8",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#d8e8c8"
+}

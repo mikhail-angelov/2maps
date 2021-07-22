@@ -29,7 +29,7 @@ export class Marks implements CommonRoutesConfig {
     router.post("/sync", this.auth.authMiddleware, async (req: CRequest, res: express.Response) => {
       try {
         const user = req.user
-        const marks = this.syncMarks(user, req.body)
+        const marks = await this.syncMarks(user, req.body)
         res.status(200).json(marks)
       } catch (e) {
         res.status(400).json({ error: 'invalid request' })
@@ -41,7 +41,7 @@ export class Marks implements CommonRoutesConfig {
   async syncMarks({ id }: any, marks: WebMark[]) {
     const marksMap = marks.reduce((acc: { [key: string]: WebMark }, mark) => ({ ...acc, [mark.id]: mark }), {})
     const savedMarks = await this.db.getRepository(Mark).find({ userId: id })
-    for (let mark of marks) {
+    for (let mark of savedMarks) {
       const existed = marksMap[mark.id]
       if (existed) {
         existed.old = true

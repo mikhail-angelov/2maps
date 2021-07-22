@@ -47,7 +47,7 @@ services:
     logging: *default_logging
     env_file:
       - .env
-    command: node src/index.js
+    command: npm start
     volumes:
         - ./data:/opt/app/data:rw
 
