@@ -36,9 +36,9 @@ describe('auth', () => {
     })
 
     it('check', async () => {
-        const token = await auth.login({ email: 'test', password: 'test' })
-        await auth.check(token)
-        expect(true).to.equal(true)
+        const [token,_] = await auth.login({ email: 'test', password: 'test' })
+        const [t, u] = await auth.check(token)
+        expect(!!t).to.equal(true)
     })
 
     it('check invalid', async () => {
@@ -52,7 +52,7 @@ describe('auth', () => {
 
     it('register', async () => {
         await auth.register({ name: 'test1', email: 'test1', password: 'test1' })
-        const token = await auth.login({ email: 'test1', password: 'test1' })
+        const [token] = await auth.login({ email: 'test1', password: 'test1' })
         expect(!!token).to.equal(true)
     })
 })

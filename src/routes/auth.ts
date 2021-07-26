@@ -9,6 +9,7 @@ import { Sender } from './mailer'
 
 const JWT_SECRET = 'asdjkdknpjnpwwijoi'
 const JWT_COOKIES = 'mapnn'
+const JWT_HEADER = 'authorization'
 
 interface JwtPayload {
   id: string;
@@ -45,7 +46,7 @@ export class Auth implements CommonRoutesConfig {
     // (we'll add the actual route configuration here next)
     router.post("/login", async (req, res) => {
       try {
-        const token = await this.login(req.body)
+        const [token] = await this.login(req.body)
         res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok' })
       } catch (e) {
         console.log('login error', e)
@@ -54,13 +55,13 @@ export class Auth implements CommonRoutesConfig {
     });
     router.post("/logout", async (req, res) => {
       res.clearCookie(JWT_COOKIES)
-      res.status(400).json({ auth: 'off' })
+      res.status(200).json({ auth: 'off' })
     });
     router.post("/check", async (req, res) => {
       try {
         const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
         const [token, decodedToken] = await this.check(testToken)
-        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000}).json({ auth: 'ok' })
+        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok' })
       } catch (e) {
         console.log('check error', e)
         res.status(401).json({ error: 'invalid auth' })
@@ -69,7 +70,7 @@ export class Auth implements CommonRoutesConfig {
     router.post("/sign-up", async (req, res) => {
       try {
         console.log('req.body', req.body)
-        const token = await this.register(req.body)
+        const [token] = await this.register(req.body)
         res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok' })
       } catch (e) {
         console.log('sign up error', e)
@@ -95,6 +96,41 @@ export class Auth implements CommonRoutesConfig {
         res.status(401).json({ error: 'invalid reset' })
       }
     });
+
+    //mobile
+    router.post("/m/login", async (req, res) => {
+      try {
+        const [token, user] = await this.login(req.body)
+        res.status(200).json({ token, user })
+      } catch (e) {
+        console.log('login error', e)
+        res.status(401).json({ error: 'invalid login' })
+      }
+    });
+    router.post("/m/logout", async (req, res) => {
+      res.status(200).json({ auth: 'off' })
+    });
+    router.post("/m/check", async (req, res) => {
+      try {
+        const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
+        const testToken = authHeader ? authHeader.slice(7) : ''
+        const [token, user] = await this.check(testToken)
+        res.status(200).json({ token, user })
+      } catch (e) {
+        console.log('check error', e)
+        res.status(401).json({ error: 'invalid auth' })
+      }
+    });
+    router.post("/m/sign-up", async (req, res) => {
+      try {
+        console.log('req.body', req.body)
+        const [token, user] = await this.register(req.body)
+        res.status(200).json({ token, user })
+      } catch (e) {
+        console.log('sign up error', e)
+        res.status(401).json({ error: 'invalid sign up' })
+      }
+    });
     return router;
   }
 
@@ -104,7 +140,7 @@ export class Auth implements CommonRoutesConfig {
       throw "invalid login"
     }
     const payload: JwtPayload = { id: user.id, email }
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
   }
 
   async check(testToken: string) {
@@ -131,7 +167,7 @@ export class Auth implements CommonRoutesConfig {
     const payload: JwtPayload = { id: user.id, email }
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
     this.sender.sendEmail(email, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
-    return token
+    return [token, payload]
   }
   async forgetPassword({ email }: Forget) {
     let user = await this.db.getRepository(User).findOne({ email })
