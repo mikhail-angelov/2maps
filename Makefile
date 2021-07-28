@@ -1,7 +1,11 @@
 DEV_SERVER=root@bconf.com
 
 build:
+	npm run build
 	docker build  . -t mangelov/mapnn-tiles
+
+push:
+	docker push mangelov/mapnn-tiles:latest
 
 run:
 	docker run mangelov/mapnn-tiles:latest

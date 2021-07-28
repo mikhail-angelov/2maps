@@ -40,5 +40,30 @@ describe('marks', () => {
         const syncedMarks = await marks.syncMarks({id:userId}, webMarks)
         expect(syncedMarks.length).to.equal(1)
     })
+    it('check sync with conflict', async () => {
+        const webMarks:WebMark[] = [{
+            id:'123567',
+            name:'test-ignore',
+            lat: 56.32323794803307,
+            lng:43.989515211547825,
+            timestamp:1626944504856,
+        },
+        {
+            id:'double',
+            name:'test-good',
+            lat: 56.32323794803307,
+            lng:43.989515211547825,
+            timestamp:1626944504856,
+        },
+        {
+            id:'double',
+            name:'test-dropped',
+            lat: 56.32323794803307,
+            lng:43.989515211547825,
+            timestamp:1626944504856,
+        }]
+        const syncedMarks = await marks.syncMarks({id:userId}, webMarks)
+        expect(syncedMarks.length).to.equal(2)
+    })
 
 })
