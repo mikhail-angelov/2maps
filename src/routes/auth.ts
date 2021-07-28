@@ -113,7 +113,7 @@ export class Auth implements CommonRoutesConfig {
     router.post("/m/check", async (req, res) => {
       try {
         const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
-        const testToken = authHeader ? authHeader.slice(7) : ''
+        const testToken: string = authHeader ? authHeader.slice(7) : ''
         const [token, user] = await this.check(testToken)
         res.status(200).json({ token, user })
       } catch (e) {
@@ -129,6 +129,25 @@ export class Auth implements CommonRoutesConfig {
       } catch (e) {
         console.log('sign up error', e)
         res.status(401).json({ error: 'invalid sign up' })
+      }
+    });
+    router.post("/m/forget", async (req, res) => {
+      try {
+        await this.forgetPassword(req.body)
+        res.status(200).json({ auth: 'ok' })
+      } catch (e) {
+        console.log('forget error', e)
+        res.status(401).json({ error: 'invalid reset' })
+      }
+
+    });
+    router.post("/m/reset-password", async (req, res) => {
+      try {
+        const [token, user] = await this.resetPassword(req.body)
+        res.status(200).json({ token, user })
+      } catch (e) {
+        console.log('reset error', e)
+        res.status(401).json({ error: 'invalid reset' })
       }
     });
     return router;
@@ -151,6 +170,13 @@ export class Auth implements CommonRoutesConfig {
   }
   async authMiddleware(req: CRequest, res: express.Response, next: express.NextFunction) {
     const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
+    const decoded = jwt.verify(testToken, JWT_SECRET)
+    req.user = decoded
+    next()
+  }
+  async authMiddlewareMobile(req: CRequest, res: express.Response, next: express.NextFunction) {
+    const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
+    const testToken: string = authHeader ? authHeader.slice(7) : ''
     const decoded = jwt.verify(testToken, JWT_SECRET)
     req.user = decoded
     next()
@@ -190,7 +216,7 @@ export class Auth implements CommonRoutesConfig {
     await this.db.getRepository(User).update(user.id, { password: saltedPass, resetToken: undefined })
 
     const payload: JwtPayload = { id: user.id, email }
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 });
+    return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 }), payload];
   }
 
 }

@@ -35,6 +35,15 @@ export class Marks implements CommonRoutesConfig {
         res.status(400).json({ error: 'invalid request' })
       }
     });
+    router.post("/m/sync", this.auth.authMiddlewareMobile, async (req: CRequest, res: express.Response) => {
+      try {
+        const user = req.user
+        const marks = await this.syncMarks(user, req.body)
+        res.status(200).json(marks)
+      } catch (e) {
+        res.status(400).json({ error: 'invalid request' })
+      }
+    });
     return router;
   }
 

@@ -37,7 +37,7 @@ describe('auth', () => {
 
     it('check', async () => {
         const [token,_] = await auth.login({ email: 'test', password: 'test' })
-        const [t, u] = await auth.check(token)
+        const [t, u] = await auth.check(token as string)
         expect(!!t).to.equal(true)
     })
 
