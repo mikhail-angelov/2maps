@@ -1,4 +1,4 @@
-import { createConnections, getConnection } from "typeorm";
+import { createConnections, getConnection, Connection } from "typeorm";
 import { EtoMesto } from './entities/etoMesto'
 import { User } from './entities/user'
 import { Mark } from './entities/mark'
@@ -6,6 +6,10 @@ import { Mark } from './entities/mark'
 interface InitParams {
     mendDB: string;
     userDB: string;
+}
+interface CreateDB {
+    name: string;
+    file: string;
 }
 export enum DB {
     Users='users',
@@ -29,6 +33,23 @@ export const initDbConnections = async ({ mendDB, userDB }: InitParams) => {
             logger: 'debug'
         }]);
     return connections
+}
+
+export const createDBConnection = async ({ name, file }: CreateDB) => {
+    const connections = await createConnections([
+        {
+            name,
+            type: "sqlite",
+            database: file,
+            entities: [EtoMesto],
+            synchronize: true,
+            logger: 'debug'
+        }]);
+    return connections[0]
+}
+
+export const closeConnection = async (connection: Connection) => {
+    await connection.close()
 }
 
 export const closeConnections = async () => {

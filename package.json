@@ -8,7 +8,9 @@
     "dev": "tsc && node --unhandled-rejections=strict ./dist/app.js",
     "build": "tsc",
     "debug": "export DEBUG=* && npm run start",
-    "test": "NODE_ENV=test mocha --no-parallel --require ts-node/register src/*.spec.ts src/**/*.spec.ts"
+    "test": "NODE_ENV=test mocha --no-parallel --require ts-node/register src/*.spec.ts src/**/*.spec.ts",
+    "t": "NODE_ENV=test mocha --no-parallel --require ts-node/register src/routes/mapLoader.spec.ts",
+    "r": "tsc && node --unhandled-rejections=strict ./dist/tools/mapLoader.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +24,7 @@
   },
   "homepage": "https://github.com/mikhail-angelov/mapnn-tiles#readme",
   "dependencies": {
+    "axios": "^0.21.1",
     "bcrypt-nodejs": "0.0.3",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",

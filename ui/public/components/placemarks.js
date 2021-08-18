@@ -3,6 +3,7 @@ import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
 import { isMobile, getId, delay, post } from "../utils.js";
 import { composeUrlLink } from "../urlParams.js";
 import { createAuth } from './auth.js'
+import '../libs/qrcode.js'
 
 
 export const createPlacemarksPanel = ({ yandexMap }) => {
@@ -134,6 +135,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
         placemarks: this.props.init,
         showPanel: !isMobile(),
         refresh: Date.now(),
+        mapUrl: '',
       });
     }
 
@@ -205,7 +207,23 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       return items;
     }
 
-    render({ }, { placemarks = [], showPanel }) {
+    onShowQR() {
+      const typeNumber = 4;
+      const errorCorrectionLevel = 'L';
+      const qr = window.qrcode(typeNumber, errorCorrectionLevel);
+      const map = 'mende'
+      const mapUrl = `${location.origin}/download/${map}`
+      qr.addData(mapUrl);
+      qr.make();
+      document.getElementById('qr').innerHTML = qr.createImgTag();
+      this.setState({ mapUrl })
+    }
+    onCloseQR() {
+      document.getElementById('qr').innerHTML = '';
+      this.setState({ mapUrl: '' })
+    }
+
+    render({ }, { placemarks = [], showPanel, mapUrl }) {
       const items = this.formatPlacemarks(placemarks);
       return showPanel
         ? html` <div class="placemark">
@@ -229,7 +247,13 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
                   <div class="footer">
                   <div class="auth-sync">
                   ${authenticated
-            ? html`<button class="icon-button" onClick=${() => syncMarks(placemarks)}>Sync Markers</button>/
+            ? html`<button class="icon-button" onClick=${() => syncMarks(placemarks)}>Sync Markers</button>
+                    <button class="icon-button" onClick=${() => this.onShowQR()}>閙</button>
+                    <div class="qr">
+                    ${mapUrl ? html`<button class="icon-button qr-close" onClick=${() => this.onCloseQR()}>✕</button>` : null}
+                    <div id="qr">
+                    </div>
+                    </div>
                     <button class="icon-button" onClick=${() => auth.logout()}>Logout</button>`
             : html`<button class="icon-button" onClick=${() => auth.showLogin()}>Login</button>/
                     <button class="icon-button" onClick=${() => auth.showSignUp()}>Sign Up</button>`}

@@ -20,7 +20,7 @@ export class MendeTiles implements CommonRoutesConfig {
       }
       //this is translation standard mercator x/y/z to DB format
       console.log("map", req.params);
-      this.onTile(+x, +y, 17 - +z, res);
+      this.onTile(+x, +y,  zoom, res);
     });
     return router;
   }

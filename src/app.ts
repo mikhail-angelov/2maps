@@ -9,9 +9,11 @@ import { Auth } from './routes/auth';
 import { getConnection } from 'typeorm';
 import { initDbConnections, DB } from './db'
 import { Marks } from './routes/marks';
+import { MapLoader } from './routes/mapLoader';
 import sender from './routes/mailer'
 
 const mendDB = process.env.DB_MENDE || "./data/mende-nn.sqlitedb"
+// const mendDB = process.env.DB_MENDE || "./tmp/test.sqlitedb"
 const userDB = process.env.DB_USER || "./data/users.sqlitedb"
 
 const app: express.Application = express();
@@ -46,9 +48,11 @@ const run = async () => {
     const mende = new MendeTiles(getConnection(DB.Mende))
     const auth = new Auth(getConnection(DB.Users), sender)
     const markers = new Marks(getConnection(DB.Users), auth)
+    const mapLoader = new MapLoader(auth)
     app.use('/auth', auth.getRoutes());
     app.use('/marks', markers.getRoutes());
     app.use('/map/mende', mende.getRoutes());
+    app.use('/download', markers.getRoutes());
 
 
     server.listen(port, () => {

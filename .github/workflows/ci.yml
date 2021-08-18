@@ -1,0 +1,33 @@
+name: ci
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest 
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - name: build test server
+      run: |
+        npm ci
+        npm run build
+        npm test
+    - name: build ui
+      run: |
+        cd ui
+        npm ci
+        npm run build
+
+     #Docker
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    
+    - name: Publish Docker Image to GPR
+      run: |
+        docker -v
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+        docker build . --tag docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest --cache-from docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest
+        docker push docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest
