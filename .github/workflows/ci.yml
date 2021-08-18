@@ -19,6 +19,7 @@ jobs:
       run: |
         cd ui
         npm ci
+        echo {"mapBoxKey":"${{ secrets.MAPBOX_KEY }}","yandexMapKey":"${{ secrets.YANDEX_KEY }}","mapnnUrl":"https://mapnn.bconf.com/map/mende/{z}/{x}/{y}.jpg","apiHost":"https://mapnn.bconf.com","metrica":""} >> env.json
         npm run build
 
      #Docker
