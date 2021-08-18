@@ -34,10 +34,11 @@ export class Marks implements CommonRoutesConfig {
 
   getRoutes() {
     const router = express.Router();
-    router.post("/sync", this.auth.authMiddleware, upload.none(), async (req: CRequest, res: express.Response) => {
+    router.post("/sync", this.auth.authMiddleware, upload.single('value'), async (req: CRequest, res: express.Response) => {
       try {
+        const value = req?.file.buffer.toString('utf8')
         const user = req.user
-        const marks = await this.syncMarks(user, JSON.parse(req.body.value))
+        const marks = await this.syncMarks(user, JSON.parse(value))
         res.status(200).json(marks)
       } catch (e) {
         console.log('sync error', e)
