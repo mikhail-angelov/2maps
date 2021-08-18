@@ -1,6 +1,6 @@
 import { html, render, Component } from "../libs/htm.js";
 import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
-import { isMobile, getId, delay, post } from "../utils.js";
+import { isMobile, getId, delay, postLarge } from "../utils.js";
 import { composeUrlLink } from "../urlParams.js";
 import { createAuth } from './auth.js'
 import '../libs/qrcode.js'
@@ -24,7 +24,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
 
   const syncMarks = async (data) => {
     const items = data.map(({ id, name, description, point, timestamp }) => ({ id, name, description, lat: point.lat, lng: point.lng, timestamp }))
-    const res = await post(`${window.apiHost}/marks/sync`, items)
+    const res = await postLarge(`${window.apiHost}/marks/sync`, items)
     console.log('sync', res)
     const toSave = res.map(({ id, name, description, lng, lat, timestamp }) => ({ id, name, description, point: { lat, lng }, timestamp }))
     savePlacemarksLocal(toSave)

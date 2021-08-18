@@ -4,7 +4,6 @@ const mailgun = new Mailgun(formData);
 
 const key = process.env.MG_KEY || ''
 const domain = process.env.MG_DOMAIN
-
 export interface Sender {
     sendEmail: (to: string, subject: string, text: string) => void
 }

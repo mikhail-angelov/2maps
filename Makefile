@@ -16,4 +16,4 @@ scp:
 	scp -r docker-compose.yml ${DEV_SERVER}:/opt/mapnn/docker-compose.yml
 
 deploy: 
-	ssh ${DEV_SERVER} 'docker pull mangelov/mapnn-tiles:latest; cd /opt/mapnn;docker-compose down;docker-compose up -d'
+	ssh ${DEV_SERVER} 'docker pull docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest; cd /opt/mapnn;docker-compose down;docker-compose up -d'

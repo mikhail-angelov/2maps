@@ -1,3 +1,5 @@
+import './libs/axios.js'
+
 export const isMobile = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
@@ -19,6 +21,33 @@ export const post = async (url, data) => {
     })
     const j = await res.json()
     return j
+  } catch (e) {
+    console.log('fetch error', e)
+    throw e
+  }
+}
+export const postLarge = async (url, data) => {
+  try {
+    const body = new FormData();
+    // const jsonBlob = new Blob(JSON.stringify(data), { type: "application/json" });
+    body.append("value", JSON.stringify(data));
+    // const res = await fetch(url, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': undefined
+    //   },
+    //   credentials: 'include',
+    //   body,
+    // })
+    // const j = await res.json()
+    // return j
+    const res = await window.axios({
+      method: 'post',
+      url,
+      data: body,
+      maxContentLength: 1000,
+    })
+    return res.data
   } catch (e) {
     console.log('fetch error', e)
     throw e

@@ -37,7 +37,7 @@ export class Marks implements CommonRoutesConfig {
     router.post("/sync", this.auth.authMiddleware, upload.none(), async (req: CRequest, res: express.Response) => {
       try {
         const user = req.user
-        const marks = await this.syncMarks(user, req.body)
+        const marks = await this.syncMarks(user, JSON.parse(req.body.value))
         res.status(200).json(marks)
       } catch (e) {
         console.log('sync error', e)
