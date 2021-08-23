@@ -45,11 +45,11 @@ export class Marks implements CommonRoutesConfig {
         res.status(400).json({ error: 'invalid request' })
       }
     });
-    router.post("/m/sync", this.auth.authMiddlewareMobile, upload.none(), async (req: CRequest, res: express.Response) => {
+    router.post("/m/sync", this.auth.authMiddlewareMobile, upload.single('value'), async (req: CRequest, res: express.Response) => {
       try {
+        const value = req?.file.buffer.toString('utf8')
         const user = req.user
-        const clientMarkers = JSON.parse(req.body.value)
-        const marks = await this.syncMarks(user, clientMarkers)
+        const marks = await this.syncMarks(user, JSON.parse(value))
         res.status(200).json(marks)
       } catch (e) {
         console.log('msync error', e)
