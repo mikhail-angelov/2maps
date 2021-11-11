@@ -22,7 +22,7 @@ jobs:
       run: |
         cd ui
         npm ci
-        echo \{\"mapBoxKey\":\"$MAPBOX_KEY\",\"yandexMapKey\":\"$YANDEX_KEY\",\"mapnnUrl\":\"https://mapnn.bconf.com/map/mende/{z}/{x}/{y}.jpg\",\"apiHost\":\"https://mapnn.bconf.com\",\"metrica\":\"\"\} >> env.json
+        echo \{\"mapBoxKey\":\"$MAPBOX_KEY\",\"yandexMapKey\":\"$YANDEX_KEY\",\"osmUrl\":\"https://mapnn.bconf.com/map-osm/{z}/{x}/{y}.jpg\",\"mendeUrl\":\"https://mapnn.bconf.com/map-mende/{z}/{x}/{y}.jpg\",\"apiHost\":\"https://mapnn.bconf.com\",\"metrica\":\"\"\} >> env.json
         npm run build
 
      #Docker
