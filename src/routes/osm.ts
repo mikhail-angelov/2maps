@@ -13,7 +13,7 @@ export class OsmTiles implements CommonRoutesConfig {
   getRoutes() {
     const router = express.Router();
     // (we'll add the actual route configuration here next)
-    router.get("/tile/:z/:x/:y.pbf", async (req, res) => {
+    router.get("/:z/:x/:y.pbf", async (req, res) => {
       const { x, y, z } = req.params;
       console.log("osm", req.params);
       const tile = await this.onTile(+x, +y, +z);
