@@ -1,8 +1,8 @@
 mapboxgl.accessToken = window.mapBoxKey;
-// const mendeUrl = window.mendeUrl;
-// const osmUrl = window.osmUrl;
-const mendeUrl = 'http://localhost:3000/map-mende/{z}/{x}/{y}.jpg';
-const osmUrl = "http://localhost:3000/map-osm/tile/{z}/{x}/{y}.pbf";
+const mendeUrl = window.mendeUrl;
+const osmUrl = window.osmUrl;
+// const mendeUrl = 'http://localhost:3000/map-mende/{z}/{x}/{y}.jpg';
+// const osmUrl = "http://localhost:3000/map-osm/tile/{z}/{x}/{y}.pbf";
 
 export const getSecondMap = (center, zoom) => {
   const map = new mapboxgl.Map({
