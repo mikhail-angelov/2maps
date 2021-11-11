@@ -17,3 +17,6 @@ scp:
 
 deploy: 
 	ssh ${DEV_SERVER} 'docker pull docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest; cd /opt/mapnn;docker-compose down;docker-compose up -d'
+
+clean:
+	docker system prune -a

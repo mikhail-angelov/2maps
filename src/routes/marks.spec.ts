@@ -7,38 +7,58 @@ import { Mark } from '../entities/mark'
 import { User } from '../entities/user'
 import { Marks, WebMark } from './marks'
 
+const USER = {id:'aaade243-0fb7-480f-801c-bc64566209cc',name:'test',email:'test', password:'test'}
+const MARKS = [{
+    id:'123567',
+    userId: USER.id,
+    name:'test',
+    description:'',
+    lat: 56.32323794803307,
+    lng:43.989515211547825,
+    timestamp:1626944504856,
+},{
+    id:'123568',
+    userId: USER.id,
+    name:'test2',
+    description:'none',
+    rate:2,
+    lat: 56.32323794803307,
+    lng:43.989515211547825,
+    timestamp:1626944504856,
+},{
+    id:'123569',
+    userId: USER.id,
+    name:'to remove',
+    description:'none',
+    lat: 56.32323794803307,
+    lng:43.989515211547825,
+    timestamp:1626944504856,
+}]
+
 const remove = promisify(unlink)
 describe('marks', () => {
     let marks: Marks
     let userId: string
     beforeEach(async () => {
-        await initDbConnections({ mendDB: './tmp/pgm.sqlitedb', userDB: './tmp/user.sqlitedb' })
+        await initDbConnections({ mendDB: './tmp/pgm.sqlitedb', osmDB: './tmp/nn-osm.mbtiles', userDB: './tmp/user.sqlitedb' })
         const app: any = { post: () => { } }
         const auth: any = { authMiddleware : () => Promise.resolve('test') }
         marks = new Marks(getConnection(DB.Users), auth)
         // add marks
         const db = await getConnection('users')
-        const user = await db.getRepository(User).save({id:'aaade243-0fb7-480f-801c-bc64566209cc',name:'test',email:'test', password:'test'})
+        const user = await db.getRepository(User).save(USER)
         userId = user.id
-        await db.getRepository(Mark).save([{
-            id:'123567',
-            userId,
-            name:'test',
-            description:'',
-            lat: 56.32323794803307,
-            lng:43.989515211547825,
-            timestamp:1626944504856,
-        }])
+        await db.getRepository(Mark).save(MARKS)
     })
     afterEach(async () => {
         await closeConnections()
         await remove('./tmp/user.sqlitedb') //remove user db
     })
 
-    it('check sync', async () => {
+    it('check blank sync', async () => {
         const webMarks:WebMark[] = []
         const syncedMarks = await marks.syncMarks({id:userId}, webMarks)
-        expect(syncedMarks.length).to.equal(1)
+        expect(syncedMarks.length).to.equal(3)
     })
     it('check sync with conflict', async () => {
         const webMarks:WebMark[] = [{
@@ -47,6 +67,15 @@ describe('marks', () => {
             lat: 56.32323794803307,
             lng:43.989515211547825,
             timestamp:1626944504856,
+        },
+        {
+            id:'123568',
+            name:'update second',
+            description:'new',
+            rate:2,
+            lat: 56.32323794803307,
+            lng:43.989515211547825,
+            timestamp:1626944504857,
         },
         {
             id:'double',
@@ -61,9 +90,17 @@ describe('marks', () => {
             lat: 56.32323794803307,
             lng:43.989515211547825,
             timestamp:1626944504856,
+        },
+        {
+            id:'123569',
+            name:'to remove',
+            removed:true,
+            lat: 56.32323794803307,
+            lng:43.989515211547825,
+            timestamp:1626944504856,
         }]
         const syncedMarks = await marks.syncMarks({id:userId}, webMarks)
-        expect(syncedMarks.length).to.equal(2)
+        console.log(syncedMarks)
+        expect(syncedMarks.length).to.equal(3)
     })
-
 })

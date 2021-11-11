@@ -51,26 +51,28 @@ ymaps.ready(() => {
     centerObject.geometry.setCoordinates(yandexMap.getCenter());
   });
 
-  yandexMap.onEditMark = ({ id, name, description = '', point, onSubmit }) => {
+  yandexMap.onEditMark = ({ id, name, description = '', point, rate=0, onSubmit }) => {
     if (yandexMap.balloon.isOpen()) {
       yandexMap.balloon.close();
     }
     yandexMap.balloon
       .open([point.lat, point.lng], {
         contentHeader: `${id ? "Обновить метку" : "Добавить метку?"}`,
-        contentBody: `<form id="onAdd"><p>Название: <input name="name" value="${name}"/></p>
+        contentBody: `<form id="onAdd">
+        <p>Название: <input name="name" value="${name}"/></p>
         <p>Описание: <input name="description" value="${description}"/></p>
+        <p>Рейт: <input name="rate" value="${rate}" type="number"/></p>
         <input name="point" value="${point.lat},${point.lng}" hidden/>
         <input name="id" value="${id}" hidden/>
-        <p><sup>координаты: ${point.lat.toFixed(6)},${point.lng.toFixed(6)}
-        </sup></p><button>${id ? "Сохранить" : "Добавить"}</button></form>`,
+        <p><sup>координаты: ${point.lat.toFixed(6)},${point.lng.toFixed(6)}</sup></p>
+        <button>${id ? "Сохранить" : "Добавить"}</button></form>`,
       })
       .then(() => {
         document.getElementById("onAdd").addEventListener("submit", onSubmit);
       });
   };
-  yandexMap.addPlacemark = ({ name, description, point }) => {
-    return addObject(name, description, [point.lat, point.lng], "main");
+  yandexMap.addPlacemark = ({ name, description, rate, point }) => {
+    return addObject(name, description, rate, [point.lat, point.lng], "main");
   };
 
   yandexMap.events.add("contextmenu", function (e) {
@@ -79,6 +81,7 @@ ymaps.ready(() => {
       yandexMap.onEditMark({
         name: "",
         description: "...",
+        rate: 1,
         point: { lat, lng },
         onSubmit: addMapItem,
       });
@@ -130,11 +133,12 @@ ymaps.ready(() => {
     const formData = new FormData(e.target);
     const name = formData.get("name");
     const description = formData.get("description");
+    const rate = +formData.get("rate")?+formData.get("rate"):0;
     const [lat, lng] = yandexMap.balloon.getPosition();
     yandexMap.balloon.close();
-    panel.addItems([{ name, description, point: { lat, lng } }]);
+    panel.addItems([{ name, description, rate, point: { lat, lng } }]);
   }
-  function addBalloon(name, description, coords) {
+  function addBalloon(name, description, rate, coords) {
     const n = encodeURIComponent(name)
     const d = encodeURIComponent(description)
     return `<div class="balloon">
@@ -149,11 +153,11 @@ ymaps.ready(() => {
       </div>`
   }
 
-  function addObject(name, description = "", coords, type) {
+  function addObject(name, description = "", rate=0, coords, type) {
     const placemark = new ymaps.Placemark(
       coords,
       {
-        balloonContent: addBalloon(name, description, coords),
+        balloonContent: addBalloon(name, description, rate, coords),
         hintContent: `${name}:${description}`,
         hintOptions: {
           maxWidth: 100,
@@ -170,7 +174,7 @@ ymaps.ready(() => {
     yandexMap.geoObjects.add(placemark);
     return placemark;
   }
-  function addMark({ name, description, point }) {
-    return addObject(name, description, [point.lat, point.lng], "guest");
+  function addMark({ name, description, rate, point }) {
+    return addObject(name, description, rate, [point.lat, point.lng], "guest");
   }
 });

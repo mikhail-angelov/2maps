@@ -1,6 +1,7 @@
-import { Entity, PrimaryColumn, Column } from "typeorm";
+import { Entity, Index, Column, PrimaryColumn } from "typeorm";
 
 @Entity('tiles')
+@Index(["z", "y","x"], { unique: true })
 export class EtoMesto {
 
     @PrimaryColumn()

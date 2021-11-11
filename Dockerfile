@@ -6,5 +6,7 @@ WORKDIR /opt/app
 COPY ./package*.json /opt/app/
 COPY ./dist dist
 COPY ./ui/public ui/public
-
+RUN chown -R node:node /opt/app
+USER node
 RUN npm ci --only=production
+COPY --chown=node:node . .

@@ -5,6 +5,8 @@ import { composeUrlLink } from "../urlParams.js";
 import { createAuth } from './auth.js'
 import '../libs/qrcode.js'
 
+const blackStars = '★★★★★'
+const whiteStars = '☆☆☆☆☆'
 
 export const createPlacemarksPanel = ({ yandexMap }) => {
   const panel = { addItems: () => { }, refresh: () => { } };
@@ -23,10 +25,10 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
   })
 
   const syncMarks = async (data) => {
-    const items = data.map(({ id, name, description, point, timestamp }) => ({ id, name, description, lat: point.lat, lng: point.lng, timestamp }))
+    const items = data.map(({ id, name, description, rate, point, timestamp, removed }) => ({ id, name, description, rate, lat: point.lat, lng: point.lng, timestamp, removed }))
     const res = await postLarge(`${window.apiHost}/marks/sync`, items)
     console.log('sync', res)
-    const toSave = res.map(({ id, name, description, lng, lat, timestamp }) => ({ id, name, description, point: { lat, lng }, timestamp }))
+    const toSave = res.map(({ id, name, description, rate, lng, lat, timestamp }) => ({ id, name, description, rate, point: { lat, lng }, timestamp }))
     savePlacemarksLocal(toSave)
     //todo make it without reload
     location.reload()
@@ -53,6 +55,9 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       name: p.name,
       point: p.point,
       timestamp: p.timestamp,
+      description: p.description,
+      rate: p.rate,
+      removed: p.removed,
     }));
     const file = new Blob([JSON.stringify(toSore)], {
       type: "application/json",
@@ -80,7 +85,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
               item.point.lat &&
               item.point.lng
           )
-          .map(({ id, name, point, description, timestamp }) => ({ id, name, point, description, timestamp }));
+          .map(({ id, name, point, description, rate, removed, timestamp }) => ({ id, name, point, description, rate, removed, timestamp }));
         panel.addItems(items);
       } catch (e) {
         console.log("File content error:", e);
@@ -94,37 +99,43 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     return d > 800 ? `${(d / 1000).toFixed(2)} км` : `${d} м`;
   };
 
-  const PItem = ({ id, name, point, distance, onRemove, onEdit }) =>
+  const PItem = ({ id, name, rate, point, distance, removed, onRemove, onEdit }) =>
     html`<li
       class="place-item"
       key="${id}"
       onClick=${() => yandexMap.setCenter([point.lat, point.lng])}
+      disabled=${removed}
     >
       <div class="title">
         <div>${name}</div>
-        <div class="sub-title">${formatDistance(distance)}</div>
+        <div class="sub-title">${Rate(rate)} ${formatDistance(distance)}</div>
       </div>
       <${IconButton}
         icon="assets/link.svg"
         tooltips="Скопировать линк"
         onClick=${() => copyUrl([{ id, name, point }])}
+        disabled=${removed}
       />
       <${IconButton}
         icon="assets/edit.svg"
         tooltips="Редактировать линк"
         onClick=${() => onEdit([{ id, name, point }])}
+        disabled=${removed}
       />
       <${IconButton}
         icon="assets/remove.svg"
         tooltips="Удалить все"
         onClick=${() => onRemove()}
+        disabled=${removed}
       />
     </li>`;
 
-  const IconButton = ({ icon, onClick, ...other }) =>
-    html`<button class="icon-button" onClick=${onClick} ...${other}>
+  const IconButton = ({ icon, onClick, disabled, ...other }) =>
+    html`<button class="icon-button ${disabled?'disabled':''}" onClick=${onClick} ...${other} disabled=${disabled}>
       <img src=${icon}></img>
     </button>`;
+
+  const Rate = (rate=0) => html`<div class="rate">${blackStars.substr(0, rate) + whiteStars.substr(0, 5 - rate)}</div>`;
 
   class App extends Component {
     componentDidMount() {
@@ -158,7 +169,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
 
     removeItem(id, mapItem) {
       const { placemarks } = this.state;
-      const updatedPlacemarks = placemarks.filter((p) => p.id !== id);
+      const updatedPlacemarks = placemarks.map((p) => p.id === id? { ...p, removed: true } : p);
       if (mapItem) {
         yandexMap.geoObjects.remove(mapItem);
       }
@@ -176,10 +187,11 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
           const id = formData.get("id");
           const name = formData.get("name");
           const description = formData.get("description");
+          const rate = +formData.get("rate")?+formData.get("rate"):0;
           const timestamp = Date.now()
           const { placemarks } = this.state;
           const updatedPlacemarks = placemarks.map((p) =>
-            p.id === id ? { ...p, name, description, timestamp } : p
+            p.id === id ? { ...p, name, description, timestamp, rate } : p
           );
           this.setState({ placemarks: updatedPlacemarks });
           savePlacemarksLocal(updatedPlacemarks);

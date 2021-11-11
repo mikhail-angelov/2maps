@@ -15,13 +15,14 @@ const mapToEntity = ({ id, name, description, lat, lng, timestamp }: WebMark, us
 }
 
 export interface WebMark {
-  id: string | number;
+  id: string;
   name: string;
   description?: string;
+  rate?: number;
   lat: number;
   lng: number;
-  timestamp?: number;
-  old?: boolean;
+  timestamp: number;
+  removed?: boolean;
 }
 
 export class Marks implements CommonRoutesConfig {
@@ -61,22 +62,35 @@ export class Marks implements CommonRoutesConfig {
 
   async syncMarks({ id }: any, clientMarks: WebMark[]) {
     const marks = _.uniqBy(clientMarks, 'id')
-    const marksMap = _.keyBy(marks, 'id')
     const savedMarks = await this.db.getRepository(Mark).find({ userId: id })
-    for (let mark of savedMarks) {
+    const marksMap = _.keyBy(savedMarks, 'id')
+    const marksToAdd = []
+    const marksToUpdate = []
+    const marksIdsToRemove = []
+    for (let mark of marks) {
       const existed = marksMap[mark.id]
-      if (existed) {
-        existed.old = true
-        if (existed.timestamp && existed.timestamp < mark.timestamp) {
-          await this.db.getRepository(Mark).update(mark.id, mapToEntity(existed, id))
+      if(!existed) {
+        marksToAdd.push(mapToEntity(mark, id))
+      }else{
+        if(mark.removed) {
+          marksIdsToRemove.push(mark.id)
+        }else if(mark.timestamp > existed.timestamp) {
+          marksToUpdate.push(mapToEntity(mark, id))
+        }else{
+          // do nothing
         }
       }
     }
-
-    const addedMarks = marks.filter(item => !item.old).map(item => mapToEntity(item, id))
-    await this.db.getRepository(Mark).save(addedMarks)
-    console.log('Added', addedMarks.length, 'marks')
-
+    if (marksToAdd.length) {
+      await this.db.getRepository(Mark).save(marksToAdd)
+    }
+    if (marksToUpdate.length) {
+      await this.db.getRepository(Mark).save(marksToUpdate)
+    }
+    if (marksIdsToRemove.length) {
+      await this.db.getRepository(Mark).delete(marksIdsToRemove)
+    }
+    
     return await this.db.getRepository(Mark).find({ userId: id })
   }
 

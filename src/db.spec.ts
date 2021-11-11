@@ -8,7 +8,7 @@ import { User } from './entities/user'
 
 const remove = promisify(unlink)
 describe('db', () => {
-    beforeEach(() => initDbConnections({ mendDB: './tmp/pgm.sqlitedb', userDB: './tmp/user.sqlitedb' }))
+    beforeEach(() => initDbConnections({ mendDB: './tmp/pgm.sqlitedb', osmDB: './tmp/nn-osm.mbtiles', userDB: './tmp/user.sqlitedb' }))
     afterEach(async() => {
         await closeConnections()
         await remove('./tmp/user.sqlitedb') //remove user db

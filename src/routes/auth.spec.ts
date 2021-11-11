@@ -9,7 +9,7 @@ const remove = promisify(unlink)
 describe('auth', () => {
     let auth: Auth
     beforeEach(async () => {
-        await initDbConnections({ mendDB: './tmp/pgm.sqlitedb', userDB: './tmp/user.sqlitedb' })
+        await initDbConnections({ mendDB: './tmp/pgm.sqlitedb', osmDB: './tmp/nn-osm.mbtiles', userDB: './tmp/user.sqlitedb' })
         const app: any = { post: () => { } }
         const sender: any = {sendEmail: () => { } }
         auth = new Auth(getConnection(DB.Users), sender)

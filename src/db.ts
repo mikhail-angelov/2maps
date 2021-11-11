@@ -2,9 +2,11 @@ import { createConnections, getConnection, Connection } from "typeorm";
 import { EtoMesto } from './entities/etoMesto'
 import { User } from './entities/user'
 import { Mark } from './entities/mark'
+import { MbTile } from "./entities/mbTile";
 
 interface InitParams {
     mendDB: string;
+    osmDB: string;
     userDB: string;
 }
 interface CreateDB {
@@ -13,15 +15,23 @@ interface CreateDB {
 }
 export enum DB {
     Users='users',
-    Mende='mende'
+    Mende='mende',
+    Osm='osm'
 }
-export const initDbConnections = async ({ mendDB, userDB }: InitParams) => {
+export const initDbConnections = async ({ mendDB, userDB, osmDB }: InitParams) => {
     const connections = await createConnections([
         {
             name: DB.Mende,
             type: "sqlite",
             database: mendDB,
             entities: [EtoMesto],
+            synchronize: false,
+            logger: 'debug'
+        }, {
+            name: DB.Osm,
+            type: "sqlite",
+            database: osmDB,
+            entities: [MbTile],
             synchronize: false,
             logger: 'debug'
         }, {
@@ -34,6 +44,17 @@ export const initDbConnections = async ({ mendDB, userDB }: InitParams) => {
         }]);
     return connections
 }
+
+export const closeConnections = async () => {
+    let connection = await getConnection(DB.Mende)
+    await connection.close()
+    connection = await getConnection(DB.Osm)
+    await connection.close()
+    connection = await getConnection(DB.Users)
+    await connection.close()
+}
+
+//TBD: refactor it
 
 export const createDBConnection = async ({ name, file }: CreateDB) => {
     const connections = await createConnections([
@@ -51,11 +72,3 @@ export const createDBConnection = async ({ name, file }: CreateDB) => {
 export const closeConnection = async (connection: Connection) => {
     await connection.close()
 }
-
-export const closeConnections = async () => {
-    let connection = await getConnection('mende')
-    await connection.close()
-    connection = await getConnection('users')
-    await connection.close()
-}
-

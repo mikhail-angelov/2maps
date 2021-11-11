@@ -15,6 +15,9 @@ export class Mark {
     @Column()
     description?: string;
 
+    @Column({nullable: true})
+    rate?: number;
+
     @Column()
     lat!: number;
 

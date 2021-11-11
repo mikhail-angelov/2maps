@@ -3,6 +3,8 @@ export const savePlacemarksLocal = (placemarks) => {
     id: p.id,
     name: p.name,
     description: p.description,
+    rate: p.rate,
+    removed: p.removed,
     point: p.point,
     timestamp: p.timestamp || 0,
   }));

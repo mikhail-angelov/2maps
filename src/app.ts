@@ -5,6 +5,7 @@ import * as expressWinston from 'express-winston';
 import cookieParser from 'cookie-parser'
 import cors from 'cors';
 import { MendeTiles } from './routes/mende';
+import { OsmTiles } from './routes/osm'
 import { Auth } from './routes/auth';
 import { getConnection } from 'typeorm';
 import { initDbConnections, DB } from './db'
@@ -13,7 +14,7 @@ import { MapLoader } from './routes/mapLoader';
 import sender from './routes/mailer'
 
 const mendDB = process.env.DB_MENDE || "./data/mende-nn.sqlitedb"
-// const mendDB = process.env.DB_MENDE || "./tmp/test.sqlitedb"
+const osmDB = process.env.DB_OSM || "./data/nn-osm.mbtiles"
 const userDB = process.env.DB_USER || "./data/users.sqlitedb"
 
 const app: express.Application = express();
@@ -43,15 +44,17 @@ if (!process.env.DEBUG) {
 app.use(expressWinston.logger(loggerOptions));
 
 const run = async () => {
-    await initDbConnections({ mendDB, userDB })
+    await initDbConnections({ mendDB, osmDB, userDB })
 
     const mende = new MendeTiles(getConnection(DB.Mende))
+    const osm = new OsmTiles(getConnection(DB.Osm))
     const auth = new Auth(getConnection(DB.Users), sender)
     const markers = new Marks(getConnection(DB.Users), auth)
     const mapLoader = new MapLoader(auth)
     app.use('/auth', auth.getRoutes());
     app.use('/marks', markers.getRoutes());
-    app.use('/map/mende', mende.getRoutes());
+    app.use('/map-mende', mende.getRoutes());
+    app.use('/map-osm', osm.getRoutes());
     app.use('/download', markers.getRoutes());
 
 
