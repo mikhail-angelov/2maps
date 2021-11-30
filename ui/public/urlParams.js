@@ -18,12 +18,14 @@ export const parseUrlParams = () => {
   const placemarks = params.get(PLACEMARKS)
     ? parsePlacemarks(params.get(PLACEMARKS))
     : [];
+  const resetToken = params.get('reset-token')
   return {
     zoom,
     center,
     opacity,
     placemarks,
     name,
+    resetToken,
   };
 };
 

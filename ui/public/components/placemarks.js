@@ -1,7 +1,7 @@
 import { html, render, Component } from "../libs/htm.js";
 import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
 import { isMobile, getId, delay, postLarge } from "../utils.js";
-import { composeUrlLink } from "../urlParams.js";
+import { composeUrlLink, parseUrlParams } from "../urlParams.js";
 import { createAuth } from './auth.js'
 import '../libs/qrcode.js'
 
@@ -23,6 +23,11 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     authenticated = value;
     panel.refresh()
   })
+
+  const {resetToken} = parseUrlParams()
+  if (resetToken) {
+    auth.showPasswordReset()
+  }
 
   const syncMarks = async (data) => {
     const items = data.map(({ id, name, description, rate, point, timestamp, removed }) => ({ id, name, description, rate, lat: point.lat, lng: point.lng, timestamp, removed }))
