@@ -1,4 +1,5 @@
 import { html, Component, render, useState, useEffect } from "../libs/htm.js";
+import { parseUrlParams } from "../urlParams.js";
 import { isMobile, post } from "../utils.js";
 
 const check = async () => {
@@ -19,6 +20,10 @@ const logout = async () => {
 }
 const signUp = async (data) => {
   const res = await post(`${window.apiHost}/auth/sign-up`, data)
+  return res.auth === 'ok'
+}
+const passwordReset = async (data) => {
+  const res = await post(`${window.apiHost}/auth/reset-password`, data)
   return res.auth === 'ok'
 }
 
@@ -74,11 +79,33 @@ const SignUp = ({ onSignUp, toLogin, error }) => {
 
 };
 
+const PasswordReset = ({ onPasswordReset, error, resetToken }) => {
+  const [password, setPassword] = useState('')
+
+  const passwordReset = (e) => {
+    e.preventDefault()
+    onPasswordReset({ password, resetToken })
+  }
+
+  return html`<form class="auth-form" onSubmit=${passwordReset}>
+    <div class="title">Update Account</div>
+    <div class="label">New Password</div>
+    <input class="form-input" value=${password} onChange=${(e) => setPassword(e.target.value)} type="password"></input>
+    ${error && html`<div class=error>${error}</div>`}
+    <div class="row">
+      <button class="form-button primary">Change</button>
+    </div>
+  </form>`;
+
+};
+
 export const createAuth = (onAuthChanged) => {
+  const {resetToken} = parseUrlParams()
   const auth = {
     showLogin: () => { },
     showSignUp: () => { },
     logout: () => { },
+    showPasswordReset: () => { },
   }
 
   class Auth extends Component {
@@ -86,6 +113,7 @@ export const createAuth = (onAuthChanged) => {
       auth.showLogin = this.showLogin.bind(this);
       auth.showSignUp = this.showSignUp.bind(this);
       auth.logout = this.logout.bind(this);
+      auth.showPasswordReset = this.showPasswordReset.bind(this);
       check().then(onAuthChanged)
 
       this.setState({
@@ -104,6 +132,9 @@ export const createAuth = (onAuthChanged) => {
     }
     showSignUp() {
       this.setState({ show: true, ui: 'signUp' });
+    }
+    showPasswordReset() {
+      this.setState({ show: true, ui: 'password-reset' });
     }
 
     async onLogin(credentials) {
@@ -137,6 +168,21 @@ export const createAuth = (onAuthChanged) => {
       }
     }
 
+    async onPasswordReset(credentials) {
+      try {
+        const data = await passwordReset(credentials)
+        console.log('onPasswordReset', data)
+        if (data) {
+          this.setState({ show: false })
+        } else {
+          this.setState({ error: 'invalid password reset' })
+        }
+      } catch (e) {
+        console.log('passwordReset error', e)
+        this.setState({ error: e.toString() })
+      }
+    }
+
     render({ }, { show, ui, error }) {
 
       const onClose = () => this.setState({ show: false })
@@ -145,6 +191,8 @@ export const createAuth = (onAuthChanged) => {
         content = html`<${Login} onLogin=${this.onLogin.bind(this)} toSignUp=${() => this.setState({ ui: 'signUp' })} error=${error}/>`
       } else if (ui === 'signUp') {
         content = html`<${SignUp} onSignUp=${this.onSignUp.bind(this)} toLogin=${() => this.setState({ ui: 'login' })} error=${error}/>`
+      } else if (ui === 'password-reset') {
+        content = html`<${PasswordReset} onPasswordReset=${this.onPasswordReset.bind(this)} resetToken=${resetToken} error=${error}/>`
       }
 
       return show && content ?
