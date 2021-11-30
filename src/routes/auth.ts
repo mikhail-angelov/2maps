@@ -29,7 +29,6 @@ interface Forget {
 }
 interface Reset {
   resetToken: string;
-  email: string;
   password: string;
 }
 
@@ -202,11 +201,11 @@ export class Auth implements CommonRoutesConfig {
     }
     const resetToken = bcrypt.genSaltSync(10)
     await this.db.getRepository(User).update(user.id, { resetToken })
-    const link = `https://mapnn.vercel.app/?reset-token=${resetToken}`
+    const link = `https://mapnn.vercel.app/?reset-token=${encodeURIComponent(resetToken)}`
     this.sender.sendEmail(email, 'Map-nn reset password', `to reset password for map-nn use this link <a href=${link}>${link}</a>`)
   }
-  async resetPassword({ resetToken, email, password }: Reset) {
-    let user = await this.db.getRepository(User).findOne({ email, resetToken })
+  async resetPassword({ resetToken, password }: Reset) {
+    let user = await this.db.getRepository(User).findOne({ resetToken: decodeURIComponent(resetToken) })
     if (!user || !resetToken) {
       throw "invalid user"
     }
@@ -215,7 +214,7 @@ export class Auth implements CommonRoutesConfig {
     const saltedPass = bcrypt.hashSync(password, salt)
     await this.db.getRepository(User).update(user.id, { password: saltedPass, resetToken: undefined })
 
-    const payload: JwtPayload = { id: user.id, email }
+    const payload: JwtPayload = { id: user.id, email: user.email }
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 }), payload];
   }
 
