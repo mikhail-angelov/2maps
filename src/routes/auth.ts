@@ -7,6 +7,8 @@ import bcrypt from 'bcrypt-nodejs'
 import { User } from '../entities/user'
 import { Sender } from './mailer'
 
+const HOST = process.env.HOST || ''
+
 const JWT_SECRET = 'asdjkdknpjnpwwijoi'
 const JWT_COOKIES = 'mapnn'
 const JWT_HEADER = 'authorization'
@@ -199,18 +201,20 @@ export class Auth implements CommonRoutesConfig {
 
     const payload: JwtPayload = { id: user.id, email }
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
-    this.sender.sendEmail(email, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
+    await this.sender.sendEmail(email, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
     return [token, payload]
   }
   async forgetPassword({ email }: Forget) {
-    let user = await this.db.getRepository(User).findOne({ email })
-    if (!user) {
-      throw "invalid user"
-    }
-    const resetToken = bcrypt.genSaltSync(10)
-    await this.db.getRepository(User).update(user.id, { resetToken })
-    const link = `https://mapnn.vercel.app/?reset-token=${encodeURIComponent(resetToken)}`
-    this.sender.sendEmail(email, 'Map-nn reset password', `to reset password for map-nn use this link <a href=${link}>${link}</a>`)
+    return this.db.transaction(async transactionalEntityManager => {
+      const user = await transactionalEntityManager.getRepository(User).findOne({ email })    
+      if (!user) {
+        throw "invalid user"
+      }
+      const resetToken = bcrypt.genSaltSync(10)
+      await transactionalEntityManager.getRepository(User).update(user.id, { resetToken })
+      const link = `${HOST}/?reset-token=${encodeURIComponent(resetToken)}`
+      await this.sender.sendEmail(email, 'Map-nn reset password', `to reset password for map-nn use this link <a href="${link}">${link}</a>`)
+    })
   }
   async resetPassword({ resetToken, password }: Reset) {
     let user = await this.db.getRepository(User).findOne({ resetToken: decodeURIComponent(resetToken) })
