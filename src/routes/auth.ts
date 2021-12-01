@@ -2,7 +2,7 @@ import { CommonRoutesConfig } from './common';
 import express from 'express';
 import { CRequest } from '../../types/express'
 import { Connection } from "typeorm";
-import jwt from 'jsonwebtoken'
+import jwt,{VerifyErrors} from 'jsonwebtoken'
 import bcrypt from 'bcrypt-nodejs'
 import { User } from '../entities/user'
 import { Sender } from './mailer'
@@ -169,16 +169,24 @@ export class Auth implements CommonRoutesConfig {
   }
   async authMiddleware(req: CRequest, res: express.Response, next: express.NextFunction) {
     const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
-    const decoded = jwt.verify(testToken, JWT_SECRET)
-    req.user = decoded
-    next()
+    jwt.verify(testToken, JWT_SECRET,(err: VerifyErrors | null, decoded: any) => {
+      if (err) {
+        return next('invalid auth')
+      }
+      req.user = decoded
+      next()
+    })
   }
   async authMiddlewareMobile(req: CRequest, res: express.Response, next: express.NextFunction) {
     const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
     const testToken: string = authHeader ? authHeader.slice(7) : ''
-    const decoded = jwt.verify(testToken, JWT_SECRET)
-    req.user = decoded
-    next()
+    jwt.verify(testToken, JWT_SECRET,(err: VerifyErrors | null, decoded: any) => {
+      if (err) {
+        return next('invalid auth')
+      }
+      req.user = decoded
+      next()
+    })
   }
   async register({ name, email, password }: SignUp) {
     let user = await this.db.getRepository(User).findOne({ email })

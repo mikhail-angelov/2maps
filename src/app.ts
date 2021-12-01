@@ -10,11 +10,10 @@ import { Auth } from './routes/auth';
 import { getConnection } from 'typeorm';
 import { initDbConnections, DB } from './db'
 import { Marks } from './routes/marks';
-import { MapLoader } from './routes/mapLoader';
+import { Maps } from './routes/maps';
 import sender from './routes/mailer'
 
-// const mendDB = process.env.DB_MENDE || "./data/mende-nn.sqlitedb"
-const mendDB =  "./data/google15.sqlitedb"
+const mendDB = process.env.DB_MENDE || "./data/mende-nn.sqlitedb"
 const osmDB = process.env.DB_OSM || "./data/nn-osm.mbtiles"
 const userDB = process.env.DB_USER || "./data/users.sqlitedb"
 
@@ -51,13 +50,13 @@ const run = async () => {
     const osm = new OsmTiles(getConnection(DB.Osm))
     const auth = new Auth(getConnection(DB.Users), sender)
     const markers = new Marks(getConnection(DB.Users), auth)
-    const mapLoader = new MapLoader(auth)
+    const maps = new Maps(getConnection(DB.Users),auth)
     app.use('/auth', auth.getRoutes());
     app.use('/marks', markers.getRoutes());
+    app.use('/maps', maps.getRoutes());
     app.use('/map-mende', mende.getRoutes());
     app.use('/map-osm', osm.getRoutes());
     app.use('/download', markers.getRoutes());
-
 
     server.listen(port, () => {
         console.log(`Server running at port: ${port}`);

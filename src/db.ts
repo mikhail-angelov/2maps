@@ -2,6 +2,7 @@ import { createConnections, getConnection, Connection } from "typeorm";
 import { EtoMesto } from './entities/etoMesto'
 import { User } from './entities/user'
 import { Mark } from './entities/mark'
+import { MapFile } from './entities/mapFile'
 import { MbTile } from "./entities/mbTile";
 
 interface InitParams {
@@ -38,7 +39,7 @@ export const initDbConnections = async ({ mendDB, userDB, osmDB }: InitParams) =
             name: DB.Users,
             type: "sqlite",
             database: userDB,
-            entities: [User, Mark],
+            entities: [User, Mark, MapFile],
             synchronize: true,
             logger: 'debug'
         }]);

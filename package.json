@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/mikhail-angelov/mapnn-tiles#readme",
   "dependencies": {
+    "aws-sdk": "^2.1040.0",
     "axios": "^0.21.1",
     "bcrypt-nodejs": "0.0.3",
     "cookie-parser": "^1.4.5",
