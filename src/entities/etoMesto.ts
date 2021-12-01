@@ -4,7 +4,7 @@ import { Entity, Index, Column, PrimaryColumn } from "typeorm";
 @Index(["z", "y","x"], { unique: true })
 export class EtoMesto {
 
-    @PrimaryColumn()
+    @Column()
     x!: number;
 
     @Column()
@@ -13,7 +13,7 @@ export class EtoMesto {
     @Column()
     z!: number;
 
-    @Column()
+    @PrimaryColumn()
     s!: number;
 
     @Column({ name: 'Image' })

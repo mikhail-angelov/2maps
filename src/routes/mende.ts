@@ -31,8 +31,8 @@ export class MendeTiles implements CommonRoutesConfig {
   async onTile(x: number, y: number, z: number) {
     try {
       //this is translation standard mercator x/y/z to DB format
-      const zoom = 17 - z;
-      if (!x || !y || zoom > 7 || zoom < 3) {
+      const zoom = +z;//17 - z;
+      if (!x || !y || zoom > 17 || zoom < 3) {
         return null;
       }
       const tile = await this.db.getRepository(EtoMesto).findOne({ x, y, z: zoom })

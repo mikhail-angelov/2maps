@@ -70,12 +70,12 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
   const leftBottom = { lat: 56.963702, lng: 42.977057 }
   const rightTop = { lat: 55.191112, lng: 46.121449 }
   let cursor = 4
-  let zz = 0
-  let zz_end = 14
-
+  let zz = 4
+  let zz_end = 13
+  let s = 0
   try {
     for (let zoom = zz; zoom <= zz_end; zoom++) {
-      let s = Date.now() / 1000
+      let startZoom = Date.now() / 1000
       let count = 0
       let [xx, yy] = latLngToTileIndex({ ...leftBottom, zoom })
       let [xx_end, yy_end] = latLngToTileIndex({ ...rightTop, zoom })
@@ -84,12 +84,18 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
       cursor++
       for (let x = xx; x <= xx_end; x++) {
         for (let y = yy; y <= yy_end; y++) {
-          const url = `https://a.tile.openstreetmap.org/${zoom}/${x}/${y}.png`
-          const image = await loader(url)
-          await connection.getRepository(EtoMesto).insert({ x, y, z: zoom, s: 0, image });
-          count++;
-          progress(`${count}/${total} - ${Date.now() / 1000 - s} | ${x}-${y}`, cursor)
-          s = Date.now() / 1000
+          // const url = `https://a.tile.openstreetmap.org/${zoom}/${x}/${y}.png`
+          const url = `http://mt1.google.com/vt/lyrs=y&x=${x}&y=${y}&z=${zoom}`
+          try {
+            const image = await loader(url)
+            s++
+            await connection.getRepository(EtoMesto).insert({ x, y, z: zoom, s, image });
+            count++;
+            progress(`${count}/${total} - ${Date.now() / 1000 - startZoom} | ${x}-${y}`, cursor)
+            startZoom = Date.now() / 1000
+          } catch (e) {
+            console.log('error load tile', x, y, zoom, e)
+          }
         }
       }
     }
@@ -103,4 +109,46 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
   return { status: 'ok' }
 }
 
-downloadMap({ url: '', name: 'test' })
+// downloadMap({ url: '', name: 'test' })
+
+const TILE_SIZE = 256;
+
+function createInfoWindowContent(lat: number, lng: number, zoom: number) {
+  const scale = 1 << zoom;
+  const [x, y] = project(lat, lng);
+  const pixelCoordinate = [
+    Math.floor(x * scale),
+    Math.floor(y * scale)
+  ];
+  const tileCoordinate = [
+    Math.floor((x * scale) / TILE_SIZE),
+    Math.floor((y * scale) / TILE_SIZE)
+  ];
+  console.log(pixelCoordinate, tileCoordinate);
+  return [
+    "Chicago, IL",
+    "Zoom level: " + zoom,
+    "Pixel Coordinate: " + pixelCoordinate,
+    "Tile Coordinate: " + tileCoordinate,
+  ].join("<br>");
+}
+
+// The mapping between latitude, longitude and pixels is defined by the web
+// mercator projection.
+function project(lat: number, lng: number) {
+  let siny = Math.sin((lat * Math.PI) / 180);
+
+  // Truncating to 0.9999 effectively limits latitude to 89.189. This is
+  // about a third of a tile past the edge of the world tile.
+  siny = Math.min(Math.max(siny, -0.9999), 0.9999);
+  return [TILE_SIZE * (0.5 + lng / 360), TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI))];
+}
+
+const leftTop = { lat: 56.852812, lng: 43.360428 }
+const rightBottom = { lat: 554.977790, lng: 45.859073 }
+
+createInfoWindowContent(56.32407255482896, 44.005093481506336, 14)
+
+console.log(latLngToTileIndex({ lat: 56.32407255482896, lng: 44.005093481506336, zoom: 14 }))
+
+downloadMap({ url: 'google', name: 'google' })

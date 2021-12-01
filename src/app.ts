@@ -13,7 +13,8 @@ import { Marks } from './routes/marks';
 import { MapLoader } from './routes/mapLoader';
 import sender from './routes/mailer'
 
-const mendDB = process.env.DB_MENDE || "./data/mende-nn.sqlitedb"
+// const mendDB = process.env.DB_MENDE || "./data/mende-nn.sqlitedb"
+const mendDB =  "./data/google15.sqlitedb"
 const osmDB = process.env.DB_OSM || "./data/nn-osm.mbtiles"
 const userDB = process.env.DB_USER || "./data/users.sqlitedb"
 
