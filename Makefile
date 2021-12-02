@@ -1,5 +1,3 @@
-DEV_SERVER=root@bconf.com
-
 build:
 	npm run build
 	docker build  . -t mangelov/mapnn-tiles
@@ -11,12 +9,12 @@ run:
 	docker run mangelov/mapnn-tiles:latest
 
 scp:
-	scp -r ./data ${DEV_SERVER}:/opt/mapnn
-	scp -r ./.env ${DEV_SERVER}:/opt/mapnn/.env
-	scp -r docker-compose.yml ${DEV_SERVER}:/opt/mapnn/docker-compose.yml
+	scp -r ./data root@bconf.com:/opt/mapnn
+	scp -r ./.env root@bconf.com:/opt/mapnn/.env
+	scp -r docker-compose.yml root@bconf.com}:/opt/mapnn/docker-compose.yml
 
 deploy: 
-	ssh ${DEV_SERVER} 'docker pull docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest; cd /opt/mapnn;docker-compose down;docker-compose up -d'
+	ssh root@bconf.com 'docker pull docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest; cd /opt/mapnn;docker-compose down;docker-compose up -d'
 
 clean:
 	docker system prune -a
