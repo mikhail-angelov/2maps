@@ -41,7 +41,6 @@ export class Maps implements CommonRoutesConfig {
         console.log('s3 error', this.bucket, err)
         return
       }
-      console.log('data', data)
       const maps: Partial<MapFile>[] = data.Contents.map(({ Key = '', Size = 0 }) => ({ name: Key.split('.sqlitedb')[0], url: Key, size: Size }))
       this.refineMapsInDB(maps)
     });

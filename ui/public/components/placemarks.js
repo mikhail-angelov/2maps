@@ -31,9 +31,12 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
 
   const syncMarks = async (data) => {
     const items = data.map(({ id, name, description, rate, point, timestamp, removed }) => ({ id, name, description, rate, lat: point.lat, lng: point.lng, timestamp, removed }))
+    // it returns all synced markers
     const res = await postLarge(`${window.apiHost}/marks/sync`, items)
-    console.log('sync', res)
-    const toSave = res.map(({ id, name, description, rate, lng, lat, timestamp }) => ({ id, name, description, rate, point: { lat, lng }, timestamp }))
+    console.log('sync', res.length)
+    const toSave = res
+      .filter(item=>!!item.id)
+      .map(({ id, name, description, rate, lng, lat, timestamp }) => ({ id, name, description, rate, point: { lat, lng }, timestamp }))
     savePlacemarksLocal(toSave)
     //todo make it without reload
     location.reload()
@@ -85,6 +88,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
           .filter(
             (item) =>
               item &&
+              item.id &&
               item.name &&
               item.point &&
               item.point.lat &&

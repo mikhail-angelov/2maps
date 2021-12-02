@@ -69,7 +69,7 @@ export class Marks implements CommonRoutesConfig {
     const marksIdsToRemove = []
     for (let mark of marks) {
       const existed = marksMap[mark.id]
-      if(!existed) {
+      if(!existed && !mark.removed) {
         marksToAdd.push(mapToEntity(mark, id))
       }else{
         if(mark.removed) {
