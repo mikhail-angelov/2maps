@@ -16,7 +16,7 @@ export class EtoMesto {
     @PrimaryColumn()
     s!: number;
 
-    @Column({ name: 'Image' })
+    @Column()
     image!: Buffer;
 
 }
