@@ -70,7 +70,7 @@ export class Maps implements CommonRoutesConfig {
       }
     });
 
-    router.get("/:id", this.auth.authMiddlewareMobile, async (req: CRequest, res: express.Response) => {
+    router.post("/:id", this.auth.authMiddlewareMobile, async (req: CRequest, res: express.Response) => {
       try {
         const user = req.user
         const { id } = req.params;
@@ -80,10 +80,10 @@ export class Maps implements CommonRoutesConfig {
           return res.status(400).json({ error: 'invalid request' })
         }
         //todo: check if user has access to this map
-        const downloadUrl = this.s3.getSignedUrl('getObject', {
+        const downloadUrl = await this.s3.getSignedUrlPromise('getObject', {
           Bucket: this.bucket,
           Key: map.url,
-          Expires: 60000,
+          Expires: 60,
         });
 
         res.status(200).json(toWebMap({ ...map, url: downloadUrl }))
