@@ -10,8 +10,8 @@ import { Auth } from './auth'
 
 const upload = multer()
 
-const mapToEntity = ({ id, name, description, lat, lng, timestamp }: WebMark, userId: string): Mark => {
-  return { id: id.toString(), name, description: description || '', lat, lng, userId, timestamp: timestamp || Date.now() }
+const mapToEntity = ({ id, name, description, lat, lng, timestamp, rate }: WebMark, userId: string): Mark => {
+  return { id: id.toString(), name, description: description || '', lat, lng, userId, timestamp: timestamp || Date.now(), rate }
 }
 
 export interface WebMark {
