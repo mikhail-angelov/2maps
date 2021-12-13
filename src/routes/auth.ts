@@ -34,6 +34,10 @@ interface Reset {
   password: string;
 }
 
+interface ChangePassword {
+  password: string;
+}
+
 export class Auth implements CommonRoutesConfig {
   db: Connection
   sender: Sender
@@ -151,6 +155,15 @@ export class Auth implements CommonRoutesConfig {
         res.status(401).json({ error: 'invalid reset' })
       }
     });
+    router.post("/m/change-password", this.authMiddlewareMobile, async (req: CRequest, res) => {
+      try {
+        await this.changePassword(req.user.id, req.body.password)
+        res.status(200).json({ status: 'password changed' })
+      } catch (e) {
+        console.log('password change error', e)
+        res.status(401).json({ error: 'invalid password changing' })
+      }
+    });
     return router;
   }
 
@@ -228,6 +241,12 @@ export class Auth implements CommonRoutesConfig {
 
     const payload: JwtPayload = { id: user.id, email: user.email }
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 }), payload];
+  }
+
+  changePassword(userId: string, newPassword: string ) {
+    const salt = bcrypt.genSaltSync(10)
+    const saltedPass = bcrypt.hashSync(newPassword, salt)
+    return this.db.getRepository(User).update(userId, { password: saltedPass })
   }
 
 }
