@@ -40,7 +40,7 @@ describe('marks', () => {
     let marks: Marks
     let userId: string
     beforeEach(async () => {
-        await initDbConnections({ mendDB: './tmp/pgm.sqlitedb', osmDB: './tmp/nn-osm.mbtiles', userDB: './tmp/user.sqlitedb' })
+        await initDbConnections({ userDB: './tmp/user.sqlitedb' })
         const app: any = { post: () => { } }
         const auth: any = { authMiddleware : () => Promise.resolve('test') }
         marks = new Marks(getConnection(DB.Users), auth)

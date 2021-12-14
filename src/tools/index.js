@@ -1,14 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
-const fs = require("fs");
 const app = express();
 const port = process.env.PORT || "3001";
-const db = new sqlite3.Database(
-  process.env.DB_MENDE || "../data/mende-nn.sqlitedb"
-);
+const db = new sqlite3.Database("../data/mende-nn.sqlitedb");
 
-app.get("/map/mende/:z/:x/:y.jpg", cors(), (req, res) => {
+app.get("/test/:z/:x/:y.jpg", cors(), (req, res) => {
   const { x, y, z } = req.params;
   const zoom = 17 - +z;
   if (!x || !y || zoom > 7 || zoom < 3) {

@@ -1,13 +1,11 @@
 import { createConnections, getConnection, Connection } from "typeorm";
-import { EtoMesto } from './entities/etoMesto'
+import { Tile } from './entities/tile'
 import { User } from './entities/user'
 import { Mark } from './entities/mark'
 import { MapFile } from './entities/mapFile'
-import { MbTile } from "./entities/mbTile";
+import { TileSource } from "./entities/tileSource";
 
 interface InitParams {
-    mendDB: string;
-    osmDB: string;
     userDB: string;
 }
 interface CreateDB {
@@ -16,30 +14,14 @@ interface CreateDB {
 }
 export enum DB {
     Users='users',
-    Mende='mende',
-    Osm='osm'
 }
-export const initDbConnections = async ({ mendDB, userDB, osmDB }: InitParams) => {
+export const initDbConnections = async ({ userDB }: InitParams) => {
     const connections = await createConnections([
         {
-            name: DB.Mende,
-            type: "sqlite",
-            database: mendDB,
-            entities: [EtoMesto],
-            synchronize: false,
-            logger: 'debug'
-        }, {
-            name: DB.Osm,
-            type: "sqlite",
-            database: osmDB,
-            entities: [MbTile],
-            synchronize: false,
-            logger: 'debug'
-        }, {
             name: DB.Users,
             type: "sqlite",
             database: userDB,
-            entities: [User, Mark, MapFile],
+            entities: [User, Mark, MapFile, TileSource],
             synchronize: true,
             logger: 'debug'
         }]);
@@ -47,11 +29,7 @@ export const initDbConnections = async ({ mendDB, userDB, osmDB }: InitParams) =
 }
 
 export const closeConnections = async () => {
-    let connection = await getConnection(DB.Mende)
-    await connection.close()
-    connection = await getConnection(DB.Osm)
-    await connection.close()
-    connection = await getConnection(DB.Users)
+    let connection = await getConnection(DB.Users)
     await connection.close()
 }
 
@@ -63,7 +41,7 @@ export const createDBConnection = async ({ name, file }: CreateDB) => {
             name,
             type: "sqlite",
             database: file,
-            entities: [EtoMesto],
+            entities: [Tile],
             synchronize: true,
             logger: 'debug'
         }]);

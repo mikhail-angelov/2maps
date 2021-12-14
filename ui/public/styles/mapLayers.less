@@ -1,0 +1,48 @@
+.layers-overlay {
+  display : flex;
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index : 9999999;
+
+  .layer-icon {
+    margin: 5px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .layer-list {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+  
+    .layer-list-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #ccc;
+      background-color: black;
+      color: white;
+      font-weight: bold;
+
+      .header-button {
+        width: 40px;
+        height: 40px;
+      }
+    }
+    .map-list{
+      background: white;
+      padding: 5px 0;
+      margin: 0;
+
+      .map-item {
+        display: flex;
+        list-style-type: none;
+        height: 24px;
+      }
+    }
+  }
+}
+

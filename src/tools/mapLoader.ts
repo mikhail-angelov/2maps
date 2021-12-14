@@ -3,7 +3,7 @@ import axios from 'axios'
 import rdl from 'readline'
 import fs from 'fs'
 import { createDBConnection, closeConnection } from '../db'
-import { EtoMesto } from '../entities/etoMesto'
+import { Tile } from '../entities/tile'
 
 const loader = async (url: string): Promise<any> => {
   const response = await axios.get(url, {
@@ -89,7 +89,7 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
           try {
             const image = await loader(url)
             s++
-            await connection.getRepository(EtoMesto).insert({ x, y, z: zoom, s, image });
+            await connection.getRepository(Tile).insert({ x, y, z: zoom, s, image });
             count++;
             progress(`${count}/${total} - ${Date.now() / 1000 - startZoom} | ${x}-${y}`, cursor)
             startZoom = Date.now() / 1000
