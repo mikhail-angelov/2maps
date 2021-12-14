@@ -1,4 +1,4 @@
-const vectorStyles = (mendeUrl) => ({
+const vectorStyles = (mendeUrl, osmUrl) => ({
     "version": 8,
     "name": "Bright",
     "metadata": {

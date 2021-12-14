@@ -4,26 +4,26 @@ import { isMobile, post } from "../utils.js";
 
 const check = async () => {
   try {
-    const res = await post(`${window.apiHost}/auth/check`, {})
+    const res = await post(`/auth/check`, {})
     return res.auth === 'ok'
   } catch (e) {
     return false
   }
 }
 const login = async (credentials) => {
-  const res = await post(`${window.apiHost}/auth/login`, credentials)
+  const res = await post(`/auth/login`, credentials)
   return res.auth === 'ok'
 }
 const logout = async () => {
-  const res = await post(`${window.apiHost}/auth/logout`, {})
+  const res = await post(`/auth/logout`, {})
   return false
 }
 const signUp = async (data) => {
-  const res = await post(`${window.apiHost}/auth/sign-up`, data)
+  const res = await post(`/auth/sign-up`, data)
   return res.auth === 'ok'
 }
 const passwordReset = async (data) => {
-  const res = await post(`${window.apiHost}/auth/reset-password`, data)
+  const res = await post(`/auth/reset-password`, data)
   return res.auth === 'ok'
 }
 

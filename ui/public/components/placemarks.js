@@ -33,7 +33,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
   const syncMarks = async (data) => {
     const items = data.map(({ id, name, description, rate, point, timestamp, removed }) => ({ id, name, description, rate, lat: point.lat, lng: point.lng, timestamp, removed }))
     // it returns all synced markers
-    const res = await postLarge(`${window.apiHost}/marks/sync`, items)
+    const res = await postLarge(`/marks/sync`, items)
     console.log('sync', res.length)
     const toSave = res
       .filter(item=>!!item.id)
