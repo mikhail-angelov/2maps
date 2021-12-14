@@ -3,7 +3,7 @@ const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
 const app = express();
 const port = process.env.PORT || "3001";
-const db = new sqlite3.Database("../data/mende-nn.sqlitedb");
+const db = new sqlite3.Database("../data/test.sqlitedb");
 
 app.get("/test/:z/:x/:y.jpg", cors(), (req, res) => {
   const { x, y, z } = req.params;

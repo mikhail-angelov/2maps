@@ -6,7 +6,6 @@ export class OsmTiles implements CommonRoutesConfig {
   
   getRoutes() {
     const router = express.Router();
-    // (we'll add the actual route configuration here next)
     router.get("/:name/:z/:x/:y.pbf", async (req, res) => {
       try {
         const { name, x, y, z } = req.params;

@@ -3,15 +3,16 @@ import { getConnection } from 'typeorm';
 import { unlink } from 'fs'
 import { promisify } from 'util'
 import { initDbConnections, closeConnections, DB } from '../db'
-import { Auth } from './auth'
+import { Auth, JWT_COOKIES } from './auth'
+import { CRequest } from '../../types/express'
 
 const remove = promisify(unlink)
 describe('auth', () => {
     let auth: Auth
     beforeEach(async () => {
-        await initDbConnections({userDB: './tmp/user.sqlitedb' })
+        await initDbConnections({ userDB: './tmp/user.sqlitedb' })
         const app: any = { post: () => { } }
-        const sender: any = {sendEmail: () => { } }
+        const sender: any = { sendEmail: () => { } }
         auth = new Auth(getConnection(DB.Users), sender)
         // add user
         await auth.register({ name: 'test', email: 'test', password: 'test' })
@@ -36,14 +37,16 @@ describe('auth', () => {
     })
 
     it('check', async () => {
-        const [token,_] = await auth.login({ email: 'test', password: 'test' })
-        const [t, u] = await auth.check(token as string)
+        const [token, _] = await auth.login({ email: 'test', password: 'test' })
+        const req = { cookies: { [JWT_COOKIES]: token } } as CRequest
+        const [t, u] = await auth.check(req)
         expect(!!t).to.equal(true)
     })
 
     it('check invalid', async () => {
         try {
-            await auth.check('invalid')
+            const req = { cookies: { [JWT_COOKIES]: 'invalid' } } as CRequest
+            await auth.check(req)
             expect(false).to.equal(true);
         } catch (e) {
             expect(!!e).to.equal(true);

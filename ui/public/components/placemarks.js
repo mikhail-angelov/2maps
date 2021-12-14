@@ -228,7 +228,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       const typeNumber = 4;
       const errorCorrectionLevel = 'L';
       const qr = window.qrcode(typeNumber, errorCorrectionLevel);
-      const map = 'mende'
+      const map = 'test'
       const mapUrl = `${location.origin}/download/${map}`
       qr.addData(mapUrl);
       qr.make();

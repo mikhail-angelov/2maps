@@ -1,7 +1,7 @@
 import { CommonRoutesConfig, maxAge } from './common';
 import express from 'express';
 import fs from 'fs';
-import { Connection } from "typeorm";
+import { Connection, In } from "typeorm";
 import { getTile } from "../tilesDb";
 import { TileSource } from '../entities/tileSource'
 
@@ -17,7 +17,7 @@ export class Tiles implements CommonRoutesConfig {
   }
   async refineTileSourcesInDB() {
     const files = fs.readdirSync('./data')
-    const mapFiles = files.filter(f => f.endsWith('.sqlitedb') && !f.includes('user')).map(f => f.replace('.sqlitedb', ''))
+    const mapFiles = files.filter(f => f.endsWith('.sqlitedb') && !f.startsWith('user')).map(f => f.replace('.sqlitedb', ''))
 
     const existingSources = await this.db.getRepository(TileSource).find()
     const existingKeys = existingSources.map(({ key }) => key)
@@ -25,11 +25,13 @@ export class Tiles implements CommonRoutesConfig {
     if (newSources.length > 0) {
       await this.db.getRepository(TileSource).save(newSources)
     }
-    //todo: delete maps that are not in the list
+    const missingSources = existingSources.filter(({ key }) => !mapFiles.includes(key)).map(({ key }) => key)
+    if (missingSources.length > 0) {
+      await this.db.getRepository(TileSource).delete({ key: In(missingSources) })
+    }
   }
   getRoutes() {
     const router = express.Router();
-    // (we'll add the actual route configuration here next)
     router.get("/:name/:z/:x/:y.jpg", async (req, res) => {
       try {
         const { name, x, y, z } = req.params;
