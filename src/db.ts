@@ -18,7 +18,7 @@ export const closeConnection = async () => {
 export const initDbConnectionTest = async (db: any) => {
     try {
         const conn = await db.initDb({
-            entities: [                User,Mark,MapFile,TileSource            ],
+            entities: [User, Mark, MapFile, TileSource],
         });
         return conn
     } catch (e) {

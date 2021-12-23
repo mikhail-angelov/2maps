@@ -21,8 +21,8 @@ services:
         - /var/run/docker.sock:/var/run/docker.sock
     networks:
         - webnet
-  postgres:
-    container_name: postgres
+  postgres-2map:
+    container_name: postgres-2map
     image: postgis/postgis:12-3.1
     networks:
       - webnet
@@ -45,12 +45,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      - postgres-2map
     links:
-      - postgres:postgres
+      - postgres-2map:postgres-2map
     command: npm run migration:run
-    volumes:
-        - ./data:/opt/app/data:rw
 
 networks:
   webnet:
