@@ -1,6 +1,6 @@
 import { createConnections, Connection } from "typeorm";
-import { Tile } from './entities/tile'
-import { MbTile } from './entities/mbTile'
+import { Tile } from './entitiesMap/tile'
+import { MbTile } from './entitiesMap/mbTile'
 
 interface TileRequest {
     name: string,
@@ -30,7 +30,7 @@ const getConnection = async (name: string) => {
     return connections[name];
 }
 
-const createDBConnection = async (name: string) => {
+export const createDBConnection = async (name: string) => {
     const connections = await createConnections([
         {
             name,

@@ -3,14 +3,14 @@ version: '3.7'
 services:
 
   mapnn:
-    image: mangelov/mapnn-tiles:latest
+    image: mangelov/2maps:latest
     container_name: "mapnn"
     networks:
       - webnet
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - .env.local
     command: npm start
     volumes:
         - ./data:/opt/app/data:rw

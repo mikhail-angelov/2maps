@@ -1,26 +1,21 @@
 import { expect } from 'chai'
-import { getConnection } from 'typeorm';
-import { unlink } from 'fs'
-import { promisify } from 'util'
-import { initDbConnections, closeConnections, DB } from '../db'
+import { DbUnit } from 'nestjs-db-unit';
+import { initDbConnectionTest } from '../db'
 import { Auth, JWT_COOKIES } from './auth'
 import { CRequest } from '../../types/express'
 
-const remove = promisify(unlink)
 describe('auth', () => {
+    let db = new DbUnit();
     let auth: Auth
     beforeEach(async () => {
-        await initDbConnections({ userDB: './tmp/user.sqlitedb' })
+        const conn = await initDbConnectionTest(db);
         const app: any = { post: () => { } }
         const sender: any = { sendEmail: () => { } }
-        auth = new Auth(getConnection(DB.Users), sender)
+        auth = new Auth(conn, sender)
         // add user
         await auth.register({ name: 'test', email: 'test', password: 'test' })
     })
-    afterEach(async () => {
-        await closeConnections()
-        await remove('./tmp/user.sqlitedb') //remove user db
-    })
+    afterEach(() => db.closeDb());
 
     it('login', async () => {
         const token = await auth.login({ email: 'test', password: 'test' })

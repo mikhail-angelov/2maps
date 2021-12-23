@@ -1,29 +1,37 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Point } from 'geojson';
+import { ColumnEx } from 'nestjs-db-unit'
+import { User } from "./user";
 
-@Entity({})
+@Entity({ name: 'mark' })
 export class Mark {
 
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column()
+    @Column({ name: 'user_id' })
     userId!: string;
+
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'user_id' })
+    user?: User;
 
     @Column()
     name!: string;
 
-    @Column()
+    @Column({ nullable: true })
     description?: string;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     rate?: number;
 
-    @Column()
-    lat!: number;
+    @ColumnEx({
+        type: 'geography',
+        spatialFeatureType: 'Point',
+        srid: 4326,
+    })
+    location!: Point;
 
-    @Column()
-    lng!: number;
-    
-    @Column()
-    timestamp!: number;
+    @ColumnEx({ type: 'timestamptz' })
+    timestamp!: Date;
 }

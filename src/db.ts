@@ -1,53 +1,29 @@
-import { createConnections, getConnection, Connection } from "typeorm";
-import { Tile } from './entities/tile'
-import { User } from './entities/user'
+import { createConnection, getConnection, getConnectionManager } from "typeorm";
 import { Mark } from './entities/mark'
+import { User } from './entities/user'
 import { MapFile } from './entities/mapFile'
-import { TileSource } from "./entities/tileSource";
+import { TileSource } from './entities/tileSource'
+const config = require('../ormconfig.js');
 
-interface InitParams {
-    userDB: string;
-}
-interface CreateDB {
-    name: string;
-    file: string;
-}
-export enum DB {
-    Users='users',
-}
-export const initDbConnections = async ({ userDB }: InitParams) => {
-    const connections = await createConnections([
-        {
-            name: DB.Users,
-            type: "sqlite",
-            database: userDB,
-            entities: [User, Mark, MapFile, TileSource],
-            synchronize: true,
-            logger: 'debug'
-        }]);
-    return connections
+export const initDbConnection = async () => {
+    const connection = await createConnection(config);
+    return connection
 }
 
-export const closeConnections = async () => {
-    let connection = await getConnection(DB.Users)
+export const closeConnection = async () => {
+    let connection = await getConnection()
     await connection.close()
 }
 
-//TBD: refactor it
-
-export const createDBConnection = async ({ name, file }: CreateDB) => {
-    const connections = await createConnections([
-        {
-            name,
-            type: "sqlite",
-            database: file,
-            entities: [Tile],
-            synchronize: true,
-            logger: 'debug'
-        }]);
-    return connections[0]
-}
-
-export const closeConnection = async (connection: Connection) => {
-    await connection.close()
+export const initDbConnectionTest = async (db: any) => {
+    try {
+        const conn = await db.initDb({
+            entities: [                User,Mark,MapFile,TileSource            ],
+        });
+        return conn
+    } catch (e) {
+        const conn = getConnectionManager().get()
+        await conn.synchronize(true)
+        return conn
+    }
 }

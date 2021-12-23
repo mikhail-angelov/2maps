@@ -1,105 +1,95 @@
 import { expect } from 'chai'
-import { getConnection } from 'typeorm';
-import { unlink } from 'fs'
-import { promisify } from 'util'
-import { initDbConnections, closeConnections, DB } from '../db'
-import { Mark } from '../entities/mark'
-import { User } from '../entities/user'
+import { DbUnit } from 'nestjs-db-unit';
+import { initDbConnectionTest } from '../db'
 import { Marks, WebMark } from './marks'
+import { Point } from 'geojson';
+import { Mark } from '../entities/mark'
 
-const USER = {id:'aaade243-0fb7-480f-801c-bc64566209cc',name:'test',email:'test', password:'test'}
-const MARKS = [{
-    id:'123567',
+const USER = { id: 'aaade243-0fb7-480f-801c-bc64566209cc', name: 'test', email: 'test', password: 'test' }
+const location = { type: 'Point', coordinates: [43.989515211547825, 56.32323794803307] } as Point
+const MARKS: Mark[] = [{
+    id: '014acc56-cb26-41a6-b995-1266157f3c07',
     userId: USER.id,
-    name:'test',
-    description:'',
-    lat: 56.32323794803307,
-    lng:43.989515211547825,
-    timestamp:1626944504856,
-},{
-    id:'123568',
+    name: 'test',
+    description: '',
+    location,
+    timestamp: new Date(1626944504856),
+}, {
+    id: '014acc56-cb26-41a6-b995-1266157f3c08',
     userId: USER.id,
-    name:'test2',
-    description:'none',
-    rate:2,
-    lat: 56.32323794803307,
-    lng:43.989515211547825,
-    timestamp:1626944504856,
-},{
-    id:'123569',
+    name: 'test2',
+    description: 'none',
+    rate: 2,
+    location,
+    timestamp: new Date(1626944504856),
+}, {
+    id: '014acc56-cb26-41a6-b995-1266157f3c09',
     userId: USER.id,
-    name:'to remove',
-    description:'none',
-    lat: 56.32323794803307,
-    lng:43.989515211547825,
-    timestamp:1626944504856,
+    name: 'to remove',
+    description: 'none',
+    location,
+    timestamp: new Date(1626944504856),
 }]
 
-const remove = promisify(unlink)
 describe('marks', () => {
+    let db = new DbUnit({ debug: true });
     let marks: Marks
-    let userId: string
     beforeEach(async () => {
-        await initDbConnections({ userDB: './tmp/user.sqlitedb' })
-        const app: any = { post: () => { } }
-        const auth: any = { authMiddleware : () => Promise.resolve('test') }
-        marks = new Marks(getConnection(DB.Users), auth)
-        // add marks
-        const db = await getConnection('users')
-        const user = await db.getRepository(User).save(USER)
-        userId = user.id
-        await db.getRepository(Mark).save(MARKS)
+        const conn = await initDbConnectionTest(db);
+        const auth: any = { authMiddleware: () => Promise.resolve({ user: USER }) }
+        marks = new Marks(conn, auth)
+        await db.load({
+            User: [USER],
+            Mark: MARKS,
+        });
     })
-    afterEach(async () => {
-        await closeConnections()
-        await remove('./tmp/user.sqlitedb') //remove user db
-    })
+    afterEach(() => db.closeDb());
 
     it('check blank sync', async () => {
-        const webMarks:WebMark[] = []
-        const syncedMarks = await marks.syncMarks({id:userId}, webMarks)
+        const webMarks: WebMark[] = []
+        const syncedMarks = await marks.syncMarks(USER.id, webMarks)
         expect(syncedMarks.length).to.equal(3)
     })
     it('check sync with conflict', async () => {
-        const webMarks:WebMark[] = [{
-            id:'123567',
-            name:'test-ignore',
+        const webMarks: WebMark[] = [{
+            id: '014acc56-cb26-41a6-b995-1266157f3c07',
+            name: 'test-ignore',
             lat: 56.32323794803307,
-            lng:43.989515211547825,
-            timestamp:1626944504856,
+            lng: 43.989515211547825,
+            timestamp: 1626944504856,
         },
         {
-            id:'123568',
-            name:'update second',
-            description:'new',
-            rate:2,
+            id: '014acc56-cb26-41a6-b995-1266157f3c08',
+            name: 'update second',
+            description: 'new',
+            rate: 2,
             lat: 56.32323794803307,
-            lng:43.989515211547825,
-            timestamp:1626944504857,
+            lng: 43.989515211547825,
+            timestamp: 1626944504857,
         },
         {
-            id:'double',
-            name:'test-good',
+            id: '014acc56-cb26-41a6-b995-1266157f3c00',
+            name: 'test-good',
             lat: 56.32323794803307,
-            lng:43.989515211547825,
-            timestamp:1626944504856,
+            lng: 43.989515211547825,
+            timestamp: 1626944504856,
         },
         {
-            id:'double',
-            name:'test-dropped',
+            id: '014acc56-cb26-41a6-b995-1266157f3c00',
+            name: 'test-dropped',
             lat: 56.32323794803307,
-            lng:43.989515211547825,
-            timestamp:1626944504856,
+            lng: 43.989515211547825,
+            timestamp: 1626944504856,
         },
         {
-            id:'123569',
-            name:'to remove',
-            removed:true,
+            id: '014acc56-cb26-41a6-b995-1266157f3c09',
+            name: 'to remove',
+            removed: true,
             lat: 56.32323794803307,
-            lng:43.989515211547825,
-            timestamp:1626944504856,
+            lng: 43.989515211547825,
+            timestamp: 1626944504856,
         }]
-        const syncedMarks = await marks.syncMarks({id:userId}, webMarks)
+        const syncedMarks = await marks.syncMarks(USER.id, webMarks)
         console.log(syncedMarks)
         expect(syncedMarks.length).to.equal(3)
     })
