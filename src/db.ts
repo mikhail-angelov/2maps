@@ -1,11 +1,33 @@
-import { createConnection, getConnection, getConnectionManager } from "typeorm";
+import {
+    createConnection,
+    getConnection,
+    getConnectionManager,
+    getConnectionOptions,
+    DefaultNamingStrategy,
+    ConnectionOptions,
+} from "typeorm";
 import { Mark } from './entities/mark'
 import { User } from './entities/user'
 import { MapFile } from './entities/mapFile'
 import { TileSource } from './entities/tileSource'
-const config = require('../ormconfig.js');
+// const config = require('../ormconfig.js');
+
+const getDbConfig = async () => {
+    const baseOptions: ConnectionOptions = await getConnectionOptions();
+    const config = {
+        ...baseOptions,
+        namingStrategy: new DefaultNamingStrategy(),
+        entities: [
+            __dirname + '/entities/**/*.{ts,js}',
+        ],
+        migrations: [__dirname + '/migrations/**/*.{ts,js}'],
+        keepConnectionAlive: true,
+    };
+    return config;
+};
 
 export const initDbConnection = async () => {
+    const config = await getDbConfig();
     const connection = await createConnection(config);
     return connection
 }
