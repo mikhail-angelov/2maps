@@ -1,26 +1,7 @@
 version: '3.7'
 
 services:
-  logger2:
-    image: umputun/docker-logger
-    logging: &default_logging
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "5"
-    environment:
-        - LOG_FILES=true
-        - LOG_SYSLOG=false
-        - EXCLUDE=docker-logger
-        - MAX_FILES=70
-        - MAX_SIZE=50
-        - MAX_AGE=40
-        - DEBUG=false
-    volumes:
-        - ./logs:/srv/logs
-        - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-        - webnet
+
   postgres-2map:
     container_name: postgres-2map
     image: postgis/postgis:12-3.1
@@ -41,7 +22,6 @@ services:
     image: docker.pkg.github.com/mikhail-angelov/2maps/2maps-migration:latest
     networks:
       - webnet
-    logging: *default_logging
     env_file:
       - .env
     depends_on:

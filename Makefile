@@ -21,7 +21,7 @@ deploy:
 	ssh root@2map.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/mapnn;docker-compose down;docker-compose up -d'
 
 migration: 
-	ssh root@2map.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/mapnn;docker-compose down;docker-compose -f ./docker-compose.migration.yml up;docker-compose up -d'
+	ssh root@2map.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps-migration:latest; cd /opt/mapnn;docker-compose down;docker-compose -f ./docker-compose.migration.yml up;docker-compose up -d'
 
 clean:
 	docker system prune -a
