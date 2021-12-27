@@ -3,6 +3,7 @@ import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
 import { isMobile, getId, delay, postLarge } from "../utils.js";
 import { composeUrlLink, parseUrlParams } from "../urlParams.js";
 import { createAuth } from './auth.js'
+import { createTerms } from './terms.js'
 import '../libs/qrcode.js'
 
 const blackStars = '★★★★★'
@@ -24,9 +25,15 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     panel.refresh()
   })
 
-  const {resetToken} = parseUrlParams()
+  const terms = createTerms()
+
+  const {resetToken, isTermsExist} = parseUrlParams()
   if (resetToken) {
     auth.showPasswordReset()
+  }
+
+  if (isTermsExist) {
+    terms.showTerms()
   }
 
   const syncMarks = async (data) => {
@@ -294,6 +301,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
                   <a class="link" href="https://github.com/mikhail-angelov/mapnn">
                   <img src="assets/github.svg"></img>исходники
                   </a>
+                  <a class="terms" onClick=${() => terms.showTerms()}>Политика в отношении обработки персональных данных</a>
                   </div>
                 </div>`
         : html`<${IconButton}
