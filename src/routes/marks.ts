@@ -2,16 +2,25 @@ import { CommonRoutesConfig } from './common';
 import express from 'express';
 import multer from 'multer'
 import _ from 'lodash'
+import { v4 as uuid } from '@lukeed/uuid';
+import { Point } from 'geojson';
 import { CRequest } from '../../types/express'
 import { Connection } from "typeorm";
 import { Mark } from '../entities/mark'
 import { Auth } from './auth'
 
+const isUUID = (id: string): boolean => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)
 
 const upload = multer()
 
 const mapToEntity = ({ id, name, description, lat, lng, timestamp, rate }: WebMark, userId: string): Mark => {
-  return { id: id.toString(), name, description: description || '', lat, lng, userId, timestamp: timestamp || Date.now(), rate }
+  const markId = isUUID(id.toString()) ? id : uuid()
+  const location: Point =  { type: 'Point', coordinates: [lng, lat] }
+  return { id: markId, name, description: description || '', location, userId, timestamp: new Date(timestamp) || Date.now(), rate }
+}
+const mapToDto = ({ id, name, description, location, timestamp, rate }: Mark): WebMark => {
+  const [lng, lat] = location.coordinates;
+  return { id, name, description: description || '', lng, lat, timestamp: timestamp.getTime() || Date.now(), rate }
 }
 
 export interface WebMark {
@@ -39,7 +48,7 @@ export class Marks implements CommonRoutesConfig {
       try {
         const value = req?.file.buffer.toString('utf8')
         const user = req.user
-        const marks = await this.syncMarks(user, JSON.parse(value))
+        const marks = await this.syncMarks(user.id, JSON.parse(value))
         res.status(200).json(marks)
       } catch (e) {
         console.log('sync error', e)
@@ -50,7 +59,7 @@ export class Marks implements CommonRoutesConfig {
       try {
         const user = req.user
         const clientMarkers = JSON.parse(req.body.value)
-        const marks = await this.syncMarks(user, clientMarkers)
+        const marks = await this.syncMarks(user.id, clientMarkers)
         res.status(200).json(marks)
       } catch (e) {
         console.log('msync error', e)
@@ -60,27 +69,14 @@ export class Marks implements CommonRoutesConfig {
     return router;
   }
 
-  async syncMarks({ id }: any, clientMarks: WebMark[]) {
+  async syncMarks(userId: string, clientMarks: WebMark[]) {
     const marks = _.uniqBy(clientMarks, 'id')
-    const savedMarks = await this.db.getRepository(Mark).find({ userId: id })
+    const savedMarks = await this.db.getRepository(Mark).find({ userId })
     const marksMap = _.keyBy(savedMarks, 'id')
-    const marksToAdd = []
-    const marksToUpdate = []
-    const marksIdsToRemove = []
-    for (let mark of marks) {
-      const existed = marksMap[mark.id]
-      if(!existed && !mark.removed) {
-        marksToAdd.push(mapToEntity(mark, id))
-      }else{
-        if(mark.removed) {
-          marksIdsToRemove.push(mark.id)
-        }else if(mark.timestamp > existed.timestamp) {
-          marksToUpdate.push(mapToEntity(mark, id))
-        }else{
-          // do nothing
-        }
-      }
-    }
+    const marksToAdd = marks.filter(mark => !marksMap[mark.id]).map(mark => mapToEntity(mark, userId))
+    const marksToUpdate = marks.filter(mark => marksMap[mark.id] && !mark.removed && mark.timestamp>marksMap[mark.id].timestamp.getTime()).map(mark => mapToEntity(mark, userId))
+    const marksIdsToRemove = marks.filter(mark => marksMap[mark.id] && mark.removed).map(({id}) => id)
+    
     if (marksToAdd.length) {
       await this.db.getRepository(Mark).save(marksToAdd)
     }
@@ -91,7 +87,8 @@ export class Marks implements CommonRoutesConfig {
       await this.db.getRepository(Mark).delete(marksIdsToRemove)
     }
     
-    return await this.db.getRepository(Mark).find({ userId: id })
+    const updatedMarks =  await this.db.getRepository(Mark).find({ userId })
+    return updatedMarks.map(mapToDto)
   }
 
 }

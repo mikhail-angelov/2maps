@@ -2,7 +2,7 @@ import { Entity, Index, Column, PrimaryColumn } from "typeorm";
 
 @Entity('tiles')
 @Index(["z", "y","x"], { unique: true })
-export class EtoMesto {
+export class Tile {
 
     @Column()
     x!: number;

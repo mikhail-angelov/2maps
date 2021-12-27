@@ -48,9 +48,6 @@
     <script src="/libs/less.min.js" type="text/javascript"></script>
     <script>
       window.mapBoxKey = "<%= mapBoxKey %>";
-      window.mendeUrl = "/map-mende/{z}/{x}/{y}.jpg";
-      window.osmUrl = "/map-osm/{z}/{x}/{y}.jpg";
-      window.apiHost = "<%= apiHost %>";
     </script>
   </head>
   <body>
@@ -66,6 +63,7 @@
         <div id="ymap" class="map"></div>
         <!-- <div id="placemarks"></div> -->
         <div id="slider" class="map-overlay"></div>
+        <div id="layers" class="layers-overlay"></div>
       </div>
       <div id="auth"></div>
       <div id="terms"></div>

@@ -14,39 +14,46 @@ services:
         - LOG_FILES=true
         - LOG_SYSLOG=false
         - EXCLUDE=docker-logger
-        - MAX_FILES=10
+        - MAX_FILES=70
         - MAX_SIZE=50
-        - MAX_AGE=20
+        - MAX_AGE=40
         - DEBUG=false
     volumes:
         - ./logs:/srv/logs
         - /var/run/docker.sock:/var/run/docker.sock
-  nginx:
-    image: nginx:latest
-    restart: unless-stopped
+    networks:
+        - webnet
+  postgres-2map:
+    container_name: postgres-2map
+    image: postgis/postgis:12-3.1
     networks:
       - webnet
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
-      - "3001:3001"
-    depends_on:
-      - mapnn
-    links:
-      - mapnn:mapnn
-    logging: *default_logging
+      - 5432
     volumes:
-        - ./data/nginx.conf:/etc/nginx/nginx.conf:ro
-        - ./tmp:/var/www/cache/tmp
-  mapnn:
-    image: docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest
+      - /opt/postgresdb:/var/lib/postgresql/data
+
+  2map:
+    image: docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest
     container_name: "mapnn"
     restart: unless-stopped
     networks:
       - webnet
     ports:
-      - "3000"
+      - "3001:3000"
     logging: *default_logging
     env_file:
       - .env
+    depends_on:
+      - postgres-2map
+    links:
+      - postgres-2map:postgres-2map
     command: npm start
     volumes:
         - ./data:/opt/app/data:rw

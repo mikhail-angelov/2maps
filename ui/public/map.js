@@ -2,11 +2,13 @@ import { loadOpacity } from "./storage.js";
 import { parseUrlParams } from "./urlParams.js";
 import { createOpacitySlider } from "./components/opacitySlider.js";
 import { createPlacemarksPanel } from "./components/placemarks.js";
-import { getSecondMap } from "./components/secondMap.js";
-import { isMobile } from "./utils.js";
+import { createSecondMap } from "./components/secondMap.js";
+import { createMapLayer } from "./components/mapLayers.js";
+import { isMobile, get } from "./utils.js";
 
 let { zoom, center: position, name, opacity, placemarks: marks } = parseUrlParams();
-const secondMap = getSecondMap(position, zoom);
+let mapName = 'mende-nn';
+const secondMap = createSecondMap(position, zoom, mapName);
 opacity = opacity ? +opacity : loadOpacity();
 
 ymaps.ready(() => {
@@ -51,7 +53,7 @@ ymaps.ready(() => {
     centerObject.geometry.setCoordinates(yandexMap.getCenter());
   });
 
-  yandexMap.onEditMark = ({ id, name, description = '', point, rate=0, onSubmit }) => {
+  yandexMap.onEditMark = ({ id, name, description = '', point, rate = 0, onSubmit }) => {
     if (yandexMap.balloon.isOpen()) {
       yandexMap.balloon.close();
     }
@@ -116,6 +118,13 @@ ymaps.ready(() => {
   createOpacitySlider("#ymap", opacity);
   marks.forEach((p) => addMark(p));
   const panel = createPlacemarksPanel({ yandexMap });
+  get('/tiles/list').then((maps) => {
+    createMapLayer({
+      maps, selected: mapName, setMap: (newMap) => {
+        secondMap.setMap(newMap)
+      }
+    });
+  })
 
   if (isMobile()) {
     document.getElementById("slider").setAttribute('class', 'map-overlay mobile')
@@ -133,7 +142,7 @@ ymaps.ready(() => {
     const formData = new FormData(e.target);
     const name = formData.get("name");
     const description = formData.get("description");
-    const rate = +formData.get("rate")?+formData.get("rate"):0;
+    const rate = +formData.get("rate") ? +formData.get("rate") : 0;
     const [lat, lng] = yandexMap.balloon.getPosition();
     yandexMap.balloon.close();
     panel.addItems([{ name, description, rate, point: { lat, lng } }]);
@@ -153,7 +162,7 @@ ymaps.ready(() => {
       </div>`
   }
 
-  function addObject(name, description = "", rate=0, coords, type) {
+  function addObject(name, description = "", rate = 0, coords, type) {
     const placemark = new ymaps.Placemark(
       coords,
       {

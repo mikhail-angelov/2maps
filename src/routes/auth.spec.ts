@@ -1,25 +1,21 @@
 import { expect } from 'chai'
-import { getConnection } from 'typeorm';
-import { unlink } from 'fs'
-import { promisify } from 'util'
-import { initDbConnections, closeConnections, DB } from '../db'
-import { Auth } from './auth'
+import { DbUnit } from 'nestjs-db-unit';
+import { initDbConnectionTest } from '../db'
+import { Auth, JWT_COOKIES } from './auth'
+import { CRequest } from '../../types/express'
 
-const remove = promisify(unlink)
 describe('auth', () => {
+    let db = new DbUnit();
     let auth: Auth
     beforeEach(async () => {
-        await initDbConnections({ mendDB: './tmp/pgm.sqlitedb', osmDB: './tmp/nn-osm.mbtiles', userDB: './tmp/user.sqlitedb' })
+        const conn = await initDbConnectionTest(db);
         const app: any = { post: () => { } }
-        const sender: any = {sendEmail: () => { } }
-        auth = new Auth(getConnection(DB.Users), sender)
+        const sender: any = { sendEmail: () => { } }
+        auth = new Auth(conn, sender)
         // add user
         await auth.register({ name: 'test', email: 'test', password: 'test' })
     })
-    afterEach(async () => {
-        await closeConnections()
-        await remove('./tmp/user.sqlitedb') //remove user db
-    })
+    afterEach(() => db.closeDb());
 
     it('login', async () => {
         const token = await auth.login({ email: 'test', password: 'test' })
@@ -36,14 +32,16 @@ describe('auth', () => {
     })
 
     it('check', async () => {
-        const [token,_] = await auth.login({ email: 'test', password: 'test' })
-        const [t, u] = await auth.check(token as string)
+        const [token, _] = await auth.login({ email: 'test', password: 'test' })
+        const req = { cookies: { [JWT_COOKIES]: token } } as CRequest
+        const [t, u] = await auth.check(req)
         expect(!!t).to.equal(true)
     })
 
     it('check invalid', async () => {
         try {
-            await auth.check('invalid')
+            const req = { cookies: { [JWT_COOKIES]: 'invalid' } } as CRequest
+            await auth.check(req)
             expect(false).to.equal(true);
         } catch (e) {
             expect(!!e).to.equal(true);

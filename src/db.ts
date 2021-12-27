@@ -1,75 +1,51 @@
-import { createConnections, getConnection, Connection } from "typeorm";
-import { EtoMesto } from './entities/etoMesto'
-import { User } from './entities/user'
+import {
+    createConnection,
+    getConnection,
+    getConnectionManager,
+    getConnectionOptions,
+    DefaultNamingStrategy,
+    ConnectionOptions,
+} from "typeorm";
 import { Mark } from './entities/mark'
+import { User } from './entities/user'
 import { MapFile } from './entities/mapFile'
-import { MbTile } from "./entities/mbTile";
+import { TileSource } from './entities/tileSource'
+// const config = require('../ormconfig.js');
 
-interface InitParams {
-    mendDB: string;
-    osmDB: string;
-    userDB: string;
-}
-interface CreateDB {
-    name: string;
-    file: string;
-}
-export enum DB {
-    Users='users',
-    Mende='mende',
-    Osm='osm'
-}
-export const initDbConnections = async ({ mendDB, userDB, osmDB }: InitParams) => {
-    const connections = await createConnections([
-        {
-            name: DB.Mende,
-            type: "sqlite",
-            database: mendDB,
-            entities: [EtoMesto],
-            synchronize: false,
-            logger: 'debug'
-        }, {
-            name: DB.Osm,
-            type: "sqlite",
-            database: osmDB,
-            entities: [MbTile],
-            synchronize: false,
-            logger: 'debug'
-        }, {
-            name: DB.Users,
-            type: "sqlite",
-            database: userDB,
-            entities: [User, Mark, MapFile],
-            synchronize: true,
-            logger: 'debug'
-        }]);
-    return connections
+const getDbConfig = async () => {
+    const baseOptions: ConnectionOptions = await getConnectionOptions();
+    const config = {
+        ...baseOptions,
+        namingStrategy: new DefaultNamingStrategy(),
+        entities: [
+            __dirname + '/entities/**/*.{ts,js}',
+        ],
+        migrations: [__dirname + '/migrations/**/*.{ts,js}'],
+        keepConnectionAlive: true,
+    };
+    return config;
+};
+
+export const initDbConnection = async () => {
+    const config = await getDbConfig();
+    const connection = await createConnection(config);
+    return connection
 }
 
-export const closeConnections = async () => {
-    let connection = await getConnection(DB.Mende)
-    await connection.close()
-    connection = await getConnection(DB.Osm)
-    await connection.close()
-    connection = await getConnection(DB.Users)
+export const closeConnection = async () => {
+    let connection = await getConnection()
     await connection.close()
 }
 
-//TBD: refactor it
-
-export const createDBConnection = async ({ name, file }: CreateDB) => {
-    const connections = await createConnections([
-        {
-            name,
-            type: "sqlite",
-            database: file,
-            entities: [EtoMesto],
-            synchronize: true,
-            logger: 'debug'
-        }]);
-    return connections[0]
-}
-
-export const closeConnection = async (connection: Connection) => {
-    await connection.close()
+export const initDbConnectionTest = async (db: any) => {
+    try {
+        const conn = await db.initDb({
+            entities: [User, Mark, MapFile, TileSource],
+        });
+        return conn
+    } catch (e) {
+        const conn = getConnectionManager().get()
+        await conn.synchronize(true)
+        return conn
+    }
 }

@@ -4,6 +4,7 @@ import { isMobile, getId, delay, postLarge } from "../utils.js";
 import { composeUrlLink, parseUrlParams } from "../urlParams.js";
 import { createAuth } from './auth.js'
 import { createTerms } from './terms.js'
+import  {IconButton} from './common.js';
 import '../libs/qrcode.js'
 
 const blackStars = '★★★★★'
@@ -39,7 +40,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
   const syncMarks = async (data) => {
     const items = data.map(({ id, name, description, rate, point, timestamp, removed }) => ({ id, name, description, rate, lat: point.lat, lng: point.lng, timestamp, removed }))
     // it returns all synced markers
-    const res = await postLarge(`${window.apiHost}/marks/sync`, items)
+    const res = await postLarge(`/marks/sync`, items)
     console.log('sync', res.length)
     const toSave = res
       .filter(item=>!!item.id)
@@ -146,11 +147,6 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       />
     </li>`;
 
-  const IconButton = ({ icon, onClick, disabled, ...other }) =>
-    html`<button class="icon-button ${disabled?'disabled':''}" onClick=${onClick} ...${other} disabled=${disabled}>
-      <img src=${icon}></img>
-    </button>`;
-
   const Rate = (rate=0) => html`<div class="rate">${blackStars.substr(0, rate) + whiteStars.substr(0, 5 - rate)}</div>`;
 
   class App extends Component {
@@ -239,7 +235,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       const typeNumber = 4;
       const errorCorrectionLevel = 'L';
       const qr = window.qrcode(typeNumber, errorCorrectionLevel);
-      const map = 'mende'
+      const map = 'test'
       const mapUrl = `${location.origin}/download/${map}`
       qr.addData(mapUrl);
       qr.make();
@@ -275,16 +271,16 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
                   <div class="footer">
                   <div class="auth-sync">
                   ${authenticated
-            ? html`<button class="icon-button" onClick=${() => syncMarks(placemarks)}>Sync Markers</button>
-                    <button class="icon-button" onClick=${() => this.onShowQR()}>閙</button>
+            ? html`<button class="icon-button footer-button" onClick=${() => syncMarks(placemarks)}>Sync Markers</button>
+                    <button class="icon-button footer-button" onClick=${() => this.onShowQR()}>閙</button>
                     <div class="qr">
-                    ${mapUrl ? html`<button class="icon-button qr-close" onClick=${() => this.onCloseQR()}>✕</button>` : null}
+                    ${mapUrl ? html`<button class="icon-button footer-button qr-close" onClick=${() => this.onCloseQR()}>✕</button>` : null}
                     <div id="qr">
                     </div>
                     </div>
-                    <button class="icon-button" onClick=${() => auth.logout()}>Logout</button>`
-            : html`<button class="icon-button" onClick=${() => auth.showLogin()}>Login</button>/
-                    <button class="icon-button" onClick=${() => auth.showSignUp()}>Sign Up</button>`}
+                    <button class="icon-button footer-button" onClick=${() => auth.logout()}>Logout</button>`
+            : html`<button class="icon-button footer-button" onClick=${() => auth.showLogin()}>Login</button>/
+                    <button class="icon-button footer-button" onClick=${() => auth.showSignUp()}>Sign Up</button>`}
                   </div>
                   <div class="import-export">
                     <label class="upload" htmlFor="upload">
@@ -292,7 +288,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
                     </label>
                     <input type="file" id="upload" onChange=${(e) =>
             importPlacemarks(e.target.files)} hidden></input>
-                    <button class="icon-button" onClick=${() =>
+                    <button class="icon-button footer-button" onClick=${() =>
             downloadPlacemarks(placemarks)}>
                       Экспорт
                     </button>
@@ -305,7 +301,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
                   </div>
                 </div>`
         : html`<${IconButton}
-            class="icon-button placemark-icon"
+            class="icon-button footer-button"
             icon="assets/place.svg"
             onClick=${() => this.setShowPanel(true)}
           />`;

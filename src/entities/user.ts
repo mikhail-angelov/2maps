@@ -1,6 +1,7 @@
-import {Entity, PrimaryGeneratedColumn, Column} from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Mark } from "./mark";
 
-@Entity({})
+@Entity({name:'user'})
 export class User {
 
     @PrimaryGeneratedColumn('uuid')
@@ -8,10 +9,17 @@ export class User {
 
     @Column()
     email!: string;
-    
+
     @Column()
     password!: string;
-    
-    @Column({nullable:true})
+
+    @Column({ nullable: true, name: 'reset_token' })
     resetToken?: string;
+
+    @OneToMany(
+        () => Mark,
+        mark => mark.user,
+        { cascade: true },
+    )
+    marks?: Mark[];
 }

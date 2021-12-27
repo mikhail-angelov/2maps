@@ -4,22 +4,17 @@ import * as winston from 'winston';
 import * as expressWinston from 'express-winston';
 import cookieParser from 'cookie-parser'
 import cors from 'cors';
-import { MendeTiles } from './routes/mende';
+import { Tiles } from './routes/tiles';
 import { OsmTiles } from './routes/osm'
 import { Auth } from './routes/auth';
-import { getConnection } from 'typeorm';
-import { initDbConnections, DB } from './db'
+import { initDbConnection } from './db'
 import { Marks } from './routes/marks';
 import { Maps } from './routes/maps';
 import sender from './routes/mailer'
 
-const mendDB = process.env.DB_MENDE || "./data/mende-nn.sqlitedb"
-const osmDB = process.env.DB_OSM || "./data/nn-osm.mbtiles"
-const userDB = process.env.DB_USER || "./data/users.sqlitedb"
-
 const app: express.Application = express();
 const server: http.Server = http.createServer(app);
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 //static ui
 app.use(express.static('ui/public'))
@@ -44,18 +39,17 @@ if (!process.env.DEBUG) {
 app.use(expressWinston.logger(loggerOptions));
 
 const run = async () => {
-    await initDbConnections({ mendDB, osmDB, userDB })
-
-    const mende = new MendeTiles(getConnection(DB.Mende))
-    const osm = new OsmTiles(getConnection(DB.Osm))
-    const auth = new Auth(getConnection(DB.Users), sender)
-    const markers = new Marks(getConnection(DB.Users), auth)
-    const maps = new Maps(getConnection(DB.Users),auth)
+    const db = await initDbConnection();
+    const tiles = new Tiles(db)
+    const osm = new OsmTiles()
+    const auth = new Auth(db, sender)
+    const markers = new Marks(db, auth)
+    const maps = new Maps(db,auth)
     app.use('/auth', auth.getRoutes());
     app.use('/marks', markers.getRoutes());
     app.use('/maps', maps.getRoutes());
-    app.use('/map-mende', mende.getRoutes());
-    app.use('/map-osm', osm.getRoutes());
+    app.use('/tiles', tiles.getRoutes());
+    app.use('/osm-tiles', osm.getRoutes());
     app.use('/download', markers.getRoutes());
 
     server.listen(port, () => {

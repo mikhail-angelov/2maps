@@ -2,7 +2,7 @@ import { CommonRoutesConfig } from './common';
 import express from 'express';
 import { CRequest } from '../../types/express'
 import { Connection } from "typeorm";
-import jwt,{VerifyErrors} from 'jsonwebtoken'
+import jwt, { VerifyErrors } from 'jsonwebtoken'
 import bcrypt from 'bcrypt-nodejs'
 import { User } from '../entities/user'
 import { Sender } from './mailer'
@@ -10,7 +10,7 @@ import { Sender } from './mailer'
 const HOST = process.env.HOST || ''
 
 const JWT_SECRET = 'asdjkdknpjnpwwijoi'
-const JWT_COOKIES = 'mapnn'
+export const JWT_COOKIES = 'mapnn'
 const JWT_HEADER = 'authorization'
 
 interface JwtPayload {
@@ -64,8 +64,8 @@ export class Auth implements CommonRoutesConfig {
     });
     router.post("/check", async (req, res) => {
       try {
-        const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
-        const [token, decodedToken] = await this.check(testToken)
+
+        const [token, decodedToken] = await this.check(req)
         res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok' })
       } catch (e) {
         console.log('check error', e)
@@ -117,9 +117,7 @@ export class Auth implements CommonRoutesConfig {
     });
     router.post("/m/check", async (req, res) => {
       try {
-        const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
-        const testToken: string = authHeader ? authHeader.slice(7) : ''
-        const [token, user] = await this.check(testToken)
+        const [token, user] = await this.checkMobile(req)
         res.status(200).json({ token, user })
       } catch (e) {
         console.log('check error', e)
@@ -176,7 +174,22 @@ export class Auth implements CommonRoutesConfig {
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
   }
 
-  async check(testToken: string) {
+  async check(req: CRequest) {
+    const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
+    if (!testToken) {
+      throw "invalid auth"
+    }
+    const decodedToken: any = jwt.verify(testToken, JWT_SECRET)
+    const payload: JwtPayload = { id: decodedToken.id, email: decodedToken.email }
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    return [token, decodedToken]
+  }
+  async checkMobile(req: CRequest) {
+    const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
+    const testToken: string = authHeader ? authHeader.slice(7) : ''
+    if (!testToken) {
+      throw "invalid auth"
+    }
     const decodedToken: any = jwt.verify(testToken, JWT_SECRET)
     const payload: JwtPayload = { id: decodedToken.id, email: decodedToken.email }
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
@@ -184,24 +197,33 @@ export class Auth implements CommonRoutesConfig {
   }
   async authMiddleware(req: CRequest, res: express.Response, next: express.NextFunction) {
     const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
-    jwt.verify(testToken, JWT_SECRET,(err: VerifyErrors | null, decoded: any) => {
+    console.log('testToken', testToken)
+    if (!testToken) {
+      return res.status(401).json({ error: 'invalid auth' })
+    }
+    jwt.verify(testToken, JWT_SECRET, (err: VerifyErrors | null, decoded: any) => {
       if (err) {
-        return next('invalid auth')
+        return res.status(401).json({ error: 'invalid auth' })
       }
       req.user = decoded
       next()
     })
+
   }
   async authMiddlewareMobile(req: CRequest, res: express.Response, next: express.NextFunction) {
     const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
     const testToken: string = authHeader ? authHeader.slice(7) : ''
-    jwt.verify(testToken, JWT_SECRET,(err: VerifyErrors | null, decoded: any) => {
-      if (err) {
-        return next('invalid auth')
-      }
-      req.user = decoded
-      next()
-    })
+    try {
+      jwt.verify(testToken, JWT_SECRET, (err: VerifyErrors | null, decoded: any) => {
+        if (err) {
+          return res.status(401).json({ error: 'invalid auth' })
+        }
+        req.user = decoded
+        next()
+      })
+    } catch (e) {
+      res.status(401).json({ error: 'invalid auth' })
+    }
   }
   async register({ name, email, password }: SignUp) {
     let user = await this.db.getRepository(User).findOne({ email })
@@ -219,7 +241,7 @@ export class Auth implements CommonRoutesConfig {
   }
   async forgetPassword({ email }: Forget) {
     return this.db.transaction(async transactionalEntityManager => {
-      const user = await transactionalEntityManager.getRepository(User).findOne({ email })    
+      const user = await transactionalEntityManager.getRepository(User).findOne({ email })
       if (!user) {
         throw "invalid user"
       }
@@ -243,7 +265,7 @@ export class Auth implements CommonRoutesConfig {
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 }), payload];
   }
 
-  changePassword(userId: string, newPassword: string ) {
+  changePassword(userId: string, newPassword: string) {
     const salt = bcrypt.genSaltSync(10)
     const saltedPass = bcrypt.hashSync(newPassword, salt)
     return this.db.getRepository(User).update(userId, { password: saltedPass })

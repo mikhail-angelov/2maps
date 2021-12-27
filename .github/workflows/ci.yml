@@ -22,7 +22,7 @@ jobs:
       run: |
         cd ui
         npm ci
-        echo \{\"mapBoxKey\":\"$MAPBOX_KEY\",\"yandexMapKey\":\"$YANDEX_KEY\",\"osmUrl\":\"https://2map.xyz/map-osm/{z}/{x}/{y}.pbf\",\"mendeUrl\":\"https://2map.xyz/map-mende/{z}/{x}/{y}.jpg\",\"apiHost\":\"https://2map.xyz\",\"metrica\":\"\"\} >> env.json
+        echo \{\"mapBoxKey\":\"$MAPBOX_KEY\",\"yandexMapKey\":\"$YANDEX_KEY\",\"metrica\":\"\"\} >> env.json
         npm run build
 
      #Docker
@@ -33,5 +33,7 @@ jobs:
       run: |
         docker -v
         echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
-        docker build . --tag docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest --cache-from docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest
-        docker push docker.pkg.github.com/mikhail-angelov/mapnn-tiles/mapnn-tiles:latest
+        docker build . --tag docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest --cache-from docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest
+        docker push docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest
+        docker build -f ./DockerfileMigration . --tag docker.pkg.github.com/mikhail-angelov/2maps/2maps-migration:latest --cache-from docker.pkg.github.com/mikhail-angelov/2maps/2maps-migration:latest
+        docker push docker.pkg.github.com/mikhail-angelov/2maps/2maps-migration:latest

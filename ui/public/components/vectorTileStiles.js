@@ -1,4 +1,4 @@
-const vectorStyles = (mendeUrl) => ({
+const vectorStyles = (osmUrl) => ({
     "version": 8,
     "name": "Bright",
     "metadata": {
@@ -34,24 +34,11 @@ const vectorStyles = (mendeUrl) => ({
         "maxzoom": 14,
         "bounds": [ -180, -85.05112877980659, 180, 85.0511287798066 ],
         "center": [ -1.247,51.761,10 ]        
-      },
-      "mende-tiles": {
-        type: "raster",
-        tiles: [mendeUrl],
-        tileSize: 256,
-        attribution: "Map tiles Mende",
-      },
+      }
     },
     "sprite": "https://openmaptiles.github.io/osm-bright-gl-style/sprite",
-    "glyphs": "http://localhost:3000/fonts/{fontstack}/{range}.pbf",
+    "glyphs": "/fonts/{fontstack}/{range}.pbf",
     "layers": [
-      {
-        id: "m-tiles",
-        type: "raster",
-        source: "mende-tiles",
-        minzoom: 2,
-        maxzoom: 19,
-      },
       // {
       //   "id": "background",
       //   "type": "background",

@@ -2,8 +2,8 @@ import _ from 'lodash'
 import axios from 'axios'
 import rdl from 'readline'
 import fs from 'fs'
-import { createDBConnection, closeConnection } from '../db'
-import { EtoMesto } from '../entities/etoMesto'
+import { createDBConnection, closeConnections } from '../tilesDb'
+import { Tile } from '../entitiesMap/tile'
 
 const loader = async (url: string): Promise<any> => {
   const response = await axios.get(url, {
@@ -62,7 +62,7 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
     fs.unlinkSync(fileName)
   } catch (e) { }
   console.log('start load', name, url, start)
-  const connection = await createDBConnection({ file: fileName, name })
+  const connection = await createDBConnection( name )
   // await connection.query('CREATE TABLE tiles (x int, y int, z int, s int, image blob, PRIMARY KEY (x,y,z,s));')
   await connection.query('CREATE INDEX IND on tiles (x,y,z,s)')
 
@@ -89,7 +89,7 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
           try {
             const image = await loader(url)
             s++
-            await connection.getRepository(EtoMesto).insert({ x, y, z: zoom, s, image });
+            await connection.getRepository(Tile).insert({ x, y, z: zoom, s, image });
             count++;
             progress(`${count}/${total} - ${Date.now() / 1000 - startZoom} | ${x}-${y}`, cursor)
             startZoom = Date.now() / 1000
@@ -104,7 +104,7 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
     throw 'cancel on error'
   }
   console.log('end load', name, Date.now() / 1000 - start)
-  await closeConnection(connection)
+  await closeConnections()
 
   return { status: 'ok' }
 }

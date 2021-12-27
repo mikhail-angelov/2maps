@@ -36,14 +36,18 @@ export class Maps implements CommonRoutesConfig {
       secretAccessKey,
     });
     // refine maps DB
-    this.s3.listObjectsV2({ Bucket: this.bucket }, async (err: aws.AWSError, data: aws.S3.Types.ListObjectsV2Output) => {
-      if (err || !data || !data.Contents) {
-        console.log('s3 error', this.bucket, err)
-        return
-      }
-      const maps: Partial<MapFile>[] = data.Contents.map(({ Key = '', Size = 0 }) => ({ name: Key.split('.sqlitedb')[0], url: Key, size: Size }))
-      this.refineMapsInDB(maps)
-    });
+    try {
+      this.s3.listObjectsV2({ Bucket: this.bucket }, async (err: aws.AWSError, data: aws.S3.Types.ListObjectsV2Output) => {
+        if (err || !data || !data.Contents) {
+          console.log('s3 error', this.bucket, err)
+          return
+        }
+        const maps: Partial<MapFile>[] = data.Contents.map(({ Key = '', Size = 0 }) => ({ name: Key.split('.sqlitedb')[0], url: Key, size: Size }))
+        this.refineMapsInDB(maps)
+      });
+    } catch (e) {
+      console.log('invalid maps init', e)
+    }
   }
 
   async refineMapsInDB(maps: Partial<MapFile>[]) {
