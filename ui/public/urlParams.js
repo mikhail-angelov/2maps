@@ -3,8 +3,6 @@ const CENTER = "center";
 const OPACITY = "opacity";
 const PLACEMARKS = "placemarks";
 const NAME = "name";
-const RESET_TOKEN = "reset-token"
-const TERMS = "terms"
 
 export const parseUrlParams = () => {
   const params = new URLSearchParams(location.search);
@@ -20,8 +18,7 @@ export const parseUrlParams = () => {
   const placemarks = params.get(PLACEMARKS)
     ? parsePlacemarks(params.get(PLACEMARKS))
     : [];
-  const resetToken = params.get(RESET_TOKEN)
-  const isTermsExist = params.has(TERMS)
+  const resetToken = params.get('reset-token')
   return {
     zoom,
     center,
@@ -29,7 +26,6 @@ export const parseUrlParams = () => {
     placemarks,
     name,
     resetToken,
-    isTermsExist,
   };
 };
 
