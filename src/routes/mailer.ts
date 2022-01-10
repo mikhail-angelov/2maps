@@ -9,7 +9,7 @@ export interface Sender {
 }
 const sendEmail = async (to: string, subject: string, text: string) => {    
     const mg = mailgun.client({ username: 'api', key });
-    const data = { from: `"map-nn" <no-reply@${domain}>`, to, subject, text };
+    const data = { from: `"map-nn" <no-reply@${domain}>`, to, subject, html: text };
     try {
         await mg.messages.create(domain, data, true)
     } catch(error) {
