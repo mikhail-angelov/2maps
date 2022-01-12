@@ -14,7 +14,8 @@
     "migration:show": "ts-node node_modules/.bin/typeorm migration:show",
     "test": "NODE_ENV=test mocha --no-parallel --require ts-node/register src/*.spec.ts src/**/*.spec.ts",
     "t": "NODE_ENV=test mocha --no-parallel --require ts-node/register src/routes/mapLoader.spec.ts",
-    "r": "tsc && node --unhandled-rejections=strict ./dist/tools/mapLoader.js"
+    "r": "tsc && node --unhandled-rejections=strict ./dist/tools/mapLoader.js",
+    "wiki": "tsc && node --unhandled-rejections=strict ./dist/tools/wikimapia.js"
   },
   "repository": {
     "type": "git",
