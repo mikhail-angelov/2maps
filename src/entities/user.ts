@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Role } from "./enums";
 import { Mark } from "./mark";
 
 @Entity({name:'user'})
@@ -22,4 +23,7 @@ export class User {
         { cascade: true },
     )
     marks?: Mark[];
+
+    @Column({type: 'simple-enum', enum: Role, nullable: false, default: Role.user})
+    role!: Role;
 }
