@@ -5,6 +5,7 @@ import { Connection } from "typeorm";
 import jwt, { VerifyErrors } from 'jsonwebtoken'
 import bcrypt from 'bcrypt-nodejs'
 import { User } from '../entities/user'
+import { Role } from '../entities/enums'
 import { Sender } from './mailer'
 
 const HOST = process.env.HOST || ''
@@ -16,6 +17,7 @@ const JWT_HEADER = 'authorization'
 interface JwtPayload {
   id: string;
   email: string;
+  role: Role;
 }
 interface Credentials {
   email: string;
@@ -165,12 +167,12 @@ export class Auth implements CommonRoutesConfig {
     return router;
   }
 
-  async login({ email, password }: Credentials) {
+  async login({ email, password }: Credentials): Promise<[string, JwtPayload]> {
     const user = await this.db.getRepository(User).findOne({ email })
     if (!user || !bcrypt.compareSync(password, user.password)) {
       throw "invalid login"
     }
-    const payload: JwtPayload = { id: user.id, email }
+    const payload: JwtPayload = { id: user.id, email, role: user.role }
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
   }
 
@@ -179,10 +181,10 @@ export class Auth implements CommonRoutesConfig {
     if (!testToken) {
       throw "invalid auth"
     }
-    const decodedToken: any = jwt.verify(testToken, JWT_SECRET)
-    const payload: JwtPayload = { id: decodedToken.id, email: decodedToken.email }
+    const {id, email, role}: any = jwt.verify(testToken, JWT_SECRET)
+    const payload: JwtPayload = { id, email, role}
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
-    return [token, decodedToken]
+    return [token, payload]
   }
   async checkMobile(req: CRequest) {
     const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
@@ -190,20 +192,34 @@ export class Auth implements CommonRoutesConfig {
     if (!testToken) {
       throw "invalid auth"
     }
-    const decodedToken: any = jwt.verify(testToken, JWT_SECRET)
-    const payload: JwtPayload = { id: decodedToken.id, email: decodedToken.email }
+    const {id, email, role}: any = jwt.verify(testToken, JWT_SECRET)
+    const payload: JwtPayload = {id, email, role}
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
-    return [token, decodedToken]
+    return [token, payload]
   }
   async authMiddleware(req: CRequest, res: express.Response, next: express.NextFunction) {
     const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
-    console.log('testToken', testToken)
     if (!testToken) {
       return res.status(401).json({ error: 'invalid auth' })
     }
     jwt.verify(testToken, JWT_SECRET, (err: VerifyErrors | null, decoded: any) => {
       if (err) {
         return res.status(401).json({ error: 'invalid auth' })
+      }
+      req.user = decoded
+      next()
+    })
+
+  }
+  async authAdminMiddleware(req: CRequest, res: express.Response, next: express.NextFunction) {
+    const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
+    if (!testToken) {
+      return res.status(401).json({ error: 'invalid auth' })
+    }
+    jwt.verify(testToken, JWT_SECRET, (err: VerifyErrors | null, decoded: any) => {
+      if (err || decoded.role !== Role.admin.toString()) {
+        console.log('err', err, decoded.role)
+        return res.status(401).json({ error: 'invalid admin auth' })
       }
       req.user = decoded
       next()
@@ -225,7 +241,7 @@ export class Auth implements CommonRoutesConfig {
       res.status(401).json({ error: 'invalid auth' })
     }
   }
-  async register({ name, email, password }: SignUp) {
+  async register({ name, email, password }: SignUp): Promise<[string, JwtPayload]> {
     let user = await this.db.getRepository(User).findOne({ email })
     if (user || !name || !password) {
       throw "invalid user"
@@ -234,7 +250,7 @@ export class Auth implements CommonRoutesConfig {
     const saltedPass = bcrypt.hashSync(password, salt)
     user = await this.db.getRepository(User).save({ name, email, password: saltedPass })
 
-    const payload: JwtPayload = { id: user.id, email }
+    const payload: JwtPayload = { id: user.id, email, role: user.role }
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
     await this.sender.sendEmail(email, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
     return [token, payload]
@@ -261,7 +277,7 @@ export class Auth implements CommonRoutesConfig {
     const saltedPass = bcrypt.hashSync(password, salt)
     await this.db.getRepository(User).update(user.id, { password: saltedPass, resetToken: undefined })
 
-    const payload: JwtPayload = { id: user.id, email: user.email }
+    const payload: JwtPayload = { id: user.id, email: user.email, role: user.role }
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 }), payload];
   }
 

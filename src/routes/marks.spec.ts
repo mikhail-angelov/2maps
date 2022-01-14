@@ -90,7 +90,6 @@ describe('marks', () => {
             timestamp: 1626944504856,
         }]
         const syncedMarks = await marks.syncMarks(USER.id, webMarks)
-        console.log(syncedMarks)
         expect(syncedMarks.length).to.equal(3)
     })
 })

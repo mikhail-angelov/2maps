@@ -3,3 +3,9 @@ export enum Role {
   user = 'user',
   test = 'test',
 }
+
+export enum MapType {
+  public = 'public',
+  test = 'test',
+  admin = 'admin',
+}

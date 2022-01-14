@@ -10,6 +10,7 @@ import { Auth } from './routes/auth';
 import { initDbConnection } from './db'
 import { Marks } from './routes/marks';
 import { Maps } from './routes/maps';
+import { Users } from './routes/users';
 import sender from './routes/mailer'
 
 const app: express.Application = express();
@@ -45,7 +46,9 @@ const run = async () => {
     const auth = new Auth(db, sender)
     const markers = new Marks(db, auth)
     const maps = new Maps(db,auth)
+    const users = new Users(db,auth)
     app.use('/auth', auth.getRoutes());
+    app.use('/user', users.getRoutes());
     app.use('/marks', markers.getRoutes());
     app.use('/maps', maps.getRoutes());
     app.use('/tiles', tiles.getRoutes());
