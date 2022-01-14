@@ -225,15 +225,16 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     }
 
     onShowQR() {
-      const typeNumber = 4;
-      const errorCorrectionLevel = 'L';
-      const qr = window.qrcode(typeNumber, errorCorrectionLevel);
-      const map = 'test'
-      const mapUrl = `${location.origin}/download/${map}`
-      qr.addData(mapUrl);
-      qr.make();
-      document.getElementById('qr').innerHTML = qr.createImgTag();
-      this.setState({ mapUrl })
+      location.href = '/admin';
+      // const typeNumber = 4;
+      // const errorCorrectionLevel = 'L';
+      // const qr = window.qrcode(typeNumber, errorCorrectionLevel);
+      // const map = 'test'
+      // const mapUrl = `${location.origin}/download/${map}`
+      // qr.addData(mapUrl);
+      // qr.make();
+      // document.getElementById('qr').innerHTML = qr.createImgTag();
+      // this.setState({ mapUrl })
     }
     onCloseQR() {
       document.getElementById('qr').innerHTML = '';

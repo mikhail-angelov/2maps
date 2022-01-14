@@ -68,7 +68,7 @@ export class Auth implements CommonRoutesConfig {
       try {
 
         const [token, decodedToken] = await this.check(req)
-        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok' })
+        res.status(200).cookie(JWT_COOKIES, token, { maxAge: 864000000 }).json({ auth: 'ok', ...decodedToken })
       } catch (e) {
         console.log('check error', e)
         res.status(401).json({ error: 'invalid auth' })
@@ -176,7 +176,7 @@ export class Auth implements CommonRoutesConfig {
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
   }
 
-  async check(req: CRequest) {
+  async check(req: CRequest): Promise<[string, JwtPayload]> {
     const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
     if (!testToken) {
       throw "invalid auth"

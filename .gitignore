@@ -4,7 +4,7 @@ logs/
 dist/
 .env*
 env.json
-index.html
+ui/public/index.html
 main.css
 info.txt
 .vercel

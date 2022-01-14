@@ -18,6 +18,23 @@ export const get = async (url) => {
     throw e
   }
 }
+export const put = async (url, data) => {
+  try {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': data ? 'application/json' : 'text/plain'
+      },
+      credentials: 'include',
+      body: data ? JSON.stringify(data) : ''
+    })
+    const j = await res.json()
+    return j
+  } catch (e) {
+    console.log('fetch error', e)
+    throw e
+  }
+}
 export const post = async (url, data) => {
   try {
     const res = await fetch(url, {

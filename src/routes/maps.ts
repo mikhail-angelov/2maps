@@ -15,9 +15,10 @@ export interface WebMap {
   url: string;
   type: MapType;
   size: number;
+  price: number;
 }
 
-const toWebMap = ({ id, name, url, size, type }: MapFile): WebMap => ({ id, name, url, size, type })
+const toWebMap = ({ id, name, url, size, price, type }: MapFile): WebMap => ({ id, name, url, size, price, type })
 
 export class Maps implements CommonRoutesConfig {
   auth: Auth
@@ -100,12 +101,25 @@ export class Maps implements CommonRoutesConfig {
       }
     });
 
+    router.get("/get", this.auth.authMiddleware, async (req: CRequest, res: express.Response) => {
+      try {
+        const user = req.user
+        console.log('load maps for', user.email, user.role)
+        const condition = user.role === Role.user ? {type: MapType.public } : { }
+        const maps = await this.mapRepo.find(condition)
+        res.status(200).json(maps.map(toWebMap))
+      } catch (e) {
+        console.log('load error', e)
+        res.status(400).json({ error: 'invalid request' })
+      }
+    });
+
     router.put("/:id", this.auth.authAdminMiddleware, async (req: CRequest, res: express.Response) => {
       try {
         const user = req.user
         console.log('update map', req.params.id, req.body)
-        const { name, url, price, size, type } = req.body;
-        await this.mapRepo.update(req.params.id, {name, url, price, size, type });
+        const update = _.pick(req.body,['name', 'price', 'type']);
+        await this.mapRepo.update(req.params.id, update);
         const map = await this.mapRepo.findOne(req.params.id);
         if(!map) {
           res.status(400).send("error")

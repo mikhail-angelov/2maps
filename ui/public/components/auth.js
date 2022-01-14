@@ -37,7 +37,7 @@ const Login = ({ onLogin, toSignUp, error }) => {
     onLogin({ email, password })
   }
 
-  return html`<form class="auth-form" onSubmit=${login}>
+  return html`<form class="form" onSubmit=${login}>
     <div class="title">Login to Map NN</div>
     <div class="label">Email</div>
     <input class="form-input" value=${email} onChange=${(e) => setEmail(e.target.value)}/>
@@ -62,7 +62,7 @@ const SignUp = ({ onSignUp, toLogin, error }) => {
     onSignUp({ name, email, password })
   }
 
-  return html`<form class="auth-form" onSubmit=${signUp} >
+  return html`<form class="form" onSubmit=${signUp} >
     <div class="title">Sign Up to Map NN</div>
     <div class="label">Name</div>
     <input class="form-input" value=${name} onChange=${(e) => setName(e.target.value)}/>
@@ -87,7 +87,7 @@ const PasswordReset = ({ onPasswordReset, error, resetToken }) => {
     onPasswordReset({ password, resetToken })
   }
 
-  return html`<form class="auth-form" onSubmit=${passwordReset}>
+  return html`<form class="form" onSubmit=${passwordReset}>
     <div class="title">Update Account</div>
     <div class="label">New Password</div>
     <input class="form-input" value=${password} onChange=${(e) => setPassword(e.target.value)} type="password"></input>
