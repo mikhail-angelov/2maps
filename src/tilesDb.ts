@@ -1,5 +1,6 @@
 import { createConnections, Connection } from "typeorm";
 import { Tile } from './entitiesMap/tile'
+import { Info } from './entitiesMap/info'
 import { MbTile } from './entitiesMap/mbTile'
 
 interface TileRequest {
@@ -36,7 +37,7 @@ export const createDBConnection = async (name: string) => {
             name,
             type: "sqlite",
             database: `./data/${name}.sqlitedb`,
-            entities: [Tile],
+            entities: [Tile, Info],
             synchronize: false,
             logger: 'debug'
         }]);

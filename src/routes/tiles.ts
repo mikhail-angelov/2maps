@@ -69,7 +69,7 @@ export class Tiles implements CommonRoutesConfig {
       if (!name || !x || !y || z > 17 || z < 3) {
         return null;
       }
-      const tile = await getTile({ name, x, y, z })
+      const tile = await getTile({ name, x, y, z: 17-z })
       return tile;
 
     } catch (e) {

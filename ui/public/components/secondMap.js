@@ -1,3 +1,5 @@
+import { setUrlParams } from '../urlParams.js'
+
 mapboxgl.accessToken = window.mapBoxKey;
 
 const RASTER_LAYER = {
@@ -15,6 +17,19 @@ const RasterSource = (mapName) => ({
   attribution: "Map tiles",
 })
 
+const debounce = function (func, delay) {
+  let timer;
+  return function () {     //anonymous function
+    const context = this;
+    const args = arguments;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      func.apply(context, args)
+    }, delay);
+  }
+}
+
+
 export const createSecondMap = (center, zoom, mapName) => {
   const map = new mapboxgl.Map({
     container: "map",
@@ -29,11 +44,18 @@ export const createSecondMap = (center, zoom, mapName) => {
     center,
     zoom,
   });
+  const onLocationUpdate = debounce(() => {
+    const { lat, lng } = map.getCenter()
+    const zoom = map.getZoom()
+    setUrlParams({ center: `${lng},${lat}`, zoom })
+  }, 1000)
 
   map.on("load", () => {
     //this is hack to solve incorrect map scale on init
     map.resize();
   });
+  map.on("zoom", onLocationUpdate);
+  map.on("moveend", onLocationUpdate);
 
   map.setMap = (newMap) => {
     map.removeLayer(RASTER_LAYER.id);

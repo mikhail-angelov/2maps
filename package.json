@@ -15,6 +15,7 @@
     "test": "NODE_ENV=test mocha --no-parallel --require ts-node/register src/*.spec.ts src/**/*.spec.ts",
     "t": "NODE_ENV=test mocha --no-parallel --require ts-node/register src/routes/mapLoader.spec.ts",
     "r": "tsc && node --unhandled-rejections=strict ./dist/tools/mapLoader.js",
+    "c": "tsc && node --unhandled-rejections=strict ./dist/tools/joinSqlDbs.js",
     "wiki": "tsc && node --unhandled-rejections=strict ./dist/tools/wikimapia.js"
   },
   "repository": {
@@ -66,8 +67,9 @@
     "@types/mocha": "^8.2.3",
     "@types/multer": "^1.4.7",
     "chai": "^4.3.4",
-    "mocha": "^9.0.2",
+    "mocha": "^9.2.0",
     "nodemon": "^2.0.6",
+    "sharp": "^0.29.3",
     "source-map-support": "^0.5.19",
     "tslint": "^6.1.3"
   }

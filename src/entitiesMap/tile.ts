@@ -1,7 +1,7 @@
-import { Entity, Index, Column, PrimaryColumn } from "typeorm";
+import { Entity, Index, Column, PrimaryColumn, Generated } from "typeorm";
 
 @Entity('tiles')
-@Index(["z", "y","x"], { unique: true })
+@Index(["z", "y","x"])
 export class Tile {
 
     @Column()
@@ -14,6 +14,7 @@ export class Tile {
     z!: number;
 
     @PrimaryColumn()
+    @Generated()
     s!: number;
 
     @Column()

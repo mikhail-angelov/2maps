@@ -29,7 +29,14 @@ export const parseUrlParams = () => {
   };
 };
 
-export const setUrlParams = () => {};
+export const setUrlParams = (params) => {
+  let searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    searchParams.set(key, value);
+  })
+  let newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + searchParams.toString();
+  window.history.pushState({ path: newurl }, '', newurl);
+}
 
 export const composeUrlLink = ({ zoom, center, opacity, placemarks }) => {
   const placemarksParma =
