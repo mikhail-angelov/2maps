@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Руководство к приложению "2 Карты"</title>
+    <style>
+        .contents {
+            margin: 20px 0;
+        }
+        .contents ul {
+            list-style-type: none;
+        }
+        .section {
+            margin-top: 70px;
+        }
+        .row {
+            margin: 30px 0;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .step {
+            margin: 20px;
+            display: flex;
+        }
+        .image {
+            height: 400px;
+        }
+        .gap {
+            width: 20px;
+            flex-shrink: 0;
+        }
+        .text-container {
+            font-size: large;
+        }
+        .text-index {
+            font-size: x-large;
+        }
+    </style>
+</head>
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <h1>Руководство к приложению "2 Карты"</h1>
+    <div class="contents">
+        <ul>
+            <li><a href="#mark">Как поставить Метку на карте?</a></li>
+            <li><a href="#track">Как записать Трек?</a></li>
+            <li><a href="#mark-list">Где посмотреть список Меток?</a></li>
+            <li><a href="#track-list">Где посмотреть список Треков?</a></li>
+            <li><a href="#track-export">Как сохранить Трек в файл .kml?</a></li>
+            <li><a href="#track-import">Как импортировать Трек из файла .kml?</a></li>
+            <li><a href="#map-import">Как импортировать Карту из файла .sqlitedb?</a></li>
+            <li><a href="#map-qr">Как скачать Карту по QR коду?</a></li>
+            <li><a href="#map-to-sd">Как перенести Карту на карту памяти (SD) или в память телефона?</a></li>
+        </ul>
+    </div>
+    <section id="mark" class="section">
+        <h2>Как поставить Метку на карте?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/mark.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Удерживайте палец на карте</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/mark2.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>Заполните поля</p>
+                    <p><span class="text-index">3. </span>Поставьте рейтинг "Метки"</p>
+                    <p><span class="text-index">4. </span>Сохраните изменения</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="track" class="section">
+        <h2>Как записать Трек?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/track.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Нажмите на значок Трека на главном экране</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/track2.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>В процессе записи значок будет другого цвета. Нажмите на него ещё раз, запись остановится, и трек сохранится в памяти телефона</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="mark-list" class="section">
+        <h2>Где посмотреть список Меток?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/tap-settings.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Нажмите на значок "Шестерёнки" на главном экране</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/settings-marks.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>Далее переходим в раздел "Метки"</p>
+                </div>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/mark-list.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">3. </span>Здесь будет находиться список "Меток"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="track-list" class="section">
+        <h2>Где посмотреть список Треков?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/tap-settings.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Нажмите на значок "Шестерёнки" на главном экране</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/settings-tracks.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>Далее переходим в раздел "Треки"</p>
+                </div>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/track-list.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">3. </span>Здесь будет находиться список "Треков"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="track-export" class="section">
+        <h2>Как сохранить Трек в файл .kml?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/track-swipe.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Смахните Трек влево</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/track-export.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>Нажимаем кнопку сохранения, и файл .kml сохранится на вашем телефоне</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="track-import" class="section">
+        <h2>Как импортировать Трек из файла .kml?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/track-import1.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Нажимаем кнопку "Бургер"</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/track-import2.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>В открывшемся меню, выбираем Импорт Трека. Находим необходимый файл .kml в памяти телефона</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="map-import" class="section">
+        <h2>Как импортировать Карту из файла .sqlitedb?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/map-import.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Нажимаем кнопку "Импорт Карты". Далее находим необходимый файл карты в формате ".sqlitedb" на телефоне</p>
+            </div>
+        </div>
+    </section>
+    <section id="map-qr" class="section">
+        <h2>Как скачать Карту по QR коду?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/map-qr.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Нажимаем кнопку "Сканировать QR"</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/map-qr2.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>Наведите камеру телефона на QR код. Дождитесь пока QR код распознается, и начнётся загрузка карты</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="map-to-sd" class="section">
+        <h2>Как перенести Карту на карту памяти (SD) или в память телефона?</h2>
+        <div class="row">
+            <div class="step">
+                <img class="image" src="/assets/help-images/map-to-sd.png" />
+                <span class="gap"></span>
+                <p class="text-container"><span class="text-index">1. </span>Нажимаем на иконку телефона или карты памяти</p>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/map-to-sd2.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">2. </span>Подтверждаем перемещение</p>
+                </div>
+            </div>
+            <div class="step">
+                <img class="image" src="/assets/help-images/map-to-sd3.png" />
+                <span class="gap"></span>
+                <div class="text-container">
+                    <p><span class="text-index">3. </span>Дожидаемся завершения процесса перемещения</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
