@@ -168,11 +168,12 @@ export class Auth implements CommonRoutesConfig {
   }
 
   async login({ email, password }: Credentials): Promise<[string, JwtPayload]> {
-    const user = await this.db.getRepository(User).findOne({ email })
+    const e = email.toLowerCase()
+    const user = await this.db.getRepository(User).findOne({ email: e })
     if (!user || !bcrypt.compareSync(password, user.password)) {
       throw "invalid login"
     }
-    const payload: JwtPayload = { id: user.id, email, role: user.role }
+    const payload: JwtPayload = { id: user.id, email: e, role: user.role }
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
   }
 
@@ -242,22 +243,23 @@ export class Auth implements CommonRoutesConfig {
     }
   }
   async register({ name, email, password }: SignUp): Promise<[string, JwtPayload]> {
-    let user = await this.db.getRepository(User).findOne({ email })
+    const e = email.toLowerCase()
+    let user = await this.db.getRepository(User).findOne({ email: e })
     if (user || !name || !password) {
       throw "invalid user"
     }
     const salt = bcrypt.genSaltSync(10)
     const saltedPass = bcrypt.hashSync(password, salt)
-    user = await this.db.getRepository(User).save({ name, email, password: saltedPass })
+    user = await this.db.getRepository(User).save({ name, email: e, password: saltedPass })
 
-    const payload: JwtPayload = { id: user.id, email, role: user.role }
+    const payload: JwtPayload = { id: user.id, email:e, role: user.role }
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
-    await this.sender.sendEmail(email, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
+    await this.sender.sendEmail(e, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
     return [token, payload]
   }
   async forgetPassword({ email }: Forget) {
     return this.db.transaction(async transactionalEntityManager => {
-      const user = await transactionalEntityManager.getRepository(User).findOne({ email })
+      const user = await transactionalEntityManager.getRepository(User).findOne({ email: email.toLowerCase() })
       if (!user) {
         throw "invalid user"
       }
