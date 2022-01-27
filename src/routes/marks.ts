@@ -15,7 +15,7 @@ const upload = multer()
 
 const mapToEntity = ({ id, name, description, lat, lng, timestamp, rate }: WebMark, userId: string): Mark => {
   const markId = isUUID(id.toString()) ? id : uuid()
-  const location: Point =  { type: 'Point', coordinates: [lng, lat] }
+  const location: Point = { type: 'Point', coordinates: [lng, lat] }
   return { id: markId, name, description: description || '', location, userId, timestamp: new Date(timestamp) || Date.now(), rate }
 }
 const mapToDto = ({ id, name, description, location, timestamp, rate }: Mark): WebMark => {
@@ -47,8 +47,9 @@ export class Marks implements CommonRoutesConfig {
     router.post("/sync", this.auth.authMiddleware, upload.single('value'), async (req: CRequest, res: express.Response) => {
       try {
         const value = req?.file.buffer.toString('utf8')
+        const newMarks = JSON.parse(value)
         const user = req.user
-        const marks = await this.syncMarks(user.id, JSON.parse(value))
+        const marks = await this.syncMarks(user.id, newMarks)
         res.status(200).json(marks)
       } catch (e) {
         console.log('sync error', e)
@@ -74,9 +75,9 @@ export class Marks implements CommonRoutesConfig {
     const savedMarks = await this.db.getRepository(Mark).find({ userId })
     const marksMap = _.keyBy(savedMarks, 'id')
     const marksToAdd = marks.filter(mark => !marksMap[mark.id]).map(mark => mapToEntity(mark, userId))
-    const marksToUpdate = marks.filter(mark => marksMap[mark.id] && !mark.removed && mark.timestamp>marksMap[mark.id].timestamp.getTime()).map(mark => mapToEntity(mark, userId))
-    const marksIdsToRemove = marks.filter(mark => marksMap[mark.id] && mark.removed).map(({id}) => id)
-    
+    const marksToUpdate = marks.filter(mark => marksMap[mark.id] && !mark.removed && mark.timestamp > marksMap[mark.id].timestamp.getTime()).map(mark => mapToEntity(mark, userId))
+    const marksIdsToRemove = marks.filter(mark => marksMap[mark.id] && mark.removed).map(({ id }) => id)
+
     if (marksToAdd.length) {
       await this.db.getRepository(Mark).save(marksToAdd)
     }
@@ -86,8 +87,8 @@ export class Marks implements CommonRoutesConfig {
     if (marksIdsToRemove.length) {
       await this.db.getRepository(Mark).delete(marksIdsToRemove)
     }
-    
-    const updatedMarks =  await this.db.getRepository(Mark).find({ userId })
+
+    const updatedMarks = await this.db.getRepository(Mark).find({ userId })
     return updatedMarks.map(mapToDto)
   }
 

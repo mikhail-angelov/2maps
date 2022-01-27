@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "tsc; node --unhandled-rejections=strict ./dist/app.js",
-    "dev": "export $(cat .env | xargs) && ts-node ./src/app.ts",
+    "dev": "export $(cat .env | xargs) && node --inspect -r ts-node/register ./src/app.ts",
     "build": "tsc",
     "debug": "export DEBUG=* && npm run start",
     "migration:generate": "ts-node node_modules/.bin/typeorm migration:generate",
@@ -46,7 +46,7 @@
     "lodash": "^4.17.21",
     "mailgun.js": "^3.5.1",
     "multer": "^1.4.2",
-    "nestjs-db-unit": "^2.3.0",
+    "nestjs-db-unit": "^2.3.1",
     "pg": "^8.7.1",
     "sqlite3": "^5.0.0",
     "ts-node": "^10.1.0",
