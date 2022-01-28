@@ -71,6 +71,7 @@ export class Marks implements CommonRoutesConfig {
         }
         console.log('markers m/sync for: ', user.email)
         const clientMarkers = JSON.parse(req.body.value)
+        console.log('to sync: ', clientMarkers.length)
         const marks = await this.syncMarks(user.id, clientMarkers)
         console.log('synced: ', marks.length)
         res.status(200).json(marks)
@@ -90,6 +91,7 @@ export class Marks implements CommonRoutesConfig {
     const marksToUpdate = marks.filter(mark => marksMap[mark.id] && !mark.removed && mark.timestamp > marksMap[mark.id].timestamp.getTime()).map(mark => mapToEntity(mark, userId))
     const marksIdsToRemove = marks.filter(mark => marksMap[mark.id] && mark.removed).map(({ id }) => id)
 
+    console.log('add', marksToAdd.length, 'update', marksToUpdate.length, 'remove', marksIdsToRemove.length)
     if (marksToAdd.length) {
       await this.db.getRepository(Mark).save(marksToAdd)
     }
