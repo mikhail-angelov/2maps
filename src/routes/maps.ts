@@ -1,10 +1,9 @@
 import { CommonRoutesConfig } from './common';
-import express from 'express';
+import express, { Request } from 'express';
 import _ from 'lodash'
 import * as aws from 'aws-sdk';
 import { Connection, Repository } from "typeorm";
-import { CRequest } from '../../types/express'
-import { Auth } from './auth'
+import { Auth, JwtPayload } from './auth'
 import { MapFile } from '../entities/mapFile'
 import { MapType, Role } from '../entities/enums'
 
@@ -65,11 +64,15 @@ export class Maps implements CommonRoutesConfig {
 
   getRoutes() {
     const router = express.Router();
-    router.get("", this.auth.authMiddlewareMobile, async (req: CRequest, res: express.Response) => {
+    router.get("", this.auth.authMiddlewareMobile, async (req: Request, res: express.Response) => {
       try {
-        const user = req.user
+        const user = req.user as JwtPayload
+        if (!user) {
+          console.log('load error', user)
+          return res.status(400).json({ error: 'invalid request' })
+        }
         console.log('load maps for', user.email, user.role)
-        const condition = user.role === Role.user ? {type: MapType.public } : { }
+        const condition = user.role === Role.user ? { type: MapType.public } : {}
         const maps = await this.mapRepo.find(condition)
         res.status(200).json(maps.map(toWebMap))
       } catch (e) {
@@ -78,10 +81,14 @@ export class Maps implements CommonRoutesConfig {
       }
     });
 
-    router.post("/:id", this.auth.authMiddlewareMobile, async (req: CRequest, res: express.Response) => {
+    router.post("/:id", this.auth.authMiddlewareMobile, async (req: Request, res: express.Response) => {
       try {
-        const user = req.user
         const { id } = req.params;
+        const user = req.user as JwtPayload
+        if (!user || !id) {
+          console.log('load error', user, id)
+          return res.status(400).json({ error: 'invalid request' })
+        }
         console.log('load map for', user.email, id)
         const map = await this.mapRepo.findOne(id)
         if (!map) {
@@ -101,11 +108,15 @@ export class Maps implements CommonRoutesConfig {
       }
     });
 
-    router.get("/get", this.auth.authMiddleware, async (req: CRequest, res: express.Response) => {
+    router.get("/get", this.auth.authMiddleware, async (req: Request, res: express.Response) => {
       try {
-        const user = req.user
-        console.log('load maps for', user.email, user.role)
-        const condition = user.role === Role.user ? {type: MapType.public } : { }
+        const user = req.user as JwtPayload
+        if (!user) {
+          console.log('get error', user)
+          return res.status(400).json({ error: 'invalid request' })
+        }
+        console.log('load maps for', user?.email, user?.role)
+        const condition = user?.role === Role.user ? { type: MapType.public } : {}
         const maps = await this.mapRepo.find(condition)
         res.status(200).json(maps.map(toWebMap))
       } catch (e) {
@@ -114,14 +125,14 @@ export class Maps implements CommonRoutesConfig {
       }
     });
 
-    router.put("/:id", this.auth.authAdminMiddleware, async (req: CRequest, res: express.Response) => {
+    router.put("/:id", this.auth.authAdminMiddleware, async (req: Request, res: express.Response) => {
       try {
         const user = req.user
         console.log('update map', req.params.id, req.body)
-        const update = _.pick(req.body,['name', 'price', 'type']);
+        const update = _.pick(req.body, ['name', 'price', 'type']);
         await this.mapRepo.update(req.params.id, update);
         const map = await this.mapRepo.findOne(req.params.id);
-        if(!map) {
+        if (!map) {
           res.status(400).send("error")
           return
         }

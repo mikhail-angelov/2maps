@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { DbUnit } from 'nestjs-db-unit';
 import { initDbConnectionTest } from '../db'
 import { Auth, JWT_COOKIES } from './auth'
-import { CRequest } from '../../types/express'
+import { Request } from 'express'
 
 describe('auth', () => {
     let db = new DbUnit();
@@ -33,14 +33,14 @@ describe('auth', () => {
 
     it('check', async () => {
         const [token, _] = await auth.login({ email: 'test', password: 'test' })
-        const req = { cookies: { [JWT_COOKIES]: token } } as CRequest
+        const req = { cookies: { [JWT_COOKIES]: token } } as Request
         const [t, u] = await auth.check(req)
         expect(!!t).to.equal(true)
     })
 
     it('check invalid', async () => {
         try {
-            const req = { cookies: { [JWT_COOKIES]: 'invalid' } } as CRequest
+            const req = { cookies: { [JWT_COOKIES]: 'invalid' } } as Request
             await auth.check(req)
             expect(false).to.equal(true);
         } catch (e) {

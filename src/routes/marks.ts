@@ -1,10 +1,9 @@
 import { CommonRoutesConfig } from './common';
-import express from 'express';
+import express, { Request } from 'express';
 import multer from 'multer'
 import _ from 'lodash'
 import { v4 as uuid } from '@lukeed/uuid';
 import { Point } from 'geojson';
-import { CRequest } from '../../types/express'
 import { Connection } from "typeorm";
 import { Mark } from '../entities/mark'
 import { Auth } from './auth'
@@ -44,23 +43,36 @@ export class Marks implements CommonRoutesConfig {
 
   getRoutes() {
     const router = express.Router();
-    router.post("/sync", this.auth.authMiddleware, upload.single('value'), async (req: CRequest, res: express.Response) => {
+    router.post("/sync", this.auth.authMiddleware, upload.single('value'), async (req: Request, res: express.Response) => {
       try {
+        const user = req.user
+        if (!user?.id || !req?.file) {
+          console.log('sync error', user)
+          return res.status(400).json({ error: 'invalid request' })
+        }
+        console.log('markers sync for: ', user.email)
         const value = req?.file.buffer.toString('utf8')
         const newMarks = JSON.parse(value)
-        const user = req.user
+        console.log('to sync: ', newMarks.length)
         const marks = await this.syncMarks(user.id, newMarks)
+        console.log('synced: ', marks.length)
         res.status(200).json(marks)
       } catch (e) {
         console.log('sync error', e)
         res.status(400).json({ error: 'invalid request' })
       }
     });
-    router.post("/m/sync", this.auth.authMiddlewareMobile, upload.none(), async (req: CRequest, res: express.Response) => {
+    router.post("/m/sync", this.auth.authMiddlewareMobile, upload.none(), async (req: Request, res: express.Response) => {
       try {
         const user = req.user
+        if (!user?.id) {
+          console.log('msync error', user)
+          return res.status(400).json({ error: 'invalid request' })
+        }
+        console.log('markers m/sync for: ', user.email)
         const clientMarkers = JSON.parse(req.body.value)
         const marks = await this.syncMarks(user.id, clientMarkers)
+        console.log('synced: ', marks.length)
         res.status(200).json(marks)
       } catch (e) {
         console.log('msync error', e)

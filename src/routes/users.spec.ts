@@ -3,7 +3,7 @@ import { DbUnit } from 'nestjs-db-unit';
 import { initDbConnectionTest } from '../db'
 import { Auth, JWT_COOKIES } from './auth'
 import { Users } from './users'
-import { CRequest } from '../../types/express'
+import { Request } from 'express'
 import { Role } from '../entities/enums';
 
 describe('users', () => {
@@ -27,7 +27,7 @@ describe('users', () => {
     afterEach(() => db.closeDb());
 
     it('get list', (done) => {
-        const req = { method: 'get', cookies: { [JWT_COOKIES]: authToken } } as CRequest
+        const req = { method: 'get', cookies: { [JWT_COOKIES]: authToken } } as Request
         const routes = users.getRoutes()
 
         //0 - get list
@@ -42,7 +42,7 @@ describe('users', () => {
     })
     it('create user', (done) => {
         const EMAIL = 'new@test.com'
-        const req = { method: 'post', body: { email: EMAIL }, cookies: { [JWT_COOKIES]: authToken } } as CRequest
+        const req = { method: 'post', body: { email: EMAIL }, cookies: { [JWT_COOKIES]: authToken } } as Request
         const routes = users.getRoutes()
 
         //1 - add user
