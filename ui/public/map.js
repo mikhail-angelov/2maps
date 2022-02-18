@@ -4,6 +4,7 @@ import { createOpacitySlider } from "./components/opacitySlider.js";
 import { createPlacemarksPanel } from "./components/placemarks.js";
 import { createSecondMap } from "./components/secondMap.js";
 import { createMapLayer } from "./components/mapLayers.js";
+import { createWikimapia } from "./components/wikimapia.js";
 import { isMobile, get } from "./utils.js";
 
 let { zoom, center: position, name, opacity, placemarks: marks } = parseUrlParams();
@@ -116,6 +117,7 @@ ymaps.ready(() => {
   };
 
   createOpacitySlider("#ymap", opacity);
+  createWikimapia(secondMap)
   marks.forEach((p) => addMark(p));
   const panel = createPlacemarksPanel({ yandexMap });
   get('/tiles/list').then((maps) => {
