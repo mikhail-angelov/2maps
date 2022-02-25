@@ -35,7 +35,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_DB: ${DB_DATABASE}
     ports:
-      - 5432
+      - "127.0.0.1:5432:5432"
     volumes:
       - /opt/postgresdb:/var/lib/postgresql/data
 
