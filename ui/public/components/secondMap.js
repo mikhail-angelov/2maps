@@ -95,7 +95,7 @@ export const createSecondMap = (center, zoom, mapName) => {
     if (isEnable) {
       map.addSource('wiki', {
         type: 'vector',
-        tiles: ['http://localhost:3000/wikimapia/{z}/{x}/{y}.mvt'],
+        tiles: [`${location.origin}/wikimapia/{z}/{x}/{y}.mvt`],
         minzoom: 12,
         maxzoom: 14
       })
