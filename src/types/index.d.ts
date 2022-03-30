@@ -1,5 +1,3 @@
-import express from 'express'
-
 export interface JwtPayloadBase {
     id: string;
     email: string;

@@ -5,6 +5,7 @@
         "baseUrl": "./src",
         "outDir": "./dist",
         "strict": true,
+        "declaration": false,
         "esModuleInterop": true,
         "inlineSourceMap": true,
         "emitDecoratorMetadata": true,
@@ -15,5 +16,6 @@
       "exclude": [
         "node_modules",
         "dist"
-      ]
+      ],
+      "ts-node": {  "files": true },
 }

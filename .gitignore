@@ -8,4 +8,5 @@ ui/public/index.html
 main.css
 info.txt
 .vercel
+*.dump
 wikimapia.json

@@ -11,6 +11,7 @@ import { initDbConnection } from './db'
 import { Marks } from './routes/marks';
 import { Maps } from './routes/maps';
 import { Users } from './routes/users';
+import { Wikimapia } from './routes/wikimapia';
 import sender from './routes/mailer'
 
 const app: express.Application = express();
@@ -47,6 +48,7 @@ const run = async () => {
     const markers = new Marks(db, auth)
     const maps = new Maps(db,auth)
     const users = new Users(db,auth)
+    const wikimapia = new Wikimapia(db)
     app.use('/auth', auth.getRoutes());
     app.use('/user', users.getRoutes());
     app.use('/marks', markers.getRoutes());
@@ -54,6 +56,7 @@ const run = async () => {
     app.use('/tiles', tiles.getRoutes());
     app.use('/osm-tiles', osm.getRoutes());
     app.use('/download', markers.getRoutes());
+    app.use('/wikimapia', wikimapia.getRoutes());
 
     server.listen(port, () => {
         console.log(`Server running at port: ${port}`);

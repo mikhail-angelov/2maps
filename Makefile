@@ -1,3 +1,12 @@
+include .env
+
+dump-db: DUMP_FILE=$(shell date +%s)-ls.dump
+dump-db:
+	pg_dump -Fc --dbname=postgresql://postgres:${DB_PASSWORD}@localhost:5432/2maps > ${DUMP_FILE}
+
+restore-db:
+	pg_restore --dbname=${DB_URL} --clean --if-exists --verbose '$(name)'
+
 build:
 	npm run build
 	docker build  . -t mangelov/2maps

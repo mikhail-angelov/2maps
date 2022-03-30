@@ -55,40 +55,7 @@ export const createSecondMap = (center, zoom, mapName) => {
     //this is hack to solve incorrect map scale on init
     map.resize();
 
-    map.addSource('wiki', {
-      'type': 'geojson',
-      'data': {
-        'type': 'FeatureCollection',
-        'features': []
-      }
-    })
-    map.addLayer({
-      'id': 'wiki-boundary',
-      'type': 'line',
-      'source': 'wiki',
-      'paint': {
-        'line-width': 1.5,
-        'line-color': 'red',
-        'line-opacity': 0.4,
-      },
-      'filter': ['==', '$type', 'Polygon']
-    });
-    map.addLayer({
-      'id': 'wiki-label',
-      'type': 'symbol',
-      'source': 'wiki',
-      'paint': {
-        'text-color': 'red'
-      },
-      'layout': {
-        'text-field': [
-          'format',
-          ['get', 'title'],
-          { 'font-scale': 0.9 }
-        ],
-      },
-      'filter': ['==', '$type', 'Polygon']
-    });
+
 
     //ter
     // map.addSource('mapbox-terrain', {
@@ -123,12 +90,54 @@ export const createSecondMap = (center, zoom, mapName) => {
     map.addLayer(RASTER_LAYER);
   }
 
-  map.refreshWiki = (features) => {
-    console.log('load features', features)
-    map.getSource('wiki').setData({
-      'type': 'FeatureCollection',
-      features
-    })
+  map.toggleWiki = (isEnable) => {
+    console.log('load wiki', isEnable)
+    if (isEnable) {
+      map.addSource('wiki', {
+        type: 'vector',
+        tiles: ['http://localhost:3000/wikimapia/{z}/{x}/{y}.mvt'],
+        minzoom: 12,
+        maxzoom: 14
+      })
+
+      map.addLayer(
+        {
+          'id': 'wiki2',
+          'type': 'line',
+          'source': 'wiki',
+          "source-layer": "wikiLayer",
+          'layout': {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          'paint': {
+            'line-color': '#ff0000',
+            'line-width': 1.5
+          }
+        },
+      );
+
+      map.addLayer({
+        'id': 'wiki-label',
+        'type': 'symbol',
+        'source': 'wiki',
+        "source-layer": "wikiLayer",
+        'paint': {
+          'text-color': 'red'
+        },
+        'layout': {
+          'text-field': [
+            'format',
+            ['get', 'name'],
+            { 'font-scale': 0.9 }
+          ],
+        },
+      });
+    } else {
+      map.removeLayer('wiki-label')
+      map.removeLayer('wiki2')
+      map.removeSource('wiki')
+    }
   }
 
   return map;
