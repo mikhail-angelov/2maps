@@ -6,4 +6,4 @@ WORKDIR /opt/app
 COPY ./package*.json ./
 COPY ./ormconfig.js ./
 COPY ./src/migrations ./src/migrations
-RUN npm ci --only=production
+RUN npm ci
