@@ -91,16 +91,14 @@ interface Tile {
 const getWikiTile = async (coords: Coord) => {
   const url = makeTileUrl(coords)
   const resp = await axios.get(url)
-  console.log('-----------resp', resp.data.length, url)
   const features = await parseTile(resp.data, {})
-  console.log('--', JSON.stringify(features.places[0], null, 2))
   const tileindex = geojsonVt({
     type: "FeatureCollection",
     features: features.places,
   })
   const tile = tileindex.getTile(coords.z, coords.x, coords.y)
   const buff = vtpbf.fromGeojsonVt({ 'wikiLayer': tile }, { version: 2 })
-  console.log('--', buff.length)
+  console.log('getWikiTile', url.replace, resp.data.length, buff.length)
   return buff
 }
 

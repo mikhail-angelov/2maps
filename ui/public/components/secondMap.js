@@ -90,13 +90,21 @@ export const createSecondMap = (center, zoom, mapName) => {
     map.addLayer(RASTER_LAYER);
   }
 
+  map.toggleMap = (isMapBox) => {
+    console.log('map switch', isMapBox)
+    if(isMapBox){
+      document.getElementById('ymap').style.visibility = "hidden"
+    }else{
+      document.getElementById('ymap').style.visibility = "visible"
+    }
+  }
   map.toggleWiki = (isEnable) => {
     console.log('load wiki', isEnable)
     if (isEnable) {
       map.addSource('wiki', {
         type: 'vector',
         tiles: [`${location.origin}/wikimapia/{z}/{x}/{y}.mvt`],
-        minzoom: 12,
+        minzoom: 11,
         maxzoom: 14
       })
 
@@ -116,6 +124,18 @@ export const createSecondMap = (center, zoom, mapName) => {
           }
         },
       );
+      map.addLayer(
+        {
+          'id': 'wiki3',
+          'type': 'fill',
+          'source': 'wiki',
+          "source-layer": "wikiLayer",
+          'paint': {
+            'fill-color': 'rgba(200, 100, 240, 0.2)',
+            'fill-outline-color': 'rgba(200, 100, 240, 1)'
+            }
+        },
+      );
 
       map.addLayer({
         'id': 'wiki-label',
@@ -129,13 +149,35 @@ export const createSecondMap = (center, zoom, mapName) => {
           'text-field': [
             'format',
             ['get', 'name'],
-            { 'font-scale': 0.9 }
+            { 'font-scale': 0.5 }
           ],
         },
       });
+      map.on('click', 'wiki3', (e) => {
+        console.log('---', e)
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(e.features[0].properties.name)
+          .addTo(map);
+      });
+
+      // Change the cursor to a pointer when
+      // the mouse is over the states layer.
+      map.on('mouseenter', 'wiki3', () => {
+        console.log('---enter')
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      // Change the cursor back to a pointer
+      // when it leaves the states layer.
+      map.on('mouseleave', 'wiki3', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
     } else {
       map.removeLayer('wiki-label')
       map.removeLayer('wiki2')
+      map.removeLayer('wiki3')
       map.removeSource('wiki')
     }
   }
