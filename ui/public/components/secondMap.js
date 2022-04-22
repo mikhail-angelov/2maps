@@ -149,7 +149,7 @@ export const createSecondMap = (center, zoom, mapName) => {
           'text-field': [
             'format',
             ['get', 'name'],
-            { 'font-scale': 0.5 }
+            { 'font-scale': 0.8 }
           ],
         },
       });
