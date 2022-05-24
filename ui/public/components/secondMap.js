@@ -149,12 +149,13 @@ export const createSecondMap = (center, zoom, mapName) => {
           'text-field': [
             'format',
             ['get', 'name'],
-            { 'font-scale': 0.8 }
+            { 'font-scale': 1.0 }
           ],
         },
       });
       map.on('click', 'wiki3', (e) => {
-        console.log('---', e)
+        console.log('---', e.features[0].properties)
+        window.open(`https://wikimapia.org/${e.features[0].properties.id}`,'wiki','popup,right=10,top=10,width=440,height=640')
         new mapboxgl.Popup()
           .setLngLat(e.lngLat)
           .setHTML(e.features[0].properties.name)
