@@ -6,6 +6,11 @@ export const isMobile = () => {
   );
 };
 
+const RATE_COLORS = ['#000000','#808080','#0000ff','#00ff00','#ffff00','#ff0000']
+export const rateToColor = (rate) => {
+  return +rate?RATE_COLORS[+rate%6]:RATE_COLORS[0];
+};
+
 export const getId = () => Math.random().toString(36).slice(2);
 export const delay = async (t, cb) => setTimeout(cb, t);
 

@@ -5,7 +5,7 @@ import { createPlacemarksPanel } from "./components/placemarks.js";
 import { createSecondMap } from "./components/secondMap.js";
 import { createMapLayer } from "./components/mapLayers.js";
 import { createWikimapia } from "./components/wikimapia.js";
-import { isMobile, get } from "./utils.js";
+import { isMobile, get, rateToColor } from "./utils.js";
 
 let { zoom, center: position, name, opacity, placemarks: marks } = parseUrlParams();
 let mapName = 'mende-nn';
@@ -84,7 +84,7 @@ ymaps.ready(() => {
       yandexMap.onEditMark({
         name: "",
         description: "...",
-        rate: 1,
+        rate: 0,
         point: { lat, lng },
         onSubmit: addMapItem,
       });
@@ -145,6 +145,7 @@ ymaps.ready(() => {
     const name = formData.get("name");
     const description = formData.get("description");
     const rate = +formData.get("rate") ? +formData.get("rate") : 0;
+    console.log('-', rate, formData.get("rate"), formData )
     const [lat, lng] = yandexMap.balloon.getPosition();
     yandexMap.balloon.close();
     panel.addItems([{ name, description, rate, point: { lat, lng } }]);
@@ -153,8 +154,9 @@ ymaps.ready(() => {
     const n = encodeURIComponent(name)
     const d = encodeURIComponent(description)
     return `<div class="balloon">
-      <h4>${name}</h4>
+      <h4 style="display: flex;"><div style="width:20px;height:20px;border-radius:50%;margin-right:10px;background-color:${rateToColor(rate)};"></div>${name}</h4>
       <p>${description}</p>
+      <div class="row"><a href="https://app.onesoil.ai/@${coords[0]},${coords[1]},14z" target="__blank">OneSoil link</a></div>
       <div class="row">
         <input disabled value="${location.origin}/?center=${coords[1]},${coords[0]}&name=${n}&description=${d}"/>
         <button class="icon-button">
@@ -176,6 +178,7 @@ ymaps.ready(() => {
         },
       },
       {
+        iconColor: rateToColor(rate),
         preset:
           type === "guest"
             ? "islands#greenCircleDotIcon"

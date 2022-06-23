@@ -161,10 +161,10 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
 
     addItems(items) {
       const { placemarks } = this.state;
-      const added = items.map(({ name, description, point }) => {
-        const placemark = { id: getId(), name, description, point, timestamp: Date.now() };
-        const mapItem = yandexMap.addPlacemark(placemark);
-        return { ...placemark, mapItem };
+      const added = items.map(({ name, description, rate, point }) => {
+        const placeMark = { id: getId(), name, description, rate, point, timestamp: Date.now() };
+        const mapItem = yandexMap.addPlacemark(placeMark);
+        return { ...placeMark, mapItem };
       });
 
       const updatedPlacemarks = [...placemarks, ...added];
