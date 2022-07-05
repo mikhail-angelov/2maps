@@ -4,7 +4,6 @@ import { createOpacitySlider } from "./components/opacitySlider.js";
 import { createPlacemarksPanel } from "./components/placemarks.js";
 import { createSecondMap } from "./components/secondMap.js";
 import { createMapLayer } from "./components/mapLayers.js";
-import { createWikimapia } from "./components/wikimapia.js";
 import { isMobile, get, rateToColor } from "./utils.js";
 
 let { zoom, center: position, name, opacity, placemarks: marks } = parseUrlParams();
@@ -116,16 +115,15 @@ ymaps.ready(() => {
     secondMap.resize();
   };
 
-  createOpacitySlider("#ymap", opacity);
-  createWikimapia(secondMap)
+  createOpacitySlider(opacity, (value) => {
+    const mapElements = document.querySelectorAll("#ymap");
+    mapElements.forEach((e) => (e.style.opacity = value / 100));
+    secondMap.setOpacity(value / 100);
+  });
   marks.forEach((p) => addMark(p));
   const panel = createPlacemarksPanel({ yandexMap });
-  get('/tiles/list').then((maps) => {
-    createMapLayer({
-      maps, selected: mapName, setMap: (newMap) => {
-        secondMap.setMap(newMap)
-      }
-    });
+  get('/tiles/list').then((mapList) => {
+    createMapLayer({mapList, map: secondMap});
   })
 
   if (isMobile()) {

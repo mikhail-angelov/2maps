@@ -2,22 +2,18 @@ import { html, render } from "../libs/htm.js";
 import { isMobile } from "../utils.js";
 import { saveOpacity } from "../storage.js";
 
-export const createOpacitySlider = (mapSelector, init) => {
+export const createOpacitySlider = (init, onChange) => {
   let opacity = init;
-  const applyOpacity = () => {
-    const mapElements = document.querySelectorAll(mapSelector);
-    mapElements.forEach((e) => (e.style.opacity = opacity / 100));
 
-  };
   const onInput = (e) => {
     opacity = parseInt(e.target.value, 10);
-    applyOpacity();
+    onChange(opacity);
   };
   const setOpacity = (e) => {
     onInput(e);
     saveOpacity(opacity);
   };
-  applyOpacity()
+  onChange(init)
 
   render(
     html`<div class="map-overlay-inner">
