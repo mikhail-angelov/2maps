@@ -85,7 +85,6 @@ export const createSecondMap = (center, zoom, mapName) => {
   map.getYandex = () => hasYandex;
   map.setYandex = (isYandex) => {
     hasYandex = isYandex;
-    console.log("setYandex", isYandex);
     if (isYandex) {
       document.getElementById("ymap").style.visibility = "visible";
       map.removeLayer("mapbox-satellite-streets");
@@ -114,7 +113,6 @@ export const createSecondMap = (center, zoom, mapName) => {
   map.getWiki = () => hasWiki;
   map.setWiki = (isEnable) => {
     hasWiki = isEnable;
-    console.log("load wiki", isEnable);
     if (isEnable) {
       map.addSource("wiki", {
         type: "vector",
@@ -161,7 +159,6 @@ export const createSecondMap = (center, zoom, mapName) => {
         },
       });
       map.on("click", "wiki3", (e) => {
-        console.log("---", e.features[0].properties);
         window.open(
           `https://wikimapia.org/${e.features[0].properties.id}`,
           "wiki",
@@ -195,7 +192,6 @@ export const createSecondMap = (center, zoom, mapName) => {
   map.getTerrain = () => hasTerrain;
   map.setTerrain = (isEnable) => {
     hasTerrain = isEnable;
-    console.log("load terain", isEnable);
     if (isEnable) {
       map.addSource("mapbox-terrain", {
         type: "vector",
