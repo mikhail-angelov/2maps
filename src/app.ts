@@ -12,6 +12,7 @@ import { Marks } from './routes/marks';
 import { Maps } from './routes/maps';
 import { Users } from './routes/users';
 import { Wikimapia } from './routes/wikimapia';
+import { Trips } from './routes/trips';
 import sender from './routes/mailer'
 
 const app: express.Application = express();
@@ -47,11 +48,13 @@ const run = async () => {
     const auth = new Auth(db, sender)
     const markers = new Marks(db, auth)
     const maps = new Maps(db,auth)
+    const trips = new Trips(db, auth)
     const users = new Users(db,auth)
     const wikimapia = new Wikimapia(db)
     app.use('/auth', auth.getRoutes());
     app.use('/user', users.getRoutes());
     app.use('/marks', markers.getRoutes());
+    app.use('/trips', trips.getRoutes());
     app.use('/maps', maps.getRoutes());
     app.use('/tiles', tiles.getRoutes());
     app.use('/osm-tiles', osm.getRoutes());

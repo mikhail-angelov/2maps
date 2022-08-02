@@ -11,6 +11,7 @@ import { User } from './entities/user'
 import { MapFile } from './entities/mapFile'
 import { TileSource } from './entities/tileSource'
 import { WikiTile } from './entities/wiki'
+import { Trip } from "./entities/trip";
 // const config = require('../ormconfig.js');
 
 const getDbConfig = async () => {
@@ -41,7 +42,7 @@ export const closeConnection = async () => {
 export const initDbConnectionTest = async (db: any) => {
     try {
         const conn = await db.initDb({
-            entities: [User, Mark, MapFile, TileSource, WikiTile],
+            entities: [User, Mark, MapFile, TileSource, WikiTile, Trip],
         });
         return conn
     } catch (e) {
