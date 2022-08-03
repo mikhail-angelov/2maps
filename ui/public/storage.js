@@ -28,3 +28,24 @@ export const loadOpacity = () => {
   const o = localStorage.getItem("opacity");
   return o ? +o : 50;
 };
+
+export const saveTripsLocal = (trips) => {
+  const toSore = trips.map((t) => ({
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    markIds: t.markIds,
+    removed: t.removed,
+    timestamp: t.timestamp || 0,
+  }));
+  localStorage.setItem("trips", JSON.stringify(toSore));
+};
+
+export const loadTripsLocal = () => {
+  const s = localStorage.getItem("trips");
+  try {
+    return JSON.parse(s) || [];
+  } catch {
+    return [];
+  }
+};
