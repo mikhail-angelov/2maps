@@ -21,8 +21,8 @@ export class Trip {
     @JoinColumn({ name: 'user_id' })
     user?: User;
 
-    @Column({ name: 'mark_ids', nullable: true })
-    markIds?: string;
+    @Column({ name: 'marks', nullable: true })
+    marks?: string;
 
     @ColumnEx({ type: 'timestamptz' })
     timestamp!: Date;

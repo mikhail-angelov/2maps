@@ -11,19 +11,19 @@ const upload = multer()
 
 const isUUID = (id: string): boolean => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id)
 
-const mapToEntity = ({ id, name, description, markIds, timestamp }: WebTrip, userId: string): Trip => {
+const mapToEntity = ({ id, name, description, marks, timestamp }: WebTrip, userId: string): Trip => {
   const tripId = isUUID(id.toString()) ? id : uuid()
-  return { id: tripId, name, description, markIds, userId, timestamp: new Date(timestamp) || Date.now() }
+  return { id: tripId, name, description, marks, userId, timestamp: new Date(timestamp) || Date.now() }
 }
-const mapToDto = ({ id, name, description, markIds, timestamp }: Trip): WebTrip => {
-  return { id, name, description, markIds, timestamp: timestamp.getTime() || Date.now() }
+const mapToDto = ({ id, name, description, marks, timestamp }: Trip): WebTrip => {
+  return { id, name, description, marks, timestamp: timestamp.getTime() || Date.now() }
 }
 
 export interface WebTrip {
   id: string;
   name: string;
   description?: string;
-  markIds?: string;
+  marks?: string;
   timestamp: number;
   removed?: boolean;
 }

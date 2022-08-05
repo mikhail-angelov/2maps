@@ -1,23 +1,26 @@
 import { html, render, Component } from "../libs/htm.js";
-import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
+import { loadPlacemarksLocal, savePlacemarksLocal, loadTripsLocal, saveTripsLocal } from "../storage.js";
 import { isMobile, getId, delay, postLarge } from "../utils.js";
 import { composeUrlLink, parseUrlParams } from "../urlParams.js";
 import { createAuth } from './auth.js'
-import  {IconButton} from './common.js';
+import { IconButton } from './common.js';
+import { editTripPanel } from "./trip.js";
 import '../libs/qrcode.js'
 
 const blackStars = '★★★★★'
 const whiteStars = '☆☆☆☆☆'
 
 export const createPlacemarksPanel = ({ yandexMap }) => {
-  const panel = { addItems: () => { }, refresh: () => { } };
+  const panel = { addItems: () => { }, refresh: () => { }, addTripItems: () => { } };
   let authenticated = false
 
-  let localItems = loadPlacemarksLocal();
-  const init = localItems.map((p) => {
+  let localPlacemarkItems = loadPlacemarksLocal();
+  let localTripItems = loadTripsLocal();
+  const init = localPlacemarkItems.map((p) => {
     const mapItem = yandexMap.addPlacemark(p);
     return { ...p, mapItem };
   });
+  const tripInit = localTripItems;
 
   const auth = createAuth((value) => {
     console.log('on auth update', value)
@@ -25,7 +28,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     panel.refresh()
   })
 
-  const {resetToken} = parseUrlParams()
+  const { resetToken } = parseUrlParams()
   if (resetToken) {
     auth.showPasswordReset()
   }
@@ -36,7 +39,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     const res = await postLarge(`/marks/sync`, items)
     console.log('sync', res.length)
     const toSave = res
-      .filter(item=>!!item.id)
+      .filter(item => !!item.id)
       .map(({ id, name, description, rate, lng, lat, timestamp }) => ({ id, name, description, rate, point: { lat, lng }, timestamp }))
     savePlacemarksLocal(toSave)
     //todo make it without reload
@@ -140,16 +143,49 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       />
     </li>`;
 
-  const Rate = (rate=0) => html`<div class="rate">${blackStars.substr(0, rate) + whiteStars.substr(0, 5 - rate)}</div>`;
+    const TItem = ({ id, name, marks, removed, onRemove, onEdit }) =>
+    html`<li
+      class="place-item"
+      key="${id}"
+      disabled=${removed}
+      onClick=${() => onEdit()}
+    >
+      <div class="title">
+        <div>${name}</div>
+      </div>
+      <${IconButton}
+        icon="assets/remove.svg"
+        tooltips="Удалить все"
+        onClick=${() => onRemove()}
+        disabled=${removed}
+      />
+    </li>`;
+
+  const Rate = (rate = 0) => html`<div class="rate">${blackStars.substr(0, rate) + whiteStars.substr(0, 5 - rate)}</div>`;
+
+  const onEditTripList = ({ id, name, description, marks, onSubmit }) => {
+    let trip = {
+      id: id || "",
+      name: name || "",
+      description: description || "",
+      marks: marks || "",
+    }
+    editTripPanel({trip, isOpenPanel: true, yandexMap });
+    document.getElementById("onConfirmTrip").addEventListener("submit", onSubmit);
+  };
 
   class App extends Component {
     componentDidMount() {
       panel.addItems = this.addItems.bind(this);
+      panel.addTripItems = this.addTripItems.bind(this);
       panel.refresh = this.refresh.bind(this);
       this.setShowPanel(!isMobile());
+      this.setShowTrip(false);
       this.setState({
         placemarks: this.props.init,
         showPanel: !isMobile(),
+        showTrip: false,
+        trips: this.props.tripInit,
         refresh: Date.now(),
         mapUrl: '',
       });
@@ -174,7 +210,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
 
     removeItem(id, mapItem) {
       const { placemarks } = this.state;
-      const updatedPlacemarks = placemarks.map((p) => p.id === id? { ...p, removed: true } : p);
+      const updatedPlacemarks = placemarks.map((p) => p.id === id ? { ...p, removed: true } : p);
       if (mapItem) {
         yandexMap.geoObjects.remove(mapItem);
       }
@@ -192,7 +228,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
           const id = formData.get("id");
           const name = formData.get("name");
           const description = formData.get("description");
-          const rate = +formData.get("rate")?+formData.get("rate"):0;
+          const rate = +formData.get("rate") ? +formData.get("rate") : 0;
           const timestamp = Date.now()
           const { placemarks } = this.state;
           const updatedPlacemarks = placemarks.map((p) =>
@@ -204,8 +240,41 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       });
     }
 
+    onChangeTripList(t) {
+      onEditTripList({
+        ...t,
+        onSubmit: (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          let id = formData.get("id");
+          const name = formData.get("name");
+          const description = formData.get("description");
+          const timestamp = Date.now()
+          const { trips } = this.state;
+          let updatedTrips = undefined;
+          if (!id) {
+            const newTrip = { id: getId(), name, description, marks: "", timestamp };
+            updatedTrips = [...trips, newTrip]
+          } else {
+            updatedTrips = trips.map((t) =>
+            t.id === id ? { ...t, name, description, timestamp, } : t
+          );
+          }
+          saveTripsLocal(updatedTrips);
+          this.setState({ trips: updatedTrips });
+          editTripPanel({trip: undefined, isOpenPanel: false, yandexMap });
+        },
+      });
+    }
+
     setShowPanel(value) {
       this.setState({ showPanel: value }, () => {
+        delay(800, () => yandexMap.refreshMe()); // hack to let containers resize, then resize map
+      });
+    }
+
+    setShowTrip(value) {
+      this.setState({ showTrip: value }, () => {
         delay(800, () => yandexMap.refreshMe()); // hack to let containers resize, then resize map
       });
     }
@@ -241,27 +310,70 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       this.setState({ mapUrl: '' })
     }
 
-    render({ }, { placemarks = [], showPanel, mapUrl }) {
-      const items = this.formatPlacemarks(placemarks);
+    addTripItems(tripItems) {
+      const { trips } = this.state;
+      const added = tripItems.map(({ name, description, marks }) => {
+        const trip = { id: getId(), name, description, marks: marks || "", timestamp: Date.now() };
+        return trip;
+      });
+
+      const updatedTrips = [...trips, ...added];
+      this.setState({ trips: updatedTrips });
+      saveTripsLocal(updatedTrips);
+    }
+
+    removeTripItem(id) {
+      const { trips } = this.state;
+      console.log()
+      const updatedTrips = trips.map((t) => t.id === id ? { ...t, removed: true } : t);
+      this.setState({ trips: updatedTrips });
+      saveTripsLocal(updatedTrips);
+    }
+
+    render({ }, { placemarks = [], showPanel, mapUrl, showTrip, trips = [] }) {
+      const placemarkItems = this.formatPlacemarks(placemarks);
       return showPanel
         ? html` <div class="placemark">
                   <div class="header">
-                    <div class="title">Метки</div>
+                    <button class="icon-button title" onClick=${() => this.setShowTrip(false)}>Метки</button>
+                    <button class="icon-button title" onClick=${() => this.setShowTrip(true)}>Маршруты</button>
                     <${IconButton}
                       icon="assets/close.svg"
                       onClick=${() => this.setShowPanel(false)}
                     />
                   </div>
-                  <ul class="list">
-                    ${items.map(
-          (p) =>
-            html`<${PItem}
+                  ${showTrip
+                  ? html`<div class="trip-list">
+                    <ul class="list">
+                      ${trips.map(
+                        (t) =>
+                          html`<${TItem}
+                          ...${t}
+                          onRemove=${() => this.removeTripItem(t.id)}
+                          onEdit=${() => this.onChangeTripList(t)}
+                        />`
+                      )}
+                    </ul>
+                    <div class="trip-button">
+                      <${IconButton}
+                        className="add"
+                        icon="assets/add.svg"
+                        tooltips="Добавить маршрут"
+                        onClick=${() => this.onChangeTripList()}
+                      />
+                    </div>
+                  </div>`
+                  : html`<ul class="list">
+                      ${placemarkItems.map(
+                        (p) =>
+                          html`<${PItem}
                           ...${p}
                           onRemove=${() => this.removeItem(p.id, p.mapItem)}
                           onEdit=${() => this.onEdit(p)}
                         />`
-        )}
-                  </ul>
+                      )}
+                    </ul>`
+                  }  
                   <div class="footer">
                   <div class="auth-sync">
                   ${authenticated
@@ -301,7 +413,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     }
   }
 
-  render(html`<${App} init=${init} />`, document.getElementById("placemarks"));
+  render(html`<${App} init=${init} tripInit=${tripInit} />`, document.getElementById("placemarks"));
 
   return panel;
 };

@@ -34,7 +34,7 @@ export const saveTripsLocal = (trips) => {
     id: t.id,
     name: t.name,
     description: t.description,
-    markIds: t.markIds,
+    marks: t.marks,
     removed: t.removed,
     timestamp: t.timestamp || 0,
   }));
