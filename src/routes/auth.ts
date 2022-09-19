@@ -13,6 +13,7 @@ const HOST = process.env.HOST || ''
 const JWT_SECRET = 'asdjkdknpjnpwwijoi'
 export const JWT_COOKIES = 'mapnn'
 const JWT_HEADER = 'authorization'
+const JWT_MOBILE_EXP_IN = '30 days'
 
 export interface JwtPayload extends JwtPayloadBase {
   role: Role;
@@ -177,7 +178,7 @@ export class Auth implements CommonRoutesConfig {
       throw "invalid login"
     }
     const payload: JwtPayload = { id: user.id, email: e, role: user.role }
-    return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
+    return [jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_MOBILE_EXP_IN }), payload];
   }
 
   async check(req: Request): Promise<[string, JwtPayload]> {
@@ -187,7 +188,8 @@ export class Auth implements CommonRoutesConfig {
     }
     const { id, email, role }: any = jwt.verify(testToken, JWT_SECRET)
     const payload: JwtPayload = { id, email, role }
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_MOBILE_EXP_IN });
+    console.log("🚀 ~ file: auth.ts ~ line 192 ~ Auth ~ check ~ token", token)
     return [token, payload]
   }
   async checkMobile(req: Request) {
@@ -198,7 +200,7 @@ export class Auth implements CommonRoutesConfig {
     }
     const { id, email, role }: any = jwt.verify(testToken, JWT_SECRET)
     const payload: JwtPayload = { id, email, role }
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_MOBILE_EXP_IN });
     return [token, payload]
   }
   async authMiddleware(req: Request, res: express.Response, next: express.NextFunction) {
@@ -256,7 +258,7 @@ export class Auth implements CommonRoutesConfig {
     user = await this.db.getRepository(User).save({ name, email: e, password: saltedPass })
 
     const payload: JwtPayload = { id: user.id, email: e, role: user.role }
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_MOBILE_EXP_IN });
     await this.sender.sendEmail(e, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
     return [token, payload]
   }
