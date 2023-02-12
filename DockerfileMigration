@@ -1,5 +1,4 @@
-FROM node:12.13-alpine
-RUN apk add man man-pages lsof lsof-doc less less-doc nano nano-doc curl nginx
+FROM node:14-alpine
 
 WORKDIR /opt/app
 COPY ./package*.json ./

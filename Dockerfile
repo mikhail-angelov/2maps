@@ -1,5 +1,5 @@
 FROM node:14-alpine
-RUN apk add man man-pages lsof lsof-doc less less-doc nano nano-doc curl nginx
+RUN apk add nano curl
 ENV NODE_ENV=production
 
 WORKDIR /opt/app
