@@ -1,5 +1,5 @@
 import { html, render, useState } from "../libs/htm.js";
-import { IconButton } from "./common.js";
+import { IconButton, Button } from "./common.js";
 
 export const createMapLayer = ({ map, mapList }) => {
   render(
@@ -18,7 +18,7 @@ const MapLayer = ({ map, mapList }) => {
   const onToggle = () => setCollapsed(!collapsed);
 
   return collapsed
-    ? html`<${IconButton}
+    ? html`<${Button}
         className="layer-icon"
         icon="assets/layer.svg"
         onClick=${onToggle}

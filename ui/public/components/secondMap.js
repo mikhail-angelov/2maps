@@ -35,6 +35,16 @@ export const createSecondMap = (center, zoom, mapName) => {
   let hasTerrain = false;
   let hasYandex = true;
   let opacity = 1;
+  let drawData = {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: [],
+      },
+    },
+  };
   const map = new mapboxgl.Map({
     container: "map",
 
@@ -219,6 +229,38 @@ export const createSecondMap = (center, zoom, mapName) => {
       map.removeLayer("terrain-data");
       map.removeSource("mapbox-terrain");
     }
+  };
+  const getDrawSource = () => {
+    const source = map.getSource("draw");
+    if (source) {
+      return source;
+    }
+    map.addSource("draw", {
+      type: "geojson",
+      data: drawData,
+    });
+
+    // Add a black outline around the polygon.
+    map.addLayer({
+      id: "draw",
+      type: "line",
+      source: "draw",
+      layout: {},
+      paint: {
+        "line-color": "red",
+        "line-width": 3,
+      },
+    });
+    return map.getSource("draw");
+  };
+  map.draw = (poly) => {
+    getDrawSource().setData({
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: poly,
+      },
+    });
   };
 
   return map;

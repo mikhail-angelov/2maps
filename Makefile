@@ -1,11 +1,11 @@
 include .env
 
-dump-db: DUMP_FILE=$(shell date +%s)-ls.dump
+dump-db: DUMP_FILE=$(shell date +%s).dump
 dump-db:
-	pg_dump -Fc --dbname=postgresql://postgres:${DB_PASSWORD}@localhost:5432/2maps > ${DUMP_FILE}
+	docker exec postgres bash -c 'pg_dump -Fc --dbname=postgresql://${DB_USERNAME}:${DB_PASSWORD}@127.0.0.1:5432/${DB_DATABASE} | gzip >/var/lib/postgresql/data/${DUMP_FILE}.tar.gz'
 
 restore-db:
-	pg_restore --dbname=${DB_URL} --clean --if-exists --verbose '$(name)'
+	pg_restore --dbname=${DB_URL} --clean --if-exists --verbose dump.tar
 
 build:
 	npm run build

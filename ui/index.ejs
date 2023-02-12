@@ -25,10 +25,10 @@
       href="assets/favicon/favicon-16x16.png"
     />
     <link rel="manifest" href="assets/favicon/site.webmanifest" />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js"></script>
     <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=<%= yandexMapKey %>"></script>
     <link
-      href="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css"
+      href="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.css"
       rel="stylesheet"
     />
     <%- metrica %>
@@ -64,6 +64,7 @@
         <!-- <div id="placemarks"></div> -->
         <div id="slider" class="map-overlay"></div>
         <div id="layers" class="layers-overlay"></div>
+        <div id="draw" class="draw-overlay"></div>
         <div id="wiki" class="wiki-overlay"></div>
       </div>
       <div id="auth"></div>

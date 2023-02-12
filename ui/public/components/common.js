@@ -4,3 +4,8 @@ export const IconButton = ({ icon, onClick, disabled, className, ...other }) =>
   html`<button class="icon-button ${disabled ? 'disabled' : ''} ${className ? className : ''}" onClick=${onClick} ...${other} disabled=${disabled}>
   <img src=${icon}></img>
 </button>`;
+
+export const Button = ({ icon, onClick, disabled, className, ...other }) =>
+  html`<button class="${disabled ? 'disabled' : ''} ${className ? className : ''}" onClick=${onClick} ...${other} disabled=${disabled}>
+  <img src=${icon}></img>
+</button>`;
