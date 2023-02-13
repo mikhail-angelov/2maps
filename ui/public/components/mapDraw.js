@@ -9,6 +9,14 @@ const MapDraw = ({ map }) => {
   const [active, setActive] = useState(false);
   const [draw, setDraw] = useState(false);
   const [path, setPath] = useState([]);
+  // const [clientRect, setClientRect] = useState({});
+
+  map.on("resize", (e)=>{
+    console.log('resize', e)
+    const clientRect = e.target.getCanvasContainer().getClientRects()[0]
+    const overlayStyle = document.getElementById("draw").style
+    overlayStyle.left = `${clientRect.left}px`
+  });
 
   const onToggle = () => setActive(!active);
   const onMouseDown = (e) => {

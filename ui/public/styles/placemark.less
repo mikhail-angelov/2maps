@@ -27,8 +27,17 @@
     background-color: #000;
     border-bottom: 1px solid #808080;
   }
-  .header .title {
+  .header .tab {
     flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid darkslategrey;
+    color: white;
+    margin: 2px;
+    &.active{
+      border-bottom: 2px solid gold;
+      color: gold;
+    }
   }
 
   .list {

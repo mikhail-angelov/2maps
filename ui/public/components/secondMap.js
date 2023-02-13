@@ -72,6 +72,7 @@ export const createSecondMap = (center, zoom, mapName) => {
   map.on("zoom", onLocationUpdate);
   map.on("moveend", onLocationUpdate);
 
+
   map.getMap = () => mapName;
   map.setMap = (newMap) => {
     mapName = newMap;
@@ -239,8 +240,6 @@ export const createSecondMap = (center, zoom, mapName) => {
       type: "geojson",
       data: drawData,
     });
-
-    // Add a black outline around the polygon.
     map.addLayer({
       id: "draw",
       type: "line",

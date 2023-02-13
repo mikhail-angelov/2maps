@@ -2,16 +2,16 @@ import { html, render, Component } from "../libs/htm.js";
 import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
 import { isMobile, getId, delay, postLarge } from "../utils.js";
 import { composeUrlLink, parseUrlParams } from "../urlParams.js";
-import { createAuth } from './auth.js'
-import  {IconButton} from './common.js';
-import '../libs/qrcode.js'
+import { createAuth } from "./auth.js";
+import { IconButton } from "./common.js";
+import "../libs/qrcode.js";
 
-const blackStars = '★★★★★'
-const whiteStars = '☆☆☆☆☆'
+const blackStars = "★★★★★";
+const whiteStars = "☆☆☆☆☆";
 
 export const createPlacemarksPanel = ({ yandexMap }) => {
-  const panel = { addItems: () => { }, refresh: () => { } };
-  let authenticated = false
+  const panel = { addItems: () => {}, refresh: () => {} };
+  let authenticated = false;
 
   let localItems = loadPlacemarksLocal();
   const init = localItems.map((p) => {
@@ -20,28 +20,46 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
   });
 
   const auth = createAuth((value) => {
-    console.log('on auth update', value)
+    console.log("on auth update", value);
     authenticated = value;
-    panel.refresh()
-  })
+    panel.refresh();
+  });
 
-  const {resetToken} = parseUrlParams()
+  const { resetToken } = parseUrlParams();
   if (resetToken) {
-    auth.showPasswordReset()
+    auth.showPasswordReset();
   }
 
   const syncMarks = async (data) => {
-    const items = data.map(({ id, name, description, rate, point, timestamp, removed }) => ({ id, name, description, rate, lat: point.lat, lng: point.lng, timestamp, removed }))
+    const items = data.map(
+      ({ id, name, description, rate, point, timestamp, removed }) => ({
+        id,
+        name,
+        description,
+        rate,
+        lat: point.lat,
+        lng: point.lng,
+        timestamp,
+        removed,
+      })
+    );
     // it returns all synced markers
-    const res = await postLarge(`/marks/sync`, items)
-    console.log('sync', res.length)
+    const res = await postLarge(`/marks/sync`, items);
+    console.log("sync", res.length);
     const toSave = res
-      .filter(item=>!!item.id)
-      .map(({ id, name, description, rate, lng, lat, timestamp }) => ({ id, name, description, rate, point: { lat, lng }, timestamp }))
-    savePlacemarksLocal(toSave)
+      .filter((item) => !!item.id)
+      .map(({ id, name, description, rate, lng, lat, timestamp }) => ({
+        id,
+        name,
+        description,
+        rate,
+        point: { lat, lng },
+        timestamp,
+      }));
+    savePlacemarksLocal(toSave);
     //todo make it without reload
-    location.reload()
-  }
+    location.reload();
+  };
 
   const copyUrl = async (items) => {
     const text = composeUrlLink({
@@ -95,7 +113,17 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
               item.point.lat &&
               item.point.lng
           )
-          .map(({ id, name, point, description, rate, removed, timestamp }) => ({ id, name, point, description, rate, removed, timestamp }));
+          .map(
+            ({ id, name, point, description, rate, removed, timestamp }) => ({
+              id,
+              name,
+              point,
+              description,
+              rate,
+              removed,
+              timestamp,
+            })
+          );
         panel.addItems(items);
       } catch (e) {
         console.log("File content error:", e);
@@ -109,7 +137,16 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     return d > 800 ? `${(d / 1000).toFixed(2)} км` : `${d} м`;
   };
 
-  const PItem = ({ id, name, rate, point, distance, removed, onRemove, onEdit }) =>
+  const PItem = ({
+    id,
+    name,
+    rate,
+    point,
+    distance,
+    removed,
+    onRemove,
+    onEdit,
+  }) =>
     html`<li
       class="place-item"
       key="${id}"
@@ -140,8 +177,13 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       />
     </li>`;
 
-  const Rate = (rate=0) => html`<div class="rate">${blackStars.substr(0, rate) + whiteStars.substr(0, 5 - rate)}</div>`;
+  const Rate = (rate = 0) =>
+    html`<div class="rate">
+      ${blackStars.substr(0, rate) + whiteStars.substr(0, 5 - rate)}
+    </div>`;
 
+  const MARKS_TAB = "marks";
+  const TRACKS_TAB = "tracks";
   class App extends Component {
     componentDidMount() {
       panel.addItems = this.addItems.bind(this);
@@ -151,7 +193,8 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
         placemarks: this.props.init,
         showPanel: !isMobile(),
         refresh: Date.now(),
-        mapUrl: '',
+        mapUrl: "",
+        tab: MARKS_TAB,
       });
     }
 
@@ -162,7 +205,14 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     addItems(items) {
       const { placemarks } = this.state;
       const added = items.map(({ name, description, rate, point }) => {
-        const placeMark = { id: getId(), name, description, rate, point, timestamp: Date.now() };
+        const placeMark = {
+          id: getId(),
+          name,
+          description,
+          rate,
+          point,
+          timestamp: Date.now(),
+        };
         const mapItem = yandexMap.addPlacemark(placeMark);
         return { ...placeMark, mapItem };
       });
@@ -174,7 +224,9 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
 
     removeItem(id, mapItem) {
       const { placemarks } = this.state;
-      const updatedPlacemarks = placemarks.map((p) => p.id === id? { ...p, removed: true } : p);
+      const updatedPlacemarks = placemarks.map((p) =>
+        p.id === id ? { ...p, removed: true } : p
+      );
       if (mapItem) {
         yandexMap.geoObjects.remove(mapItem);
       }
@@ -192,8 +244,8 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
           const id = formData.get("id");
           const name = formData.get("name");
           const description = formData.get("description");
-          const rate = +formData.get("rate")?+formData.get("rate"):0;
-          const timestamp = Date.now()
+          const rate = +formData.get("rate") ? +formData.get("rate") : 0;
+          const timestamp = Date.now();
           const { placemarks } = this.state;
           const updatedPlacemarks = placemarks.map((p) =>
             p.id === id ? { ...p, name, description, timestamp, rate } : p
@@ -225,7 +277,7 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
     }
 
     onShowQR() {
-      location.href = '/admin';
+      location.href = "/admin";
       // const typeNumber = 4;
       // const errorCorrectionLevel = 'L';
       // const qr = window.qrcode(typeNumber, errorCorrectionLevel);
@@ -237,67 +289,118 @@ export const createPlacemarksPanel = ({ yandexMap }) => {
       // this.setState({ mapUrl })
     }
     onCloseQR() {
-      document.getElementById('qr').innerHTML = '';
-      this.setState({ mapUrl: '' })
+      document.getElementById("qr").innerHTML = "";
+      this.setState({ mapUrl: "" });
     }
 
-    render({ }, { placemarks = [], showPanel, mapUrl }) {
+    renderMarks(placemarks) {
       const items = this.formatPlacemarks(placemarks);
-      return showPanel
-        ? html` <div class="placemark">
-                  <div class="header">
-                    <div class="title">Метки</div>
-                    <${IconButton}
-                      icon="assets/close.svg"
-                      onClick=${() => this.setShowPanel(false)}
-                    />
-                  </div>
-                  <ul class="list">
-                    ${items.map(
+      return html` <ul class="list">
+        ${items.map(
           (p) =>
             html`<${PItem}
-                          ...${p}
-                          onRemove=${() => this.removeItem(p.id, p.mapItem)}
-                          onEdit=${() => this.onEdit(p)}
-                        />`
+              ...${p}
+              onRemove=${() => this.removeItem(p.id, p.mapItem)}
+              onEdit=${() => this.onEdit(p)}
+            />`
         )}
-                  </ul>
-                  <div class="footer">
-                  <div class="auth-sync">
-                  ${authenticated
-            ? html`<button class="icon-button footer-button" onClick=${() => syncMarks(placemarks)}>Sync Markers</button>
-                    <button class="icon-button footer-button" onClick=${() => this.onShowQR()}>閙</button>
-                    <div class="qr">
-                    ${mapUrl ? html`<button class="icon-button footer-button qr-close" onClick=${() => this.onCloseQR()}>✕</button>` : null}
-                    <div id="qr">
-                    </div>
-                    </div>
-                    <button class="icon-button footer-button" onClick=${() => auth.logout()}>Logout</button>`
-            : html`<button class="icon-button footer-button" onClick=${() => auth.showLogin()}>Login</button>/
-                    <button class="icon-button footer-button" onClick=${() => auth.showSignUp()}>Sign Up</button>`}
-                  </div>
-                  <div class="import-export">
-                    <label class="upload" htmlFor="upload">
-                    Импорт
-                    </label>
-                    <input type="file" id="upload" onChange=${(e) =>
+      </ul>`;
+    }
+    renderTracks() {
+      return html`<div className="list">
+      not implemented yet
+      </div>`;
+    }
+
+    render({}, { placemarks = [], showPanel, mapUrl, tab }) {
+      if (showPanel) {
+        return html` <div class="placemark">
+        <div class="header">
+          <button class="tab ${
+            tab === MARKS_TAB ? "active" : ""
+          }" onClick=${() => this.setState({ tab: MARKS_TAB })}>Метки</button>
+          <button class="tab ${
+            tab === TRACKS_TAB ? "active" : ""
+          }" onClick=${() => this.setState({ tab: TRACKS_TAB })}>Треки</button>
+          <${IconButton}
+            icon="assets/backArrow.svg"
+            onClick=${() => this.setShowPanel(false)}
+          />
+        </div>
+        ${
+          tab === MARKS_TAB ? this.renderMarks(placemarks) : this.renderTracks()
+        }
+
+        <div class="footer">
+        <div class="auth-sync">
+        ${
+          authenticated
+            ? html`<button
+                  class="icon-button footer-button"
+                  onClick=${() => syncMarks(placemarks)}
+                >
+                  Sync Markers
+                </button>
+                <button
+                  class="icon-button footer-button"
+                  onClick=${() => this.onShowQR()}
+                >
+                  閙
+                </button>
+                <div class="qr">
+                  ${mapUrl
+                    ? html`<button
+                        class="icon-button footer-button qr-close"
+                        onClick=${() => this.onCloseQR()}
+                      >
+                        ✕
+                      </button>`
+                    : null}
+                  <div id="qr"></div>
+                </div>
+                <button
+                  class="icon-button footer-button"
+                  onClick=${() => auth.logout()}
+                >
+                  Logout
+                </button>`
+            : html`<button
+                  class="icon-button footer-button"
+                  onClick=${() => auth.showLogin()}
+                >
+                  Login</button
+                >/
+                <button
+                  class="icon-button footer-button"
+                  onClick=${() => auth.showSignUp()}
+                >
+                  Sign Up
+                </button>`
+        }
+        </div>
+        <div class="import-export">
+          <label class="upload" htmlFor="upload">
+          Импорт
+          </label>
+          <input type="file" id="upload" onChange=${(e) =>
             importPlacemarks(e.target.files)} hidden></input>
-                    <button class="icon-button footer-button" onClick=${() =>
+          <button class="icon-button footer-button" onClick=${() =>
             downloadPlacemarks(placemarks)}>
-                      Экспорт
-                    </button>
-                  </div>
-                  <a class="link" href="http://www.etomesto.ru/">карты c etomesto.ru</a>
-                  <a class="link" href="https://github.com/mikhail-angelov/mapnn">
-                  <img src="assets/github.svg"></img>исходники
-                  </a>
-                  </div>
-                </div>`
-        : html`<${IconButton}
-            class="icon-button footer-button"
-            icon="assets/place.svg"
-            onClick=${() => this.setShowPanel(true)}
-          />`;
+            Экспорт
+          </button>
+        </div>
+        <a class="link" href="http://www.etomesto.ru/">карты c etomesto.ru</a>
+        <a class="link" href="https://github.com/mikhail-angelov/mapnn">
+        <img src="assets/github.svg"></img>исходники
+        </a>
+        </div>
+      </div>`;
+      }
+      return html`<${IconButton}
+        class="icon-button footer-button"
+        icon="assets/rightArrow.svg"
+        onClick=${() => this.setShowPanel(true)}
+      />`;
     }
   }
 
