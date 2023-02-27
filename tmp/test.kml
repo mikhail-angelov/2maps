@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+  <Document>
+    <open>1</open>
+    <visibility>1</visibility>
+    <name>6 мар. 2022 г. 11:46:59</name>
+    <description></description>
+    <atom:author>
+      <atom:name>recored for 2maps.xyz</atom:name>
+    </atom:author>
+    <atom:link href="https://play.google.com/store/apps/details?id=com.bconf2maps" />
+    <ExtendedData>
+      <Data name="comment">
+        <value></value>
+      </Data>
+    </ExtendedData>
+    <TimeStamp>
+      <when>2022-03-06T08:46:59.627Z</when>
+    </TimeStamp>
+    <Style id="track">
+      <LineStyle>
+        <color>ffff0000</color>
+        <width>4</width>
+      </LineStyle>
+    </Style>
+    <Placemark id="tour">
+      <name>6 мар. 2022 г. 11:46:59</name>
+      <description></description>
+      <atom:author>
+        <atom:name>recored for 2maps.xyz</atom:name>
+      </atom:author>
+      <atom:link href="https://play.google.com/store/apps/details?id=com.bconf2maps" />
+      <ExtendedData>
+        <Data name="comment">
+          <value></value>
+        </Data>
+        <Data name="activity">
+          <value>0</value>
+        </Data>
+      </ExtendedData>
+      <TimeSpan>
+        <begin>2022-03-06T08:46:59.627Z</begin>
+        <end>2022-03-06T09:29:26.547Z</end>
+      </TimeSpan>
+      <styleUrl>#track</styleUrl>
+      <gx:MultiTrack>
+        <altitudeMode>absolute</altitudeMode>
+        <gx:interpolate>0</gx:interpolate>
+        <gx:Track>
+          <gx:coord>44.328298 56.079617 75.61</gx:coord>
+          <when>2022-03-06T08:47:03Z</when>
+          <gx:coord>44.328377 56.079494 76.01</gx:coord>
+          <when>2022-03-06T08:47:36Z</when>
+          <gx:coord>44.328399 56.079403 75.38</gx:coord>
+          <when>2022-03-06T08:47:38Z</when>
+          <gx:coord>44.328434 56.079301 74.72</gx:coord>
+          <when>2022-03-06T08:47:40Z</when>
+          <gx:coord>44.328482 56.079193 74.3</gx:coord>
+          <when>2022-03-06T08:47:42Z</when>
+        </gx:Track>
+      </gx:MultiTrack>
+    </Placemark>
+  </Document>
+</kml>

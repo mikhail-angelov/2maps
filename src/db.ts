@@ -7,6 +7,7 @@ import {
     ConnectionOptions,
 } from "typeorm";
 import { Mark } from './entities/mark'
+import { Track } from './entities/track'
 import { User } from './entities/user'
 import { MapFile } from './entities/mapFile'
 import { TileSource } from './entities/tileSource'
@@ -41,7 +42,7 @@ export const closeConnection = async () => {
 export const initDbConnectionTest = async (db: any) => {
     try {
         const conn = await db.initDb({
-            entities: [User, Mark, MapFile, TileSource, WikiTile],
+            entities: [User, Mark, Track, MapFile, TileSource, WikiTile],
         });
         return conn
     } catch (e) {
