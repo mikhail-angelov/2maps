@@ -11,12 +11,32 @@ const USER = {
   email: "test",
   password: "test",
 };
+const GEO_JSON = {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [44.328298, 56.079617],
+            [44.328377, 56.079494],
+            [44.328399, 56.079403],
+            [44.328434, 56.079301],
+            [44.328482, 56.079193],
+          ],
+        },
+        properties: {},
+        id: "1",
+      },
+    ],
+  };
 const TRACKS: Track[] = [
   {
     id: "014acc56-cb26-41a6-b995-1266157f3c10",
     userId: USER.id,
     name: "test",
-    track: '',
+    geoJson: JSON.stringify(GEO_JSON),
     timestamp: new Date(1626944504856),
   },
 ];
@@ -55,7 +75,7 @@ describe("tracks", () => {
     });
   });
   it("should create one", (done) => {
-    const req = { method: "post", body: {name:'test', image:null, track:'', timestamp: Date.now()} } as Request;
+    const req = { method: "post", body: {name:'test', image:null, geoJson: GEO_JSON, timestamp: Date.now()} } as Request;
     const routes = tracks.getRoutes();
     //4 - create track
     routes.stack[4].handle(req, {

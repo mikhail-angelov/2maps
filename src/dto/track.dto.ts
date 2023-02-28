@@ -1,10 +1,10 @@
-import { Feature, LineString } from "geojson";
+import { FeatureCollection } from "geojson";
 
 export interface TrackDto {
   id: string;
   name: string;
   image?: Buffer;
-  track: Feature<LineString>;
+  geoJson: FeatureCollection;
   timestamp: number;
 }
 

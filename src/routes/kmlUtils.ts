@@ -4,44 +4,33 @@ import _ from "lodash";
 import { v4 as uuid } from "@lukeed/uuid";
 import { TrackDto } from "../dto/track.dto";
 
-import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
+import { XMLBuilder } from "fast-xml-parser";
+import { DOMParser } from "xmldom";
+const tj = require("@mapbox/togeojson");
 
-const addAltitude = (coordinates: Position) => [...coordinates, 0];
+const addAltitude = ([lng, lat]: Position) => [lng, lat, 0];
 
 export const kmlToJson = (data: string): TrackDto | null => {
-  const xml = new XMLParser({
-    ignoreAttributes: false,
-  }).parse(data);
-
-  const placemark = xml?.kml?.Document?.Placemark;
-  if (!placemark) {
+  const kml = new DOMParser().parseFromString(data);
+  const geoJson = tj.kml(kml);
+  const feature = geoJson.features[0];
+  if (!feature) {
     return null;
   }
-  const coords = placemark["gx:MultiTrack"]["gx:Track"]["gx:coord"];
-  const coordinates: Position[] = coords.map((coord: string) => {
-    const [lng, lat] = coord.split(" ");
-    return [+lng, +lat];
-  });
-  const track: Feature<LineString> = {
-    type: "Feature",
-    geometry: {
-      type: "LineString",
-      coordinates,
-    },
-    properties: {},
-  };
-  const id = xml.kml.Document.id || uuid();
-  const name = placemark.name || `track ${dayjs().format("YY.MM.DD HH-mm")}`;
-  const timestamp = placemark?.TimeSpan?.begin
-    ? dayjs(placemark?.TimeSpan?.begin).unix()
+  const id = feature?.id || uuid();
+  const name =
+    feature?.properties?.name || `track ${dayjs().format("YY.MM.DD HH-mm")}`;
+  const timestamp = feature?.timespan?.begin
+    ? dayjs(feature?.timespan?.begin).unix()
     : Date.now();
-  return { id, name, track, timestamp };
+  return { id, name, geoJson, timestamp };
 };
 
 export const jsonToKml = (track: TrackDto): string => {
   const name =
     track.name || `track ${dayjs(track.timestamp).format("YY.MM.DD HH-mm")}`;
-  const coords = track.track.geometry.coordinates;
+  const feature = track.geoJson.features[0] as Feature<LineString>;
+  const coords = feature.geometry.coordinates;
   const coordinates = coords.map(addAltitude).join(" ");
   const timeStart = dayjs(track.timestamp).toISOString() || "";
   const timeEnd = dayjs(track.timestamp).toISOString() || "";

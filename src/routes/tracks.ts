@@ -1,6 +1,7 @@
 import { CommonRoutesConfig } from "./common";
 import express, { Request } from "express";
 import _ from "lodash";
+import { Readable } from "stream";
 import multer from "multer";
 import { v4 as uuid } from "@lukeed/uuid";
 import { Connection } from "typeorm";
@@ -12,7 +13,7 @@ import { kmlToJson, jsonToKml } from "./kmlUtils";
 const upload = multer();
 
 const mapToEntity = (
-  { name, image, track, timestamp }: TrackDto,
+  { name, image, geoJson, timestamp }: TrackDto,
   userId: string
 ): Track => {
   return {
@@ -20,19 +21,19 @@ const mapToEntity = (
     userId,
     name,
     image,
-    track: JSON.stringify(track),
+    geoJson: JSON.stringify(geoJson),
     timestamp: new Date(timestamp) || Date.now(),
   };
 };
 const mapListToDto = ({ id, name, image, timestamp }: Track): TrackItemDto => {
   return { id, name, timestamp: timestamp.getTime() || Date.now(), image };
 };
-const mapToDto = ({ id, name, image, track, timestamp }: Track): TrackDto => {
+const mapToDto = ({ id, name, image, geoJson, timestamp }: Track): TrackDto => {
   return {
     id,
     name,
     timestamp: timestamp.getTime() || Date.now(),
-    track: track ? JSON.parse(track) : "",
+    geoJson: geoJson ? JSON.parse(geoJson) : "",
     image,
   };
 };
@@ -96,7 +97,13 @@ export class Tracks implements CommonRoutesConfig {
           if (!track) {
             return res.status(400).json({ error: `no tack request ${id}` });
           }
-          res.status(200).send(new Buffer(jsonToKml(mapToDto(track)),'utf8'));
+          res.setHeader(
+            "Content-disposition",
+            `attachment; filename=${track.name}.kml`
+          );
+          res.setHeader("Content-type", "application/vnd.google-earth.kml+xml");
+          const readable = Readable.from([jsonToKml(mapToDto(track))]);
+          readable.pipe(res);
         } catch (e) {
           console.log("get error", id, e);
           res.status(400).json({ error: "invalid request" });
@@ -144,21 +151,18 @@ export class Tracks implements CommonRoutesConfig {
       async (req: Request, res: express.Response) => {
         const user = req.user;
         const value = req?.file?.buffer.toString("utf8");
-        console.log("--kml", value);
-        //todo validate  tack
         if (!user?.id || !value) {
           return res.status(400).json({ error: `invalid request` });
         }
         try {
-          const track = kmlToJson(value)
+          const track = kmlToJson(value);
           if (!track) {
             return res.status(400).json({ error: `invalid request` });
           }
-          track.name = req.body.name
           const newTrack = await this.db.getRepository(Track).save({
-            track: JSON.stringify(track.track),
-            name: req.body.name,
-            timestamp: Date.now(),
+            geoJson: JSON.stringify(track.geoJson),
+            name: track.name,
+            timestamp: track.timestamp,
           });
           res.status(200).json(mapToDto(newTrack));
         } catch (e) {

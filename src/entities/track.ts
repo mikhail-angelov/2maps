@@ -18,8 +18,8 @@ export class Track {
     @Column({default:''})
     name!: string;
 
-    @Column("simple-json")
-    track!: string;
+    @Column({type: "simple-json", name:'geo_json'})
+    geoJson!: string;
 
     @ColumnEx({type: "bytea", nullable: true})
     image?: Buffer;
