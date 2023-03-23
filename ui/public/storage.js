@@ -28,3 +28,12 @@ export const loadOpacity = () => {
   const o = localStorage.getItem("opacity");
   return o ? +o : 50;
 };
+
+export const savePanelWidth = (width) => {
+  localStorage.setItem("panel-width", "" + width);
+};
+
+export const loadPanelWidth = () => {
+  const o = localStorage.getItem("panel-width");
+  return o ? +o : 200;
+};

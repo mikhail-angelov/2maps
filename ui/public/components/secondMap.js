@@ -30,7 +30,7 @@ const debounce = function (func, delay) {
   };
 };
 
-export const createSecondMap = (center, zoom, mapName) => {
+export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
   let hasWiki = false;
   let hasTerrain = false;
   let hasYandex = true;
@@ -38,11 +38,8 @@ export const createSecondMap = (center, zoom, mapName) => {
   let drawData = {
     type: "geojson",
     data: {
-      type: "Feature",
-      geometry: {
-        type: "LineString",
-        coordinates: [],
-      },
+      type: "FeatureCollection",
+      features:[]
     },
   };
   const map = new mapboxgl.Map({
@@ -71,7 +68,6 @@ export const createSecondMap = (center, zoom, mapName) => {
   });
   map.on("zoom", onLocationUpdate);
   map.on("moveend", onLocationUpdate);
-
 
   map.getMap = () => mapName;
   map.setMap = (newMap) => {
@@ -252,14 +248,19 @@ export const createSecondMap = (center, zoom, mapName) => {
     });
     return map.getSource("draw");
   };
-  map.draw = (poly) => {
-    getDrawSource().setData({
-      type: "Feature",
-      geometry: {
-        type: "LineString",
-        coordinates: poly,
-      },
-    });
+  map.draw = (geoJson) => {
+    getDrawSource().setData(geoJson);
+  };
+
+  map.saveDraw = (geoJson) => {
+    console.log("-save-", geoJson);
+    const d = new Date()
+    trackStore.add({
+      id:`${Date.now()}`,
+      name:`draw-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}_${d.getHours()}:${d.getMinutes()}`,
+      geoJson,
+      timestamp: Date.now(),
+    })
   };
 
   return map;

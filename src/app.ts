@@ -9,6 +9,7 @@ import { OsmTiles } from './routes/osm'
 import { Auth } from './routes/auth';
 import { initDbConnection } from './db'
 import { Marks } from './routes/marks';
+import { Tracks } from './routes/tracks';
 import { Maps } from './routes/maps';
 import { Users } from './routes/users';
 import { Wikimapia } from './routes/wikimapia';
@@ -45,17 +46,19 @@ const run = async () => {
     const tiles = new Tiles(db)
     const osm = new OsmTiles()
     const auth = new Auth(db, sender)
-    const markers = new Marks(db, auth)
+    const marks = new Marks(db, auth)
+    const tracks = new Tracks(db, auth)
     const maps = new Maps(db,auth)
     const users = new Users(db,auth)
     const wikimapia = new Wikimapia(db)
     app.use('/auth', auth.getRoutes());
     app.use('/user', users.getRoutes());
-    app.use('/marks', markers.getRoutes());
+    app.use('/marks', marks.getRoutes());
+    app.use('/tracks', tracks.getRoutes());
     app.use('/maps', maps.getRoutes());
     app.use('/tiles', tiles.getRoutes());
     app.use('/osm-tiles', osm.getRoutes());
-    app.use('/download', markers.getRoutes());
+    app.use('/download', marks.getRoutes()); //todo: remove it
     app.use('/wikimapia', wikimapia.getRoutes());
 
     server.listen(port, () => {

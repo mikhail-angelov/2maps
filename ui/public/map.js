@@ -1,15 +1,29 @@
 import { loadOpacity } from "./storage.js";
 import { parseUrlParams } from "./urlParams.js";
 import { createOpacitySlider } from "./components/opacitySlider.js";
-import { createPlacemarksPanel } from "./components/placemarks.js";
+import { createLeftPanel } from "./components/leftPanel.js";
 import { createSecondMap } from "./components/secondMap.js";
 import { createMapLayer } from "./components/mapLayers.js";
 import { createMapDraw } from "./components/mapDraw.js";
+import { createAuth } from "./components/auth.js";
 import { isMobile, get, rateToColor } from "./utils.js";
+import { AuthStore } from "./flux/authStore.js";
+import { MarkerStore } from "./flux/markerStore.js";
+import { TrackStore } from "./flux/trackStore.js";
 
 let { zoom, center: position, name, opacity, placemarks: marks } = parseUrlParams();
 let mapName = 'mende-nn';
-const secondMap = createSecondMap(position, zoom, mapName);
+const authStore = new AuthStore()
+const markerStore = new MarkerStore()
+const trackStore = new TrackStore()
+authStore.subscribeAuth(()=>{
+  if(authStore.isAuthenticated()){
+    trackStore.loadAll()
+  }
+})
+createAuth(authStore)
+authStore.check()
+const secondMap = createSecondMap({center:position, zoom, mapName, trackStore});
 opacity = opacity ? +opacity : loadOpacity();
 
 ymaps.ready(() => {
@@ -122,8 +136,8 @@ ymaps.ready(() => {
     secondMap.setOpacity(value / 100);
   });
   marks.forEach((p) => addMark(p));
-  const panel = createPlacemarksPanel({ yandexMap });
-  createMapDraw({map:secondMap});
+  const panel = createLeftPanel({ yandexMap, secondMap, markerStore, trackStore, authStore });
+  createMapDraw({map:secondMap, trackStore});
   get('/tiles/list').then((mapList) => {
     createMapLayer({mapList, map: secondMap});
   })
