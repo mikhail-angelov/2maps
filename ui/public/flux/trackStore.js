@@ -3,8 +3,8 @@ import { get, post } from "../utils.js";
 
 export class TrackStore extends Store {
   tracks = [];
-  selected = null
-  loading = false
+  selected = null;
+  loading = false;
 
   async loadAll() {
     try {
@@ -18,12 +18,12 @@ export class TrackStore extends Store {
     return this.tracks;
   }
   async add(track) {
-    try{
-        await post('/tracks', track)
-    this.tracks = [...this.tracks, track];
-    this.refresh();
-    }catch(e){
-        console.log('failed to add track')
+    try {
+      const newTrack = await post("/tracks", track);
+      this.tracks = [...this.tracks, newTrack];
+      this.refresh();
+    } catch (e) {
+      console.log("failed to add track");
     }
   }
   remove(id) {
@@ -36,8 +36,8 @@ export class TrackStore extends Store {
     );
     this.refresh();
   }
-  select(track){
-    this.selected = track
+  select(track) {
+    this.selected = track;
     this.refresh();
   }
 }

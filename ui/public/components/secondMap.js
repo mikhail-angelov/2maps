@@ -253,7 +253,6 @@ export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
   };
 
   map.saveDraw = (geoJson) => {
-    console.log("-save-", geoJson);
     const d = new Date()
     trackStore.add({
       id:`${Date.now()}`,
@@ -261,6 +260,7 @@ export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
       geoJson,
       timestamp: Date.now(),
     })
+
   };
 
   return map;

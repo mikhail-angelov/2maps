@@ -1,6 +1,9 @@
 import { html } from "../libs/htm.js";
-import { getId, get, postLarge } from "../utils.js";
+import { getId, get } from "../utils.js";
+import { composeUrlLink } from "../urlParams.js";
 import { IconButton } from "./common.js";
+import { kmlToJson } from "../libs/togeojson.js";
+import bbox from "../libs/geojson-bbox.js";
 import "../libs/qrcode.js";
 
 const blackStars = "★★★★★";
@@ -15,83 +18,50 @@ export class Tracks {
     this.store.onRefresh(() => {
       this.panel.refresh();
     });
-
-    // let localItems = loadPlacemarksLocal();
-    // this.placemarks = localItems.map((p) => {
-    //   const mapItem = this.yandexMap.addPlacemark(p);
-    //   return { ...p, mapItem };
-    // });
+    this.onSelect = this.onSelect.bind(this);
+    this.onRemove = this.onRemove.bind(this);
+    this.copyUrl = this.copyUrl.bind(this);
   }
 
-  async syncMarks() {}
-
-  // async copyUrl({items}) {
-  //   const text = composeUrlLink({
-  //     zoom: this.yandexMap.getZoom() - 1,
-  //     center: this.yandexMap.getCenter().reverse(),
-  //     opacity: 100,
-  //     placemarks: items,
-  //   });
-  //   try {
-  //     await navigator.clipboard.writeText(text);
-  //     alert(`${text} is copied`);
-  //   } catch (e) {
-  //     console.log(e);
-  //     alert(`error copy ${e}`);
-  //   }
-  // }
-  // downloadPlacemarks(items) {
-  //   const toSore = items.map((p) => ({
-  //     id: p.id,
-  //     name: p.name,
-  //     point: p.point,
-  //     timestamp: p.timestamp,
-  //     description: p.description,
-  //     rate: p.rate,
-  //     removed: p.removed,
-  //   }));
-  //   const file = new Blob([JSON.stringify(toSore)], {
-  //     type: "application/json",
-  //   });
-  //   const a = document.createElement("a");
-  //   a.href = URL.createObjectURL(file);
-  //   a.download = "poi.json";
-  //   a.click();
-  // }
+  async test() {}
+  async copyUrl({ items }) {
+    const text = composeUrlLink({
+      zoom: this.yandexMap.getZoom() - 1,
+      center: this.yandexMap.getCenter().reverse(),
+      opacity: 100,
+      track: items,
+    });
+    try {
+      await navigator.clipboard.writeText(text);
+      alert(`${text} is copied`);
+    } catch (e) {
+      console.log(e);
+      alert(`error copy ${e}`);
+    }
+  }
   importKml(files) {
+    const parser = new DOMParser();
     if (files.length === 0) {
       console.log("No file is selected");
       return;
     }
     const reader = new FileReader();
     reader.onload = (event) => {
-      // try {
-      //   const data = JSON.parse(event.target.result);
-      //   const items = data
-      //     .filter(
-      //       (item) =>
-      //         item &&
-      //         item.id &&
-      //         item.name &&
-      //         item.point &&
-      //         item.point.lat &&
-      //         item.point.lng
-      //     )
-      //     .map(
-      //       ({ id, name, point, description, rate, removed, timestamp }) => ({
-      //         id,
-      //         name,
-      //         point,
-      //         description,
-      //         rate,
-      //         removed,
-      //         timestamp,
-      //       })
-      //     );
-      //   this.addItems(items);
-      // } catch (e) {
-      //   console.log("File content error:", e);
-      // }
+      try {
+        const doc = parser.parseFromString(
+          event.target.result,
+          "application/xml"
+        );
+        const geoJson = kmlToJson.kml(doc);
+        this.store.add({
+          id: `${Date.now()}`,
+          name: files[0].name,
+          geoJson,
+          timestamp: Date.now(),
+        });
+      } catch (e) {
+        console.log("File content error:", e);
+      }
     };
     reader.readAsText(files[0]);
   }
@@ -134,7 +104,7 @@ export class Tracks {
     this.panel.refresh();
   }
 
-  removeItem(id) {
+  onRemove(id) {
     const updatedPlacemarks = this.placemarks.map((p) =>
       p.id === id ? { ...p, removed: true } : p
     );
@@ -151,9 +121,22 @@ export class Tracks {
       this.store.select(null);
     } else {
       const track = await get(`tracks/${id}`);
-      this.store.select(track);
-      this.secondMap.draw(track.geoJson);
-      // this.yandexMap.setCenter([point.lat, point.lng])
+      if (track?.geoJson) {
+        this.store.select(track);
+        this.secondMap.draw(track.geoJson);
+        const bounds = bbox(track.geoJson);
+        this.yandexMap.setBounds(
+          [
+            [bounds[1], bounds[0]],
+            [bounds[3], bounds[2]],
+          ],
+          {
+            checkZoomRange: true,
+          }
+        );
+      } else {
+        alert("track not found");
+      }
     }
   }
 
@@ -169,7 +152,7 @@ export class Tracks {
               ({ id, name, geoJson }) =>
                 html`<${this.PItem}
                   ...${{ id, name }}
-                  onRemove=${() => this.removeItem(id)}
+                  onRemove=${() => this.onRemove(id)}
                   copyUrl=${() => this.copyUrl([{ id, name, geoJson }])}
                   onSelect=${() => this.onSelect(id)}
                 />`
@@ -183,7 +166,7 @@ export class Tracks {
     </label>
     <input type="file" id="upload" onChange=${(e) =>
       this.importKml(e.target.files)} hidden></input>
-    <button class="icon-button footer-button" onClick=${() => this.syncMarks()}>
+    <button class="icon-button footer-button" onClick=${() => this.test()}>
       Тест
     </button></div></div>`;
   }
