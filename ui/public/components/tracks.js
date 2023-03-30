@@ -142,7 +142,6 @@ export class Tracks {
 
   render() {
     const items = this.store.getAll();
-    console.log("render track", items);
     const isBlankList = !items || items.length === 0;
     return html`${
       isBlankList

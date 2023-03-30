@@ -2,8 +2,7 @@ version: '3.7'
 
 services:
 
-  postgres-2map:
-    container_name: postgres-2map
+  postgres:
     image: postgis/postgis:12-3.1
     networks:
       - webnet
@@ -25,9 +24,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres-2map
+      - postgres
     links:
-      - postgres-2map:postgres-2map
+      - postgres:postgres
     command: npm run migration:run
 
 networks:

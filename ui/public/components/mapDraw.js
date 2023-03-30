@@ -40,6 +40,7 @@ const MapDraw = ({ map, trackStore }) => {
   const onCloseTack = () => {
     trackStore.select(null);
     setActive(false);
+    map.closeDraw();
   };
   const onMouseDown = (e) => {
     setDraw(true);

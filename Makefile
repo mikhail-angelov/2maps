@@ -30,10 +30,10 @@ scp-map:
 	scp -r ./data/mende-nn.sqlitedb root@2maps.xyz:/opt/2maps/data/mende-nn.sqlitedb
 
 deploy: 
-	ssh root@2maps.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker-compose down;docker-compose up -d'
+	ssh root@2maps.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker-compose down --remove-orphans;docker-compose up -d'
 
 migration: 
-	ssh root@2maps.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps-migration:latest; cd /opt/2maps;docker-compose down;docker-compose -f ./docker-compose.migration.yml up;docker-compose up -d'
+	ssh root@2maps.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps-migration:latest; cd /opt/2maps;docker-compose down --remove-orphans;docker-compose -f ./docker-compose.migration.yml up;docker-compose up -d'
 
 clean:
 	docker system prune -a

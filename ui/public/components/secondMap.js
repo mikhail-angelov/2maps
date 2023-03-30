@@ -251,6 +251,10 @@ export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
   map.draw = (geoJson) => {
     getDrawSource().setData(geoJson);
   };
+  map.closeDraw = () => {
+    map.removeLayer("draw");
+    map.removeSource("draw");
+  };
 
   map.saveDraw = (geoJson) => {
     const d = new Date()
