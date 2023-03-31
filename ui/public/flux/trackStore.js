@@ -1,5 +1,5 @@
 import { Store } from "./store.js";
-import { get, post } from "../utils.js";
+import { get, post, remove } from "../utils.js";
 
 export class TrackStore extends Store {
   tracks = [];
@@ -26,8 +26,9 @@ export class TrackStore extends Store {
       console.log("failed to add track");
     }
   }
-  remove(id) {
+  async remove(id) {
     this.tracks = this.tracks.filter((item) => item.id !== id);
+    await remove(`/tracks/${id}`);
     this.refresh();
   }
   update(track) {

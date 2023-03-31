@@ -56,7 +56,10 @@ export class Tracks implements CommonRoutesConfig {
         try {
           const tracks = await this.db
             .getRepository(Track)
-            .find({ userId: user?.id });
+            .find({
+              where: { userId: user?.id },
+              order: { timestamp: "DESC" },
+            });
           res.status(200).json(tracks.map(mapListToDto));
         } catch (e) {
           console.log("get error", e);

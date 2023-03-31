@@ -6,9 +6,6 @@ import { kmlToJson } from "../libs/togeojson.js";
 import bbox from "../libs/geojson-bbox.js";
 import "../libs/qrcode.js";
 
-const blackStars = "★★★★★";
-const whiteStars = "☆☆☆☆☆";
-
 export class Tracks {
   constructor({ yandexMap, secondMap, panel, trackStore }) {
     this.yandexMap = yandexMap;
@@ -20,24 +17,12 @@ export class Tracks {
     });
     this.onSelect = this.onSelect.bind(this);
     this.onRemove = this.onRemove.bind(this);
-    this.copyUrl = this.copyUrl.bind(this);
+    this.onDownload = this.onDownload.bind(this);
   }
 
   async test() {}
-  async copyUrl({ items }) {
-    const text = composeUrlLink({
-      zoom: this.yandexMap.getZoom() - 1,
-      center: this.yandexMap.getCenter().reverse(),
-      opacity: 100,
-      track: items,
-    });
-    try {
-      await navigator.clipboard.writeText(text);
-      alert(`${text} is copied`);
-    } catch (e) {
-      console.log(e);
-      alert(`error copy ${e}`);
-    }
+  async onDownload(id) {
+    window.open(`/tracks/${id}/kml`, "__blank");
   }
   importKml(files) {
     const parser = new DOMParser();
@@ -66,59 +51,38 @@ export class Tracks {
     reader.readAsText(files[0]);
   }
 
-  PItem({ id, name, onRemove, copyUrl, onSelect }) {
+  PItem({ id, name, selected, onRemove, onDownload, onSelect }) {
     return html`<li class="place-item" key="${id}" onClick=${onSelect}>
       <div class="title">
-        <div>${name}</div>
+        <div class=${selected ? "red" : ""}>${name}</div>
       </div>
       <${IconButton}
-        icon="assets/link.svg"
-        tooltips="Скопировать линк"
-        onClick=${copyUrl}
+        icon="assets/download.svg"
+        tooltips="Скачать KML"
+        onClick=${onDownload}
       />
       <${IconButton}
         icon="assets/remove.svg"
-        tooltips="Удалить все"
+        tooltips="Удалить"
         onClick=${onRemove}
       />
     </li>`;
   }
 
-  addItems(items) {
-    const added = items.map(({ name, description, rate, point }) => {
-      const placeMark = {
-        id: getId(),
-        name,
-        description,
-        rate,
-        point,
-        timestamp: Date.now(),
-      };
-      const mapItem = this.yandexMap.addPlacemark(placeMark);
-      return { ...placeMark, mapItem };
-    });
-
-    const updatedPlacemarks = [...this.placemarks, ...added];
-    this.placemarks = updatedPlacemarks;
-    savePlacemarksLocal(updatedPlacemarks);
-    this.panel.refresh();
-  }
-
-  onRemove(id) {
-    const updatedPlacemarks = this.placemarks.map((p) =>
-      p.id === id ? { ...p, removed: true } : p
-    );
-    // if (mapItem) {
-    //   this.yandexMap.geoObjects.remove(mapItem);
-    // }
-    this.placemarks = updatedPlacemarks;
-    savePlacemarksLocal(updatedPlacemarks);
-    this.panel.refresh();
+  onRemove(id, name) {
+    if (window.confirm(`Вы хотите удалить трек ${name}?`)) {
+      if (this.store.selected?.id === id) {
+        this.store.select(null);
+        this.secondMap.closeDraw();
+      }
+      this.store.remove(id);
+    }
   }
 
   async onSelect(id) {
     if (this.store.selected?.id === id) {
       this.store.select(null);
+      this.secondMap.closeDraw();
     } else {
       const track = await get(`tracks/${id}`);
       if (track?.geoJson) {
@@ -148,12 +112,18 @@ export class Tracks {
         ? html`<div className="list">not tracks</div>`
         : html`<ul class="list">
             ${items.map(
-              ({ id, name, geoJson }) =>
+              ({ id, name }) =>
                 html`<${this.PItem}
-                  ...${{ id, name }}
-                  onRemove=${() => this.onRemove(id)}
-                  copyUrl=${() => this.copyUrl([{ id, name, geoJson }])}
-                  onSelect=${() => this.onSelect(id)}
+                  ...${{ id, name, selected: id === this.store.selected?.id }}
+                  onRemove=${(e) => {
+                    e.stopPropagation();
+                    this.onRemove(id, name);
+                  }}
+                  onDownload=${(e) => {
+                    e.stopPropagation();
+                    this.onDownload(id);
+                  }}
+                  onSelect=${(e) => this.onSelect(id)}
                 />`
             )}
           </ul>`
@@ -165,8 +135,6 @@ export class Tracks {
     </label>
     <input type="file" id="upload" onChange=${(e) =>
       this.importKml(e.target.files)} hidden></input>
-    <button class="icon-button footer-button" onClick=${() => this.test()}>
-      Тест
-    </button></div></div>`;
+    </div></div>`;
   }
 }

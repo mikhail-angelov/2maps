@@ -74,3 +74,13 @@ export const postLarge = async (url, data) => {
     throw e
   }
 }
+
+export const remove = async (url) => {
+  try {
+    const res = await window.axios.delete(url)
+    return res.data
+  } catch (e) {
+    console.log('fetch error', e)
+    throw e
+  }
+}
