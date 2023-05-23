@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { DbUnit } from 'nestjs-db-unit';
+import dayjs from "dayjs";
 import { initDbConnectionTest } from '../db'
 import { Marks, WebMark } from './marks'
 import { Point } from 'geojson';
@@ -21,18 +22,18 @@ const MARKS: Mark[] = [{
     description: 'none',
     rate: 2,
     location,
-    timestamp: new Date(1626944504856),
+    timestamp: new Date(1626944504857),
 }, {
     id: '014acc56-cb26-41a6-b995-1266157f3c09',
     userId: USER.id,
     name: 'to remove',
     description: 'none',
     location,
-    timestamp: new Date(1626944504856),
+    timestamp: new Date(1626944504858),
 }]
 
 describe('marks', () => {
-    let db = new DbUnit();
+    let db = new DbUnit({debug:true});
     let marks: Marks
     beforeEach(async () => {
         const conn = await initDbConnectionTest(db);
@@ -47,7 +48,8 @@ describe('marks', () => {
 
     it('check blank sync', async () => {
         const webMarks: WebMark[] = []
-        const syncedMarks = await marks.syncMarks(USER.id, webMarks)
+        await marks.syncMarks(USER.id, webMarks)
+        const syncedMarks = await marks.getAll(USER.id)
         expect(syncedMarks.length).to.equal(3)
     })
     it('check sync with conflict', async () => {
@@ -89,7 +91,13 @@ describe('marks', () => {
             lng: 43.989515211547825,
             timestamp: 1626944504856,
         }]
-        const syncedMarks = await marks.syncMarks(USER.id, webMarks)
+        await marks.syncMarks(USER.id, webMarks)
+        const syncedMarks = await marks.getAll(USER.id)
         expect(syncedMarks.length).to.equal(3)
+    })
+
+    it('should return fresh batch', async () => {
+        const res = await marks.getBatch(USER.id, dayjs(1626944504856).subtract(1,'day').toDate())
+        expect(res.length).greaterThanOrEqual(1)
     })
 })

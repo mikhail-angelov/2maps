@@ -1,5 +1,4 @@
-import { Entity, Index, Column, PrimaryGeneratedColumn } from "typeorm";
-import { UpdateDateColumnEx, ColumnEx } from 'nestjs-db-unit'
+import { Entity, Index, Column, PrimaryGeneratedColumn,UpdateDateColumn } from "typeorm";
 
 @Entity('wiki')
 @Index(["z", "y", "x"])
@@ -8,7 +7,7 @@ export class WikiTile {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @UpdateDateColumnEx({ name: 'updated_at', type: 'timestamptz' })
+    @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
     timestamp!: Date;
 
     @Column()
@@ -23,6 +22,6 @@ export class WikiTile {
     @Column()
     z!: number;
 
-    @ColumnEx({type: "bytea", nullable: false})
+    @Column({type: "bytea", nullable: false})
     image!: Buffer;
 }

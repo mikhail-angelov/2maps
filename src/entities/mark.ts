@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { Point } from 'geojson';
-import { ColumnEx } from 'nestjs-db-unit'
 import { User } from "./user";
 
 @Entity({ name: 'mark' })
@@ -25,13 +24,13 @@ export class Mark {
     @Column({ nullable: true })
     rate?: number;
 
-    @ColumnEx({
+    @Column({
         type: 'geography',
         spatialFeatureType: 'Point',
         srid: 4326,
     })
     location!: Point;
 
-    @ColumnEx({ type: 'timestamptz' })
+    @Column({ type: 'timestamptz' })
     timestamp!: Date;
 }

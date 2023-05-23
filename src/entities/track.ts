@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
-import { ColumnEx } from 'nestjs-db-unit'
 import { User } from "./user";
 
 @Entity({ name: 'track' })
@@ -21,9 +20,9 @@ export class Track {
     @Column({type: "simple-json", name:'geo_json'})
     geoJson!: string;
 
-    @ColumnEx({type: "bytea", nullable: true})
+    @Column({type: "bytea", nullable: true})
     image?: Buffer;
 
-    @ColumnEx({ type: 'timestamptz' })
+    @Column({ type: 'timestamptz' })
     timestamp!: Date;
 }
