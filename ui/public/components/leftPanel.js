@@ -1,5 +1,5 @@
 import { html, render, Component } from "../libs/htm.js";
-import { isMobile, delay } from "../utils.js";
+import { isMobile } from "../utils.js";
 import { parseUrlParams } from "../urlParams.js";
 import { IconButton } from "./common.js";
 import { savePanelWidth, loadPanelWidth } from "../storage.js";
@@ -15,7 +15,7 @@ export const createLeftPanel = ({
   authStore,
 }) => {
   const panel = { refresh: () => {}, addItems: () => {}, addTrack: () => {} };
-  const marks = new Marks(yandexMap, panel, markerStore);
+  const marks = new Marks(panel, markerStore);
   const tracks = new Tracks({ yandexMap, secondMap, panel, trackStore });
   panel.addItems = (items) => marks.addItems(items);
   panel.addTrack = (track) => tracks.addTrack(track);
@@ -65,9 +65,7 @@ export const createLeftPanel = ({
     }
 
     setShowPanel(value) {
-      this.setState({ showPanel: value }, () => {
-        delay(800, () => yandexMap.refreshMe()); // hack to let containers resize, then resize map
-      });
+      this.setState({ showPanel: value });
     }
 
     onShowQR() {

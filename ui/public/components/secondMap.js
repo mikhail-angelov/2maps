@@ -1,126 +1,175 @@
+import { MAPS } from "../flux/mapsStore.js";
 import { setUrlParams } from "../urlParams.js";
+import { debounce } from "../utils.js";
+import { render } from "../libs/htm.js";
+import { EditMarker, ViewMarker } from "./marks.js";
 
 mapboxgl.accessToken = window.mapBoxKey;
 
+const PRIMARY_SOURCE_ID = "primary-tiles";
+const SECONDARY_SOURCE_ID = "secondary-tiles";
+const MARKERS_SOURCE_ID = "markers";
 const RASTER_LAYER = {
-  id: "m-tiles",
   type: "raster",
   source: "raster-tiles",
   minzoom: 2,
   maxzoom: 19,
 };
-const RASTER_SOURCE_ID = "raster-tiles";
-const RasterSource = (mapName) => ({
+const RASTER_SOURCE = {
   type: "raster",
-  tiles: [`/tiles/${mapName}/{z}/{x}/{y}.jpg`],
   tileSize: 256,
   attribution: "Map tiles",
-});
-
-const debounce = function (func, delay) {
-  let timer;
-  return function () {
-    //anonymous function
-    const context = this;
-    const args = arguments;
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      func.apply(context, args);
-    }, delay);
-  };
 };
 
-export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
-  let hasWiki = false;
-  let hasTerrain = false;
-  let hasYandex = true;
-  let opacity = 1;
+export const createSecondMap = ({
+  center,
+  zoom,
+  trackStore,
+  markerStore,
+  mapsStore,
+  uiStore,
+}) => {
   let drawData = {
     type: "geojson",
     data: {
       type: "FeatureCollection",
-      features:[]
+      features: [],
     },
   };
+
   const map = new mapboxgl.Map({
     container: "map",
 
     style: {
       version: 8,
-      sources: {
-        [RASTER_SOURCE_ID]: RasterSource(mapName),
-      },
-      layers: [RASTER_LAYER],
+      sources: {},
+      layers: [],
       glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
     },
     center,
     zoom,
   });
-  const onLocationUpdate = debounce(() => {
-    const { lat, lng } = map.getCenter();
-    const zoom = map.getZoom();
-    setUrlParams({ center: `${lng},${lat}`, zoom });
-  }, 1000);
 
-  map.on("load", () => {
-    //this is hack to solve incorrect map scale on init
-    map.resize();
-  });
-  map.on("zoom", onLocationUpdate);
-  map.on("moveend", onLocationUpdate);
-
-  map.getMap = () => mapName;
-  map.setMap = (newMap) => {
-    mapName = newMap;
-    map.removeLayer(RASTER_LAYER.id);
-    map.removeSource(RASTER_SOURCE_ID);
-    map.addSource(RASTER_SOURCE_ID, RasterSource(newMap));
-    map.addLayer(RASTER_LAYER);
-  };
-
-  map.setOpacity = (newOpacity) => {
-    opacity = newOpacity;
-    if (!hasYandex) {
-      map.setPaintProperty(
-        "mapbox-satellite-streets",
-        "raster-opacity",
-        opacity
-      );
-    }
-  };
-
-  map.getYandex = () => hasYandex;
-  map.setYandex = (isYandex) => {
-    hasYandex = isYandex;
-    if (isYandex) {
-      document.getElementById("ymap").style.visibility = "visible";
-      map.removeLayer("mapbox-satellite-streets");
-      map.removeSource("mapbox");
-    } else {
-      document.getElementById("ymap").style.visibility = "hidden";
-      map.addSource("mapbox", {
-        type: "raster",
-        tiles: [
-          `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v10/tiles/{z}/{x}/{y}?access_token=${window.mapBoxKey}`,
-        ],
+  const reloadMaps = () => {
+    const layers = map.getStyle().layers;
+    layers.forEach((layer) => {
+      map.removeLayer(layer.id);
+    });
+    const sources = map.getStyle().sources;
+    Object.keys(sources).forEach((sourceId) => {
+      map.removeSource(sourceId);
+    });
+    map.addSource(PRIMARY_SOURCE_ID, {
+      ...RASTER_SOURCE,
+      tiles: [mapsStore.primary.url],
+    });
+    map.addLayer({
+      ...RASTER_LAYER,
+      source: PRIMARY_SOURCE_ID,
+      id: PRIMARY_SOURCE_ID,
+    });
+    if (mapsStore.secondary) {
+      map.addSource(SECONDARY_SOURCE_ID, {
+        ...RASTER_SOURCE,
+        tiles: [mapsStore.secondary.url],
       });
       map.addLayer({
-        id: "mapbox-satellite-streets",
-        source: "mapbox",
-        type: "raster",
-        layout: { visibility: "visible" },
+        ...RASTER_LAYER,
+        source: SECONDARY_SOURCE_ID,
+        id: SECONDARY_SOURCE_ID,
       });
+    }
+    map.addSource(MARKERS_SOURCE_ID, {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: markerStore.getFeatures(),
+      },
+      cluster: true,
+      clusterMaxZoom: 14, // Max zoom to cluster points on
+      clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
+    });
+    map.addLayer({
+      id: "unclustered-point",
+      type: "circle",
+      source: MARKERS_SOURCE_ID,
+      filter: ["!", ["has", "point_count"]],
+      paint: {
+        "circle-color": "#11b4da",
+        "circle-radius": 5,
+        "circle-stroke-width": 1,
+        "circle-stroke-color": "#fff",
+      },
+    });
+    map.addLayer({
+      id: "clusters",
+      type: "circle",
+      source: MARKERS_SOURCE_ID,
+      filter: ["has", "point_count"],
+      paint: {
+        // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
+        // with three steps to implement three types of circles:
+        //   * Blue, 20px circles when point count is less than 100
+        //   * Yellow, 30px circles when point count is between 100 and 750
+        //   * Pink, 40px circles when point count is greater than or equal to 750
+        "circle-color": [
+          "step",
+          ["get", "point_count"],
+          "#51bbd6",
+          5,
+          "#f1f075",
+          10,
+          "#f28cb1",
+        ],
+        "circle-radius": ["step", ["get", "point_count"], 20, 100, 30, 750, 40],
+      },
+    });
+    map.addLayer({
+      id: "cluster-count",
+      type: "symbol",
+      source: MARKERS_SOURCE_ID,
+      filter: ["has", "point_count"],
+      layout: {
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+        "text-size": 12,
+      },
+    });
+    map.addLayer({
+      id: MARKERS_SOURCE_ID + "-label",
+      source: MARKERS_SOURCE_ID,
+      type: "symbol",
+      layout: {
+        "icon-image": "custom-marker",
+        "text-field": ["get", "title"],
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        // 'text-color': 'white',
+        "text-offset": [0, 1.25],
+        "text-anchor": "top",
+      },
+    });
+   
+    setOpacity();
+  };
+  const setOpacity = () => {
+    if (map.getLayer(SECONDARY_SOURCE_ID)) {
       map.setPaintProperty(
-        "mapbox-satellite-streets",
+        SECONDARY_SOURCE_ID,
         "raster-opacity",
-        opacity
+        1 - uiStore.opacity / 100
       );
     }
   };
-  map.getWiki = () => hasWiki;
-  map.setWiki = (isEnable) => {
-    hasWiki = isEnable;
-    if (isEnable) {
+  markerStore.on("STORE_REFRESH", () => {
+    map.getSource(MARKERS_SOURCE_ID).setData({
+      type: "FeatureCollection",
+      features: markerStore.getFeatures(),
+    });
+  });
+  mapsStore.on(MAPS.SET_PRIMARY, reloadMaps);
+  mapsStore.on(MAPS.SET_SECONDARY, reloadMaps);
+  mapsStore.on(MAPS.SET_WIKIMAPIA, (hasWiki) => {
+    if (hasWiki) {
       map.addSource("wiki", {
         type: "vector",
         tiles: [`${location.origin}/wikimapia/{z}/{x}/{y}.mvt`],
@@ -195,11 +244,9 @@ export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
       map.removeLayer("wiki3");
       map.removeSource("wiki");
     }
-  };
-  map.getTerrain = () => hasTerrain;
-  map.setTerrain = (isEnable) => {
-    hasTerrain = isEnable;
-    if (isEnable) {
+  });
+  mapsStore.on(MAPS.SET_TERRAIN, (hasTerrain) => {
+    if (hasTerrain) {
       map.addSource("mapbox-terrain", {
         type: "vector",
         // Use any Mapbox-hosted tileset using its tileset id.
@@ -226,7 +273,95 @@ export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
       map.removeLayer("terrain-data");
       map.removeSource("mapbox-terrain");
     }
-  };
+  });
+
+  uiStore.on("STORE_REFRESH", setOpacity);
+
+  const onLocationUpdate = debounce(() => {
+    const { lat, lng } = map.getCenter();
+    const zoom = map.getZoom();
+    setUrlParams({ center: `${lng},${lat}`, zoom });
+  }, 1000);
+
+  map.on("load", () => {
+    //this is hack to solve incorrect map scale on init
+    map.resize();
+    reloadMaps();
+    setOpacity();
+    map.on("zoom", onLocationUpdate);
+    map.on("moveend", onLocationUpdate);
+    map.on("click", "clusters", (e) => {
+      console.log("clusters", e);
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: ["clusters"],
+      });
+      const clusterId = features[0].properties.cluster_id;
+      map
+        .getSource(MARKERS_SOURCE_ID)
+        .getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+
+          map.easeTo({
+            center: features[0].geometry.coordinates,
+            zoom: zoom,
+          });
+        });
+    });
+
+    // When a click event occurs on a feature in
+    // the unclustered-point layer, open a popup at
+    // the location of the feature, with
+    // description HTML from its properties.
+    map.on("click", "unclustered-point", (e) => {
+      const coordinates = e.features[0].geometry.coordinates.slice();
+      const { title, description = "", rate } = e.features[0].properties;
+      console.log("click", title);
+      const view = ViewMarker({
+        marker: { name: title, description, rate },
+        onCancel: () => {
+          popup?.remove();
+        },
+      });
+
+      const popup = new mapboxgl.Popup({ closeButton: false, maxWidth: 400 })
+        .setLngLat(coordinates)
+        .setHTML(`<div></div>`)
+        .addTo(map);
+      render(view, popup.getElement().childNodes[1]);
+    });
+
+    map.on("contextmenu", (e) => {
+      e.preventDefault();
+      console.log("right", e);
+      const menu = EditMarker({
+        onSave: (data) => {
+          markerStore.add({
+            ...data,
+            point: { lat: e.lngLat.lat, lng: e.lngLat.lng },
+          });
+          popup?.remove();
+        },
+        onCancel: () => {
+          console.log("cancel");
+          popup?.remove();
+        },
+      });
+
+      const popup = new mapboxgl.Popup({ closeButton: false, maxWidth: 400 })
+        .setLngLat(e.lngLat)
+        .setHTML('<div id="mapMenu"></div>')
+        .addTo(map);
+      render(menu, popup.getElement().childNodes[1]);
+    });
+
+    map.on("mouseenter", "clusters", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "clusters", () => {
+      map.getCanvas().style.cursor = "";
+    });
+  });
+
   const getDrawSource = () => {
     const source = map.getSource("draw");
     if (source) {
@@ -257,14 +392,15 @@ export const createSecondMap = ({center, zoom, mapName, trackStore}) => {
   };
 
   map.saveDraw = (geoJson) => {
-    const d = new Date()
+    const d = new Date();
     trackStore.add({
-      id:`${Date.now()}`,
-      name:`draw-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}_${d.getHours()}:${d.getMinutes()}`,
+      id: `${Date.now()}`,
+      name: `draw-${d.getFullYear()}-${
+        d.getMonth() + 1
+      }-${d.getDate()}_${d.getHours()}:${d.getMinutes()}`,
       geoJson,
       timestamp: Date.now(),
-    })
-
+    });
   };
 
   return map;

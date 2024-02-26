@@ -1,127 +1,115 @@
-import { html } from "../libs/htm.js";
-import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
-import { getId, postLarge } from "../utils.js";
-import { composeUrlLink } from "../urlParams.js";
+import { html, render, useState } from "../libs/htm.js";
+import { getId } from "../utils.js";
 import { IconButton } from "./common.js";
-import "../libs/qrcode.js";
 
 const blackStars = "★★★★★";
 const whiteStars = "☆☆☆☆☆";
 
-export class Marks {
-  constructor(yandexMap, panel, store) {
-    this.yandexMap = yandexMap;
-    this.panel = panel;
-    this.store = store;
-    this.placemarks = [];
+export const EditMarker = ({ marker = {}, onSave, onCancel }) => {
+  const id = marker.id;
+  const [name, setName] = useState(marker.name || "");
+  const [description, setDescription] = useState(marker.description || "");
+  const [rate, setRate] = useState(marker.rate || 0);
 
-    let localItems = loadPlacemarksLocal();
-    this.placemarks = localItems.map((p) => {
-      const mapItem = this.yandexMap.addPlacemark(p);
-      return { ...p, mapItem };
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const name = formData.get("name");
+    const description = formData.get("description");
+    const rate = +formData.get("rate") ? +formData.get("rate") : 0;
+    console.log("-", rate, formData.get("rate"), formData);
+
+    onSave({
+      id: id || getId(),
+      name,
+      description,
+      rate,
+      point: marker.point,
+      timestamp: Date.now(),
+    });
+  };
+
+  return html`<form class="form marker-form" onSubmit=${onSubmit}>
+    <h2>${id ? "Обновить метку" : "Добавить метку?"}</h2>
+    <div class="row">
+      <p class="label">Название:</p>
+      <input
+        name="name"
+        class="form-input"
+        value="${name}"
+        onChange=${(e) => setName(e.target.value)}
+      />
+    </div>
+    <div class="row">
+      <p class="label">Описание:</p>
+      <input
+        name="description"
+        class="form-input"
+        value="${description}"
+        onChange=${(e) => setDescription(e.target.value)}
+      />
+    </div>
+    <div class="row">
+      <p class="label">Рейт:</p>
+      <input
+        name="rate"
+        class="form-input"
+        value="${rate}"
+        type="number"
+        onChange=${(e) => setRate(e.target.value)}
+      />
+    </div>
+
+    <div class="row">
+      <button class="form-button primary">
+        ${id ? "Сохранить" : "Добавить"}
+      </button>
+      <button class="form-button" onClick=${onCancel}>Отмена</button>
+    </div>
+  </form>`;
+};
+export const ViewMarker = ({ marker = {}, onCancel }) => {
+  return html`<div class="form marker-form">
+      <b class="label">${marker.name||''}</b>
+      <p class="label">${marker.description||''}</p>
+      <button class="form-button" onClick=${onCancel}>Отмена</button>
+    </div>`;
+};
+
+export class Marks {
+  constructor(panel, markerStore) {
+    this.panel = panel;
+    this.markerStore = markerStore;
+
+    markerStore.on("STORE_REFRESH", () => {
+      this.panel.refresh();
     });
   }
 
   async syncMarks() {
-    const items = this.placemarks.map(
-      ({ id, name, description, rate, point, timestamp, removed }) => ({
-        id,
-        name,
-        description,
-        rate,
-        lat: point.lat,
-        lng: point.lng,
-        timestamp,
-        removed,
-      })
-    );
-    // it returns all synced markers
-    const res = await postLarge(`/marks/sync`, items);
-    console.log("sync", res.length);
-    const toSave = res
-      .filter((item) => !!item.id)
-      .map(({ id, name, description, rate, lng, lat, timestamp }) => ({
-        id,
-        name,
-        description,
-        rate,
-        point: { lat, lng },
-        timestamp,
-      }));
-    savePlacemarksLocal(toSave);
-    //todo make it without reload
-    location.reload();
+    this.markerStore.loadAll();
   }
 
   async copyUrl({ items }) {
-    const text = composeUrlLink({
-      zoom: this.yandexMap.getZoom() - 1,
-      center: this.yandexMap.getCenter().reverse(),
-      opacity: 100,
-      placemarks: items,
-    });
-    try {
-      await navigator.clipboard.writeText(text);
-      alert(`${text} is copied`);
-    } catch (e) {
-      console.log(e);
-      alert(`error copy ${e}`);
-    }
+    // const text = composeUrlLink({
+    //   zoom: this.yandexMap.getZoom() - 1,
+    //   center: this.yandexMap.getCenter().reverse(),
+    //   opacity: 100,
+    //   placemarks: items,
+    // });
+    // try {
+    //   await navigator.clipboard.writeText(text);
+    //   alert(`${text} is copied`);
+    // } catch (e) {
+    //   console.log(e);
+    //   alert(`error copy ${e}`);
+    // }
   }
   downloadPlacemarks() {
-    const toSore = this.placemarks.map((p) => ({
-      id: p.id,
-      name: p.name,
-      point: p.point,
-      timestamp: p.timestamp,
-      description: p.description,
-      rate: p.rate,
-      removed: p.removed,
-    }));
-    const file = new Blob([JSON.stringify(toSore)], {
-      type: "application/json",
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(file);
-    a.download = "poi.json";
-    a.click();
+    this.markerStore.downloadPlacemarks();
   }
   importPlacemarks(files) {
-    if (files.length === 0) {
-      console.log("No file is selected");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-        const items = data
-          .filter(
-            (item) =>
-              item &&
-              item.id &&
-              item.name &&
-              item.point &&
-              item.point.lat &&
-              item.point.lng
-          )
-          .map(
-            ({ id, name, point, description, rate, removed, timestamp }) => ({
-              id,
-              name,
-              point,
-              description,
-              rate,
-              removed,
-              timestamp,
-            })
-          );
-        this.addItems(items);
-      } catch (e) {
-        console.log("File content error:", e);
-      }
-    };
-    reader.readAsText(files[0]);
+    this.markerStore.importPlacemarks(files);
   }
 
   PItem({
@@ -175,102 +163,77 @@ export class Marks {
     </li>`;
   }
 
-  addItems(items) {
-    const added = items.map(({ name, description, rate, point }) => {
-      const placeMark = {
-        id: getId(),
-        name,
-        description,
-        rate,
-        point,
-        timestamp: Date.now(),
-      };
-      const mapItem = this.yandexMap.addPlacemark(placeMark);
-      return { ...placeMark, mapItem };
-    });
-
-    const updatedPlacemarks = [...this.placemarks, ...added];
-    this.placemarks = updatedPlacemarks;
-    savePlacemarksLocal(updatedPlacemarks);
-    this.panel.refresh();
-  }
-
   removeItem(id, mapItem) {
-    const updatedPlacemarks = this.placemarks.map((p) =>
-      p.id === id ? { ...p, removed: true } : p
-    );
-    if (mapItem) {
-      this.yandexMap.geoObjects.remove(mapItem);
-    }
-    this.placemarks = updatedPlacemarks;
-    savePlacemarksLocal(updatedPlacemarks);
+    this.markerStore.remove(id);
     this.panel.refresh();
   }
 
-  onEdit(p) {
-    this.yandexMap.onEditMark({
-      ...p,
-      onSubmit: (e) => {
-        e.preventDefault();
-        this.yandexMap.balloon.close();
-        const formData = new FormData(e.target);
-        const id = formData.get("id");
-        const name = formData.get("name");
-        const description = formData.get("description");
-        const rate = +formData.get("rate") ? +formData.get("rate") : 0;
-        const timestamp = Date.now();
-        const updatedPlacemarks = this.placemarks.map((p) =>
-          p.id === id ? { ...p, name, description, timestamp, rate } : p
-        );
-        this.placemarks = updatedPlacemarks;
-        savePlacemarksLocal(updatedPlacemarks);
-        this.panel.refresh();
-      },
-    });
+  onEdit(marker) {
+    const modal = document.getElementById("marker-modal");
+    modal.style.display = "flex";
+    const onCancel = () => {
+      modal.style.display = "none";
+      modal.innerHTML = "";
+    };
+    const onSave = (mark) => {
+      this.markerStore.update(mark);
+      onCancel();
+    };
+    const form = EditMarker({ marker, onSave: onSave.bind(this), onCancel: onCancel.bind(this) });
+
+    render(
+      html`<div class="modal-content">
+        <button class="close-button" onClick=${onCancel}>✕</button>${form}
+      </div>`,
+      modal
+    );
   }
 
   formatPlacemarks(placemarks) {
-    const center = this.yandexMap.getCenter();
+    // const center = this.yandexMap.getCenter();
     const items = placemarks
       .map((item) => {
-        const distance = ymaps.coordSystem.geo.getDistance(center, [
-          item.point.lat,
-          item.point.lng,
-        ]);
-        return { ...item, distance };
+        // const distance = ymaps.coordSystem.geo.getDistance(center, [
+        //   item.point.lat,
+        //   item.point.lng,
+        // ]);
+        return { ...item, distance: 0 };
       })
       .sort((a, b) => a.distance - b.distance);
     return items;
+    return [];
   }
 
   render() {
-    const items = this.formatPlacemarks(this.placemarks);
+    const items = this.formatPlacemarks(this.markerStore.markers);
     return html` <ul class="list">
       ${items.map(
         ({ id, name, rate, point, distance, removed, mapItem }) =>
           html`<${this.PItem}
             ...${{ id, name, rate, distance, removed }}
-            onRemove=${() => this.removeItem(id, mapItem)}
-            onEdit=${() => this.onEdit({ id, name, rate, point })}
+            onRemove=${() => this.removeItem.bind(this)(id, mapItem)}
+            onEdit=${() => this.onEdit.bind(this)({ id, name, rate, point })}
             copyUrl=${() => this.copyUrl([{ id, name, point }])}
-            onCenter=${() => this.yandexMap.setCenter([point.lat, point.lng])}
           />`
       )}
     </ul>
     <div class="footer">
-    <div class="import-export">
-    <label class="upload" htmlFor="upload">
-    Импорт
-    </label>
-    <input type="file" id="upload" onChange=${(e) =>
-      this.importPlacemarks(e.target.files)} hidden></input>
-    <button class="icon-button footer-button" onClick=${() =>
-      this.downloadPlacemarks()}>
-      Экспорт
-    </button>
-    <button class="icon-button footer-button" onClick=${() => this.syncMarks()}>
-      Синхр.
-    </button>
-  </div></div>`;
+      <div class="import-export">
+      <label class="upload" htmlFor="upload">
+      Импорт
+      </label>
+      <input type="file" id="upload" onChange=${(e) =>
+        this.importPlacemarks(e.target.files)} hidden></input>
+      <button class="icon-button footer-button" onClick=${() =>
+        this.downloadPlacemarks()}>
+        Экспорт
+      </button>
+      <button class="icon-button footer-button" onClick=${() =>
+        this.syncMarks()}>
+        Синхр.
+      </button>
+      </div>
+    </div>
+    <div id="marker-modal" class="modal hidden"></div>`;
   }
 }

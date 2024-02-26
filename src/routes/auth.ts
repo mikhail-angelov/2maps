@@ -257,7 +257,8 @@ export class Auth implements CommonRoutesConfig {
 
     const payload: JwtPayload = { id: user.id, email: e, role: user.role }
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
-    await this.sender.sendEmail(e, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
+    console.log(`new user successfully sing-up ${email}`)
+    this.sender.sendEmail(e, 'Welcome to Map-NN app', 'Thank you for register at Map-NN app, use it for good!')
     return [token, payload]
   }
   async forgetPassword({ email }: Forget) {

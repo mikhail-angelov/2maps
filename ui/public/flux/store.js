@@ -17,7 +17,7 @@ export class Store {
   }
   emit(event, data) {
     const handlers = this.subscribers[event] || [];
-    handlers.forEach((handler) => handler(event, data));
+    handlers.forEach((handler) => handler(data));
   }
   onRefresh(handler) {
     this.on(STORE_REFRESH, handler);

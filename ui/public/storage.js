@@ -37,3 +37,20 @@ export const loadPanelWidth = () => {
   const o = localStorage.getItem("panel-width");
   return o ? +o : 200;
 };
+
+export const saveLocal = (partial) => {
+  if (typeof partial !== "object") {
+    return;
+  }
+  const data = getLocal();
+  localStorage.setItem("2-maps", JSON.stringify({ ...data, ...partial }));
+};
+
+export const getLocal = () => {
+  const data = localStorage.getItem("2-maps");
+  try {
+    return JSON.parse(data) || {};
+  } catch (e) {
+    return {};
+  }
+};

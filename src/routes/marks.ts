@@ -127,13 +127,89 @@ export class Marks implements CommonRoutesConfig {
       this.auth.authMiddleware,
       async (req: Request, res: express.Response) => {
         const user = req.user;
-        if (!user?.id ) {
+        if (!user?.id) {
           console.log("batch error", user);
           return res.status(400).json({ error: "invalid request" });
         }
         console.log("markers batch for: ", user.email);
         this.syncMarks(user.id, req.body);
         res.status(200).json([]);
+      }
+    );
+    router.get(
+      "/:id",
+      this.auth.authMiddleware,
+      async (req: Request, res: express.Response) => {
+        const user = req.user;
+        try {
+          if (!user?.id) {
+            console.log("get error", user);
+            return res.status(400).json({ error: "invalid request" });
+          }
+          console.log("get for: ", user.email, req.params.id);
+          const mark = await this.getById(user.id, req.params.id);
+          res.status(200).json(mark);
+        } catch (e) {
+          console.log("get error", e);
+          res.status(400).json({ error: "invalid request" });
+        }
+      }
+    );
+    router.post(
+      "",
+      this.auth.authMiddleware,
+      async (req: Request, res: express.Response) => {
+        const user = req.user;
+        try {
+          if (!user?.id) {
+            console.log("get error", user);
+            return res.status(400).json({ error: "invalid request" });
+          }
+          console.log("get for: ", user.email, req.params.id);
+          const mark = await this.create(user.id, req.body);
+          res.status(200).json(mark);
+        } catch (e) {
+          console.log("create error", e);
+          res.status(400).json({ error: "invalid request" });
+        }
+      }
+    );
+    router.put(
+      "",
+      this.auth.authMiddleware,
+      async (req: Request, res: express.Response) => {
+        const user = req.user;
+        try {
+          if (!user?.id) {
+            console.log("get error", user);
+            return res.status(400).json({ error: "invalid request" });
+          }
+          console.log("get for: ", user.email, req.params.id);
+          const mark = await this.update(user.id, req.body);
+          res.status(200).json(mark);
+        } catch (e) {
+          console.log("update error", e);
+          res.status(400).json({ error: "invalid request" });
+        }
+      }
+    );
+    router.delete(
+      "/:id",
+      this.auth.authMiddleware,
+      async (req: Request, res: express.Response) => {
+        const user = req.user;
+        try {
+          if (!user?.id) {
+            console.log("get error", user);
+            return res.status(400).json({ error: "invalid request" });
+          }
+          console.log("get for: ", user.email, req.params.id);
+          const mark = await this.remove(user.id, req.body);
+          res.status(200).json(mark);
+        } catch (e) {
+          console.log("delete error", e);
+          res.status(400).json({ error: "invalid request" });
+        }
       }
     );
     router.get(
@@ -146,7 +222,10 @@ export class Marks implements CommonRoutesConfig {
           return res.status(400).json({ error: "invalid request" });
         }
         console.log("get batch for: ", user.email, req.params.timestamp);
-        const marks = await this.getBatch(user.id, dayjs(req.params.timestamp).toDate());
+        const marks = await this.getBatch(
+          user.id,
+          dayjs(req.params.timestamp).toDate()
+        );
         res.status(200).json(marks);
       }
     );
@@ -195,8 +274,39 @@ export class Marks implements CommonRoutesConfig {
     const marks = await this.db.getRepository(Mark).find({ userId });
     return marks.map(mapToDto);
   }
+  async getById(userId: string, id: string): Promise<WebMark> {
+    const mark = await this.db.getRepository(Mark).findOne({ id, userId });
+    if (!mark) throw new Error("mark not found");
+    return mapToDto(mark);
+  }
+  async create(userId: string, webMark: WebMark): Promise<WebMark> {
+    const mark = mapToEntity(webMark, userId);
+    const result = await this.db.getRepository(Mark).save(mark);
+    if (!result) throw new Error("mark not found");
+    return mapToDto(result);
+  }
+  async update(userId: string, webMark: WebMark): Promise<WebMark> {
+    const patch = mapToEntity(webMark, userId);
+    const mark = await this.db
+      .getRepository(Mark)
+      .findOne({ id: webMark.id, userId });
+    if (!mark) throw new Error("mark not found");
+    const result = await this.db
+      .getRepository(Mark)
+      .save({ ...mark, ...patch });
+    if (!result) throw new Error("mark not found");
+    return mapToDto(result);
+  }
+  async remove(userId: string, id: string): Promise<any> {
+    const mark = await this.db.getRepository(Mark).findOne({ id, userId });
+    if (!mark) throw new Error("mark not found");
+    await this.db.getRepository(Mark).delete(id);
+    return { status: "ok" };
+  }
   async getBatch(userId: string, timestamp: Date): Promise<WebMark[]> {
-    const marks = await this.db.getRepository(Mark).find({where:{ userId, timestamp: MoreThan( dayjs(timestamp).toISOString()) }});
+    const marks = await this.db.getRepository(Mark).find({
+      where: { userId, timestamp: MoreThan(dayjs(timestamp).toISOString()) },
+    });
     return marks.map(mapToDto);
   }
 }

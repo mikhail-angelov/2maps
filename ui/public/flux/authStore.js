@@ -8,6 +8,11 @@ export class AuthStore extends Store {
   error = "";
   authenticated = false;
 
+  constructor() {
+    super();
+    this.check();
+  }
+
   async check() {
     try {
       const res = await post(`/auth/check`, {});

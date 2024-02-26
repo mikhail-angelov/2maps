@@ -1,80 +1,83 @@
+import { MAPS } from "../flux/mapsStore.js";
 import { html, render, useState } from "../libs/htm.js";
 import { IconButton, Button } from "./common.js";
 
-export const createMapLayer = ({ map, mapList }) => {
+export const createMapLayer = (mapsStore) => {
   render(
-    html`<${MapLayer} map=${map} mapList=${mapList} />`,
+    html`<${MapLayer} mapsStore=${mapsStore} />`,
     document.getElementById("layers")
   );
 };
 
-const MapLayer = ({ map, mapList }) => {
+const MapLayer = ({  mapsStore }) => {
   const [collapsed, setCollapsed] = useState(true);
-  const selected = map.getMap();
-  const hasYandex = map.getYandex();
-  const hasWiki = map.getWiki();
-  const hasTerrain = map.getTerrain();
-
   const onToggle = () => setCollapsed(!collapsed);
 
-  return collapsed
-    ? html`<${Button}
-        className="layer-icon"
-        icon="assets/layer.svg"
+  mapsStore.on(MAPS.REFRESH_MAP_LIST, () => {
+  })
+
+  if (collapsed) {
+    return html`<${Button}
+      className="layer-icon"
+      icon="assets/layer.svg"
+      onClick=${onToggle}
+    />`
+  }
+
+  return html`<div class="layer-list">
+    <div class="layer-list-header">
+      Select map
+      <${IconButton}
+        className="header-button"
+        icon="assets/close.svg"
         onClick=${onToggle}
-      />`
-    : html`<div class="layer-list">
-        <div class="layer-list-header">
-          Select map
-          <${IconButton}
-            className="header-button"
-            icon="assets/close.svg"
-            onClick=${onToggle}
+      />
+    </div>
+    <div style="background: white;">
+      <ul class="map-list">
+        ${mapsStore.maps.map(({id, name}) => html`<li class="map-item">
+            <input
+              type="radio"
+              id=${id}
+              name="primaryMap"
+              checked=${mapsStore.primary?.id === id}
+              onChange=${() => mapsStore.selectPrimary(id)}
+            />
+            <label for=${id}>${name}</label>
+          </li>`)}
+      </ul>   
+    </div>
+    <div style="background: white;">
+    <input
+      type="checkbox"
+      id="map-wiki"
+      name="map-wiki"
+      onChange=${() => mapsStore.setWikimapia(!mapsStore.hasWiki)}
+      checked=${mapsStore.hasWiki}
+    />
+    <label for="map-wiki">Wikimapia</label>
+    </div>
+    <div style="background: white;">
+    <input
+      type="checkbox"
+      id="map-Terrain"
+      name="map-Terrain"
+      onChange=${() => mapsStore.setTerrain(!mapsStore.hasTerrain)}
+      checked=${mapsStore.hasTerrain}
+    />
+    <label for="map-Terrain">Terrain</label>
+    </div>
+    <ul class="map-list">
+      ${mapsStore.secondaryMaps.map(({ id, name }) => html`<li class="map-item">
+          <input
+            type="radio"
+            id=${id}
+            name="secondaryMap"
+            checked=${mapsStore.secondary?.id === id}
+            onChange=${() => mapsStore.selectSecondary(id)}
           />
-        </div>
-        <div style="background: white;">
-        <input
-          type="checkbox"
-          id="map-yandex"
-          name="map-yandex"
-          onChange=${() => map.setYandex(!map.getYandex())}
-          checked=${hasYandex}
-        />
-        <label for="map-yandex">карта Яндекс</label>
-        </div>
-        <div style="background: white;">
-        <input
-          type="checkbox"
-          id="map-wiki"
-          name="map-wiki"
-          onChange=${() => map.setWiki(!map.getWiki())}
-          checked=${hasWiki}
-        />
-        <label for="map-wiki">Wikimapia</label>
-        </div>
-        <div style="background: white;">
-        <input
-          type="checkbox"
-          id="map-Terrain"
-          name="map-Terrain"
-          onChange=${() => map.setTerrain(!map.getTerrain())}
-          checked=${hasTerrain}
-        />
-        <label for="map-Terrain">Terrain</label>
-        </div>
-        <ul class="map-list">
-          ${mapList.map(
-            ({ key, name }) => html`<li class="map-item">
-              <input
-                type="radio"
-                id=${key}
-                name="mapItem"
-                checked=${selected === key}
-                onChange=${() => map.setMa(key)}
-              />
-              <label for=${key}>${name}</label>
-            </li>`
-          )}
-        </ul>
-      </div>`;
+          <label for=${id}>${name}</label>
+        </li>`)}
+    </ul>
+  </div>`;
 };
