@@ -1,0 +1,46 @@
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5px;
+}
+.header .back {
+  background: transparent;
+  color: white;
+}
+
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.admin {
+  width: 100%;
+  display: flex;
+}
+
+.admin .left {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #ccc;
+}
+.admin .left .left-button {
+  margin: 10px;
+  margin-bottom: 0;
+  width: 100px;
+}
+
+.admin .left .left-button.primary {
+  background: black;
+  border-color: black;
+  color: white;
+}

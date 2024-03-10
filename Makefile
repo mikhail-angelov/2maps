@@ -1,5 +1,8 @@
 include .env
 
+postgres: 
+	docker-compose -f ./docker-compose-postgres.yml up -d
+	
 dump-db: DUMP_FILE=$(shell date +%s).dump
 dump-db:
 	docker exec postgres bash -c 'pg_dump -Fc --dbname=postgresql://${DB_USERNAME}:${DB_PASSWORD}@127.0.0.1:5432/${DB_DATABASE} | gzip >/var/lib/postgresql/data/${DUMP_FILE}.tar.gz'

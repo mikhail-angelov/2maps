@@ -56,7 +56,7 @@ export class Users implements CommonRoutesConfig {
         res.status(200).json(mapUser(user))
       } catch (e) {
         console.error('update user error', e)
-        
+
       }
     });
     return router;

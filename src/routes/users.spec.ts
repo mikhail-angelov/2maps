@@ -7,14 +7,14 @@ import { Request } from 'express'
 import { Role } from '../entities/enums';
 
 describe('users', () => {
-    let db = new DbUnit();
+    const db = new DbUnit();
     let auth: Auth
     let users: Users
     let authToken: string
     let userId: string
     beforeEach(async () => {
         const conn = await initDbConnectionTest(db);
-        const sender: any = { sendEmail: () => { } }
+        const sender: any = { sendEmail: () => null }
         auth = new Auth(conn, sender)
         users = new Users(conn, auth)
         // add user

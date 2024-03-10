@@ -1,4 +1,4 @@
-const STORE_REFRESH = "STORE_REFRESH";
+const STORE_REFRESH = 'STORE_REFRESH';
 export class Store {
   subscribers = {};
 
@@ -7,21 +7,25 @@ export class Store {
     this.subscribers[event] = [...handlers, handler];
     return () => {
       this.subscribers[event] = this.subscribers[event].filter(
-        (item) => item !== handler
+        (item) => item !== handler,
       );
     };
   }
+
   off(event, handler) {
     const handlers = this.subscribers[event] || [];
     this.subscribers[event] = handlers.filter((item) => item !== handler);
   }
+
   emit(event, data) {
     const handlers = this.subscribers[event] || [];
     handlers.forEach((handler) => handler(data));
   }
+
   onRefresh(handler) {
     this.on(STORE_REFRESH, handler);
   }
+
   refresh() {
     this.emit(STORE_REFRESH, null);
   }

@@ -1,15 +1,29 @@
-import { html } from "../libs/htm.js";
-import { getId, get } from "../utils.js";
-import { composeUrlLink } from "../urlParams.js";
-import { IconButton } from "./common.js";
-import { kmlToJson } from "../libs/togeojson.js";
-import bbox from "../libs/geojson-bbox.js";
-import "../libs/qrcode.js";
+import { html } from '../libs/htm.js';
+import { get } from '../utils.js';
+import { IconButton } from './common.js';
+import { kmlToJson } from '../libs/togeojson.js';
+
+const PItem = ({
+  id, name, selected, onRemove, onDownload, onSelect,
+}) => html`<li class="place-item" key="${id}" onClick=${onSelect}>
+    <div class="title">
+      <div class=${selected ? 'red' : ''}>${name}</div>
+    </div>
+    <${IconButton}
+      icon="assets/download.svg"
+      tooltips="Скачать KML"
+      onClick=${onDownload}
+    />
+    <${IconButton}
+      icon="assets/remove.svg"
+      tooltips="Удалить"
+      onClick=${onRemove}
+    />
+  </li>`;
 
 export class Tracks {
-  constructor({ yandexMap, secondMap, panel, trackStore }) {
-    this.yandexMap = yandexMap;
-    this.secondMap = secondMap;
+  constructor({ map, panel, trackStore }) {
+    this.map = map;
     this.panel = panel;
     this.store = trackStore;
     this.store.onRefresh(() => {
@@ -20,14 +34,15 @@ export class Tracks {
     this.onDownload = this.onDownload.bind(this);
   }
 
-  async test() {}
   async onDownload(id) {
-    window.open(`/tracks/${id}/kml`, "__blank");
+    window.open(`/tracks/${id}/kml`, '__blank');
+    console.log('-', this.store.selected);
   }
+
   importKml(files) {
     const parser = new DOMParser();
     if (files.length === 0) {
-      console.log("No file is selected");
+      console.log('No file is selected');
       return;
     }
     const reader = new FileReader();
@@ -35,7 +50,7 @@ export class Tracks {
       try {
         const doc = parser.parseFromString(
           event.target.result,
-          "application/xml"
+          'application/xml',
         );
         const geoJson = kmlToJson.kml(doc);
         this.store.add({
@@ -45,35 +60,17 @@ export class Tracks {
           timestamp: Date.now(),
         });
       } catch (e) {
-        console.log("File content error:", e);
+        console.log('File content error:', e);
       }
     };
     reader.readAsText(files[0]);
-  }
-
-  PItem({ id, name, selected, onRemove, onDownload, onSelect }) {
-    return html`<li class="place-item" key="${id}" onClick=${onSelect}>
-      <div class="title">
-        <div class=${selected ? "red" : ""}>${name}</div>
-      </div>
-      <${IconButton}
-        icon="assets/download.svg"
-        tooltips="Скачать KML"
-        onClick=${onDownload}
-      />
-      <${IconButton}
-        icon="assets/remove.svg"
-        tooltips="Удалить"
-        onClick=${onRemove}
-      />
-    </li>`;
   }
 
   onRemove(id, name) {
     if (window.confirm(`Вы хотите удалить трек ${name}?`)) {
       if (this.store.selected?.id === id) {
         this.store.select(null);
-        this.secondMap.closeDraw();
+        this.map.closeDraw();
       }
       this.store.remove(id);
     }
@@ -82,24 +79,14 @@ export class Tracks {
   async onSelect(id) {
     if (this.store.selected?.id === id) {
       this.store.select(null);
-      this.secondMap.closeDraw();
+      this.map.closeDraw();
     } else {
       const track = await get(`tracks/${id}`);
       if (track?.geoJson) {
         this.store.select(track);
-        this.secondMap.draw(track.geoJson);
-        const bounds = bbox(track.geoJson);
-        this.yandexMap.setBounds(
-          [
-            [bounds[1], bounds[0]],
-            [bounds[3], bounds[2]],
-          ],
-          {
-            checkZoomRange: true,
-          }
-        );
+        this.map.draw(track.geoJson);
       } else {
-        alert("track not found");
+        alert('track not found');
       }
     }
   }
@@ -112,20 +99,19 @@ export class Tracks {
         ? html`<div className="list">not tracks</div>`
         : html`<ul class="list">
             ${items.map(
-              ({ id, name }) =>
-                html`<${this.PItem}
-                  ...${{ id, name, selected: id === this.store.selected?.id }}
-                  onRemove=${(e) => {
-                    e.stopPropagation();
-                    this.onRemove(id, name);
-                  }}
-                  onDownload=${(e) => {
-                    e.stopPropagation();
-                    this.onDownload(id);
-                  }}
-                  onSelect=${(e) => this.onSelect(id)}
-                />`
-            )}
+    ({ id, name }) => html`<${PItem}
+                ...${{ id, name, selected: id === this.store.selected?.id }}
+                onRemove=${(e) => {
+    e.stopPropagation();
+    this.onRemove(id, name);
+  }}
+                onDownload=${(e) => {
+    e.stopPropagation();
+    this.onDownload(id);
+  }}
+                onSelect=${() => this.onSelect(id)}
+              />`,
+  )}
           </ul>`
     }
     <div class="footer">
@@ -133,8 +119,7 @@ export class Tracks {
     <label class="upload" htmlFor="upload">
     Импорт
     </label>
-    <input type="file" id="upload" onChange=${(e) =>
-      this.importKml(e.target.files)} hidden></input>
+    <input type="file" id="upload" onChange=${(e) => this.importKml(e.target.files)} hidden></input>
     </div></div>`;
   }
 }

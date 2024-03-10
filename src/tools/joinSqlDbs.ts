@@ -32,7 +32,7 @@ const joinDBs = async () => {
   let minzoom = 5
   let maxzoom = 5
   try {
-    for (let file of files) {
+    for (const file of files) {
       const toCopy = await createDBConnection(file)
       const info = await toCopy.getRepository(Info).findOne()
       let m = info?.minzoom || 0
@@ -57,7 +57,7 @@ const joinDBs = async () => {
     await connection.getRepository(Info).insert({ minzoom, maxzoom })
   } catch (e) {
     console.log('opps, join error', e)
-    throw 'cancel on error'
+    throw new Error('cancel on error')
   }
   console.log('done!')
   await connection.close()
@@ -83,7 +83,7 @@ const mergeTiles = async () => {
       .getRawMany();
     console.log('-', dubs.length, dubs[0])
     let i = 0
-    for (let { x, y, z } of dubs) {
+    for (const { x, y, z } of dubs) {
       i++
       const tiles = await mainRep.find({ x, y, z })
       const fileName = `${__dirname}/${x}2.jpg`
@@ -101,7 +101,7 @@ const mergeTiles = async () => {
     }
   } catch (e) {
     console.log('opps, join error', e)
-    throw 'cancel on error'
+    throw new Error('cancel on error')
   }
   console.log('done!')
   await connection.close()

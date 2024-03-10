@@ -158,7 +158,7 @@ export class Auth implements CommonRoutesConfig {
       try {
         if(!req.user){
           console.log('password change error')
-          return res.status(401).json({ error: 'invalid password changing' })  
+          return res.status(401).json({ error: 'invalid password changing' })
         }
         await this.changePassword(req.user.id, req.body.password)
         res.status(200).json({ status: 'password changed' })
@@ -174,7 +174,7 @@ export class Auth implements CommonRoutesConfig {
     const e = email.toLowerCase()
     const user = await this.db.getRepository(User).findOne({ email: e })
     if (!user || !bcrypt.compareSync(password, user.password)) {
-      throw "invalid login"
+      throw new Error("invalid login")
     }
     const payload: JwtPayload = { id: user.id, email: e, role: user.role }
     return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
@@ -183,7 +183,7 @@ export class Auth implements CommonRoutesConfig {
   async check(req: Request): Promise<[string, JwtPayload]> {
     const testToken = req.cookies ? req.cookies[JWT_COOKIES] || '' : ''
     if (!testToken) {
-      throw "invalid auth"
+      throw new Error("invalid auth")
     }
     const { id, email, role }: any = jwt.verify(testToken, JWT_SECRET)
     const payload: JwtPayload = { id, email, role }
@@ -194,7 +194,7 @@ export class Auth implements CommonRoutesConfig {
     const authHeader = req.headers ? req.headers[JWT_HEADER] || '' : ''
     const testToken: string = authHeader ? authHeader.slice(7) : ''
     if (!testToken) {
-      throw "invalid auth"
+      throw new Error("invalid auth")
     }
     const { id, email, role }: any = jwt.verify(testToken, JWT_SECRET)
     const payload: JwtPayload = { id, email, role }
@@ -249,7 +249,7 @@ export class Auth implements CommonRoutesConfig {
     const e = email.toLowerCase()
     let user = await this.db.getRepository(User).findOne({ email: e })
     if (user || !name || !password) {
-      throw "invalid user"
+      throw new Error("invalid user")
     }
     const salt = bcrypt.genSaltSync(10)
     const saltedPass = bcrypt.hashSync(password, salt)
@@ -265,7 +265,7 @@ export class Auth implements CommonRoutesConfig {
     return this.db.transaction(async transactionalEntityManager => {
       const user = await transactionalEntityManager.getRepository(User).findOne({ email: email.toLowerCase() })
       if (!user) {
-        throw "invalid user"
+        throw new Error("invalid user")
       }
       const resetToken = bcrypt.genSaltSync(10)
       await transactionalEntityManager.getRepository(User).update(user.id, { resetToken })
@@ -274,9 +274,9 @@ export class Auth implements CommonRoutesConfig {
     })
   }
   async resetPassword({ resetToken, password }: Reset) {
-    let user = await this.db.getRepository(User).findOne({ resetToken: decodeURIComponent(resetToken) })
+    const user = await this.db.getRepository(User).findOne({ resetToken: decodeURIComponent(resetToken) })
     if (!user || !resetToken) {
-      throw "invalid user"
+      throw new Error("invalid user")
     }
 
     const salt = bcrypt.genSaltSync(10)

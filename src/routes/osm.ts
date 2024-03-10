@@ -3,7 +3,7 @@ import express from 'express';
 import { getOSMTile } from "../tilesDb";
 
 export class OsmTiles implements CommonRoutesConfig {
-  
+
   getRoutes() {
     const router = express.Router();
     router.get("/:name/:z/:x/:y.pbf", async (req, res) => {

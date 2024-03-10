@@ -1,14 +1,15 @@
-import { Store } from "./store.js";
-import { parseUrlParams } from "../urlParams.js";
-import { post, remove, put, get, postLarge } from "../utils.js";
-import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
+import { Store } from './store.js';
+import {
+  post, remove, put, postLarge,
+} from '../utils.js';
+import { loadPlacemarksLocal, savePlacemarksLocal } from '../storage.js';
 
 export const MARKER = {
-  ADD: "ADD",
-  REMOVE: "REMOVE",
-  UPDATE: "UPDATE",
-  LOAD: "LOAD",
-  REFRESH: "REFRESH",
+  ADD: 'ADD',
+  REMOVE: 'REMOVE',
+  UPDATE: 'UPDATE',
+  LOAD: 'LOAD',
+  REFRESH: 'REFRESH',
 };
 
 const mapToDto = ({
@@ -30,7 +31,9 @@ const mapToDto = ({
   removed,
 });
 
-const mapFromDto = ({ id, name, description, rate, lng, lat, timestamp }) => ({
+const mapFromDto = ({
+  id, name, description, rate, lng, lat, timestamp,
+}) => ({
   id,
   name,
   description,
@@ -41,21 +44,24 @@ const mapFromDto = ({ id, name, description, rate, lng, lat, timestamp }) => ({
 
 export class MarkerStore extends Store {
   markers = [];
+
   selected = null;
+
   loading = false;
+
   authStore;
 
   constructor(authStore) {
     super();
-    //todo implement url params
-    const { placemarks } = parseUrlParams();
+    // todo implement url params
+
     this.authStore = authStore;
     this.markers = loadPlacemarksLocal();
   }
 
   getFeatures() {
     return this.markers.map((mark) => ({
-      type: "Feature",
+      type: 'Feature',
       properties: {
         id: mark.id,
         description: mark.description,
@@ -63,7 +69,7 @@ export class MarkerStore extends Store {
         rate: mark.rate,
       },
       geometry: {
-        type: "Point",
+        type: 'Point',
         coordinates: [mark.point.lng, mark.point.lat],
       },
     }));
@@ -72,16 +78,17 @@ export class MarkerStore extends Store {
   async loadAll() {
     const items = this.markers.map(mapFromDto);
     if (!this.authStore.authenticated) {
-      console.log("not authenticated");
+      // eslint-disable-next-line no-console
+      console.log('not authenticated');
       return;
     }
     // it returns all synced markers
-    const res = await postLarge(`/marks/sync`, items);
-    console.log("sync", res.length);
+    const res = await postLarge('/marks/sync', items);
     this.markers = res.filter((item) => !!item.id).map(mapToDto);
 
     this.refresh();
   }
+
   downloadPlacemarks() {
     const toSore = this.markers.map((p) => ({
       id: p.id,
@@ -93,16 +100,18 @@ export class MarkerStore extends Store {
       removed: p.removed,
     }));
     const file = new Blob([JSON.stringify(toSore)], {
-      type: "application/json",
+      type: 'application/json',
     });
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = URL.createObjectURL(file);
-    a.download = "poi.json";
+    a.download = 'poi.json';
     a.click();
   }
+
   importPlacemarks(files) {
     if (files.length === 0) {
-      console.log("No file is selected");
+      // eslint-disable-next-line no-console
+      console.log('No file is selected');
       return;
     }
     const reader = new FileReader();
@@ -111,16 +120,17 @@ export class MarkerStore extends Store {
         const data = JSON.parse(event.target.result);
         const items = data
           .filter(
-            (item) =>
-              item &&
-              item.id &&
-              item.name &&
-              item.point &&
-              item.point.lat &&
-              item.point.lng
+            (item) => item
+              && item.id
+              && item.name
+              && item.point
+              && item.point.lat
+              && item.point.lng,
           )
           .map(
-            ({ id, name, point, description, rate, removed, timestamp }) => ({
+            ({
+              id, name, point, description, rate, removed, timestamp,
+            }) => ({
               id,
               name,
               point,
@@ -128,13 +138,14 @@ export class MarkerStore extends Store {
               rate,
               removed,
               timestamp,
-            })
+            }),
           );
         this.markers = items;
         savePlacemarksLocal(items);
         this.refresh();
       } catch (e) {
-        console.log("File content error:", e);
+        // eslint-disable-next-line no-console
+        console.log('File content error:', e);
       }
     };
     reader.readAsText(files[0]);
@@ -143,15 +154,17 @@ export class MarkerStore extends Store {
   async add(mark) {
     try {
       if (this.authStore.authenticated) {
-        await post("/marks", mapToDto(mark));
+        await post('/marks', mapToDto(mark));
       }
       this.markers = [...this.markers, mark];
       savePlacemarksLocal(this.markers);
       this.refresh();
     } catch (e) {
-      console.log("failed to add marker");
+      // eslint-disable-next-line no-console
+      console.log('failed to add marker');
     }
   }
+
   async remove(id) {
     this.markers = this.markers.filter((item) => item.id !== id);
     if (this.authStore.authenticated) {
@@ -160,16 +173,16 @@ export class MarkerStore extends Store {
     savePlacemarksLocal(this.markers);
     this.refresh();
   }
+
   async update(mark) {
     if (this.authStore.authenticated) {
-      await put("/marks", mapToDto(mark));
+      await put('/marks', mapToDto(mark));
     }
-    this.markers = this.markers.map((item) =>
-      item.id === mark.id ? mark : item
-    );
+    this.markers = this.markers.map((item) => (item.id === mark.id ? mark : item));
     savePlacemarksLocal(this.markers);
     this.refresh();
   }
+
   select(mark) {
     this.selected = mark;
     this.refresh();

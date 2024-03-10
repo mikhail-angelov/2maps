@@ -4,9 +4,9 @@ import { initDbConnectionTest } from '../db'
 import { Wikimapia } from './wikimapia'
 
 describe('wikimapia', () => {
-    let db = new DbUnit();
+    const db = new DbUnit();
     let wikimapia: Wikimapia;
-    let coords = { x: 0, y: 1, z: 2 }
+    const coords = { x: 0, y: 1, z: 2 }
     beforeEach(async () => {
         const conn = await initDbConnectionTest(db);
         wikimapia = new Wikimapia(conn)

@@ -16,25 +16,6 @@ const loader = async (url: string): Promise<any> => {
   return response.data
 }
 
-const tileXYToQuadKey = (tileX: number, tileY: number, levelOfDetail: number): string => {
-  let quadKey = ''
-  for (let i = levelOfDetail; i > 0; i--) {
-    let digit = 0;
-    let mask = 1 << (i - 1);
-    if ((tileX & mask) != 0) {
-      digit++;
-    }
-    if ((tileY & mask) != 0) {
-      digit++;
-      digit++;
-    }
-    quadKey = quadKey + `${digit}`
-  }
-  return quadKey;
-}
-// `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${this.tileXYToQuadKey(x,y,z)}?mkt=ru-RU&it=G,LC,BX,RL&shading=t&n=z&og=1489&cstl=vb&o=webp`
-
-
 const latLngToTileIndex = ({ lat, lng, zoom }: { lat: number, lng: number, zoom: number }) => {
   const n = Math.pow(2, zoom)
   const xtile = Math.floor(n * ((lng + 180) / 360))
@@ -43,24 +24,18 @@ const latLngToTileIndex = ({ lat, lng, zoom }: { lat: number, lng: number, zoom:
   return [xtile, ytile]
 }
 
-const indexTileToLatLng = ({ xtile, ytile, zoom }: { xtile: number, ytile: number, zoom: number }) => {
-  const n = Math.pow(2, zoom)
-  const lon = xtile / n * 360.0 - 180.0
-  const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * ytile / n)))
-  const lat = latRad * 180 / Math.PI
-  return [lat, lon]
-}
-
 const progress = (value: any, cursor: number = 1) => {
   rdl.cursorTo(process.stdout, cursor, 0);
   process.stdout.write(value)
 }
 const downloadMap = async ({ url, name }: { url: string, name: string }) => {
-  let start = Date.now() / 1000
+  const start = Date.now() / 1000
   const fileName = `./tmp/${name}.sqlitedb`
   try {
     fs.unlinkSync(fileName)
-  } catch (e) { }
+  } catch (e) {
+    //ignore
+  }
   console.log('start load', name, url, start)
   const connection = await createDBConnection( name )
   // await connection.query('CREATE TABLE tiles (x int, y int, z int, s int, image blob, PRIMARY KEY (x,y,z,s));')
@@ -70,38 +45,38 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
   const leftBottom = { lat: 56.963702, lng: 42.977057 }
   const rightTop = { lat: 55.191112, lng: 46.121449 }
   let cursor = 4
-  let zz = 4
-  let zz_end = 13
+  const zz = 4
+  const zzEnd = 13
   let s = 0
   try {
-    for (let zoom = zz; zoom <= zz_end; zoom++) {
+    for (let zoom = zz; zoom <= zzEnd; zoom++) {
       let startZoom = Date.now() / 1000
       let count = 0
-      let [xx, yy] = latLngToTileIndex({ ...leftBottom, zoom })
-      let [xx_end, yy_end] = latLngToTileIndex({ ...rightTop, zoom })
-      const total = (xx_end - xx + 1) * (yy_end - yy + 1)
-      console.log('start zoom', zoom, '/', zz_end, total, 'tiles')
+      const [xx, yy] = latLngToTileIndex({ ...leftBottom, zoom })
+      const [xxEnd, yyEnd] = latLngToTileIndex({ ...rightTop, zoom })
+      const total = (xxEnd - xx + 1) * (yyEnd - yy + 1)
+      console.log('start zoom', zoom, '/', zzEnd, total, 'tiles')
       cursor++
-      for (let x = xx; x <= xx_end; x++) {
-        for (let y = yy; y <= yy_end; y++) {
+      for (let x = xx; x <= xxEnd; x++) {
+        for (let y = yy; y <= yyEnd; y++) {
           // const url = `https://a.tile.openstreetmap.org/${zoom}/${x}/${y}.png`
-          const url = `http://mt1.google.com/vt/lyrs=y&x=${x}&y=${y}&z=${zoom}`
+          const downloadUrl = `http://mt1.google.com/vt/lyrs=y&x=${x}&y=${y}&z=${zoom}`
           try {
-            const image = await loader(url)
+            const image = await loader(downloadUrl)
             s++
             await connection.getRepository(Tile).insert({ x, y, z: zoom, s, image });
             count++;
             progress(`${count}/${total} - ${Date.now() / 1000 - startZoom} | ${x}-${y}`, cursor)
             startZoom = Date.now() / 1000
           } catch (e) {
-            console.log('error load tile', x, y, zoom, e)
+            console.log('error load tile', downloadUrl, e)
           }
         }
       }
     }
   } catch (e) {
     console.log('opps, load error', name, e)
-    throw 'cancel on error'
+    throw new Error('cancel on error')
   }
   console.log('end load', name, Date.now() / 1000 - start)
   await closeConnections()
@@ -114,6 +89,7 @@ const downloadMap = async ({ url, name }: { url: string, name: string }) => {
 const TILE_SIZE = 256;
 
 function createInfoWindowContent(lat: number, lng: number, zoom: number) {
+  /* tslint:disable:no-bitwise */
   const scale = 1 << zoom;
   const [x, y] = project(lat, lng);
   const pixelCoordinate = [

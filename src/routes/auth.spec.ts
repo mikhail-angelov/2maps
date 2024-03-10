@@ -5,12 +5,11 @@ import { Auth, JWT_COOKIES } from './auth'
 import { Request } from 'express'
 
 describe('auth', () => {
-    let db = new DbUnit();
+    const db = new DbUnit();
     let auth: Auth
     beforeEach(async () => {
         const conn = await initDbConnectionTest(db);
-        const app: any = { post: () => { } }
-        const sender: any = { sendEmail: () => { } }
+        const sender: any = { sendEmail: () => null }
         auth = new Auth(conn, sender)
         // add user
         await auth.register({ name: 'test', email: 'test', password: 'test' })

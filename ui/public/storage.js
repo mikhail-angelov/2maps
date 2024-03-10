@@ -8,11 +8,11 @@ export const savePlacemarksLocal = (placemarks) => {
     point: p.point,
     timestamp: p.timestamp || 0,
   }));
-  localStorage.setItem("placemarks", JSON.stringify(toSore));
+  localStorage.setItem('placemarks', JSON.stringify(toSore));
 };
 
 export const loadPlacemarksLocal = () => {
-  const s = localStorage.getItem("placemarks");
+  const s = localStorage.getItem('placemarks');
   try {
     return JSON.parse(s) || [];
   } catch {
@@ -21,36 +21,38 @@ export const loadPlacemarksLocal = () => {
 };
 
 export const saveOpacity = (opacity) => {
-  localStorage.setItem("opacity", "" + opacity);
+  localStorage.setItem('opacity', `${opacity}`);
 };
 
 export const loadOpacity = () => {
-  const o = localStorage.getItem("opacity");
+  const o = localStorage.getItem('opacity');
   return o ? +o : 50;
 };
 
 export const savePanelWidth = (width) => {
-  localStorage.setItem("panel-width", "" + width);
+  console.log('savePanelWidth', width);
+  localStorage.setItem('panel-width', `${width}`);
 };
 
 export const loadPanelWidth = () => {
-  const o = localStorage.getItem("panel-width");
+  const o = localStorage.getItem('panel-width');
+  console.log('loadPanelWidth', o);
   return o ? +o : 200;
 };
 
-export const saveLocal = (partial) => {
-  if (typeof partial !== "object") {
-    return;
-  }
-  const data = getLocal();
-  localStorage.setItem("2-maps", JSON.stringify({ ...data, ...partial }));
-};
-
 export const getLocal = () => {
-  const data = localStorage.getItem("2-maps");
+  const data = localStorage.getItem('2-maps');
   try {
     return JSON.parse(data) || {};
   } catch (e) {
     return {};
   }
+};
+
+export const saveLocal = (partial) => {
+  if (typeof partial !== 'object') {
+    return;
+  }
+  const data = getLocal();
+  localStorage.setItem('2-maps', JSON.stringify({ ...data, ...partial }));
 };

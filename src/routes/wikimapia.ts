@@ -1,16 +1,16 @@
-import { CommonRoutesConfig, maxAge } from './common';
-import express from 'express';
+import { CommonRoutesConfig, maxAge } from "./common";
+import express from "express";
 import axios from "axios";
-import { gzipSync } from 'zlib'
-import * as vtpbf from 'vt-pbf'
-import geojsonVt from 'geojson-vt'
+import { gzipSync } from "zlib";
+import * as vtpbf from "vt-pbf";
+import geojsonVt from "geojson-vt";
 import { Connection, Repository } from "typeorm";
 import { WikiTile } from "../entities/wiki";
 
 const VERSION = 1;
 
 export class Wikimapia implements CommonRoutesConfig {
-  wikiRepo: Repository<WikiTile>
+  wikiRepo: Repository<WikiTile>;
   constructor(db: Connection) {
     this.wikiRepo = db.getRepository(WikiTile);
   }
@@ -19,21 +19,21 @@ export class Wikimapia implements CommonRoutesConfig {
     const router = express.Router();
     router.get("/:z/:x/:y.mvt", async (req, res) => {
       const { x, y, z } = req.params;
-      const coords = { x: +x, y: +y, z: +z }
-      console.log('proxy')
+      const coords = { x: +x, y: +y, z: +z };
+      console.log("proxy");
       try {
-        let tile = await this.getTile(coords)
+        let tile = await this.getTile(coords);
         if (!tile || tile.version < VERSION) {
           const wikiTile = await getWikiTile(coords);
-          const blob = gzipSync(Buffer.from(wikiTile))
-          tile = tile ?
-            await this.updateTile(tile.id, blob) :
-            await this.addTile(coords, blob)
+          const blob = gzipSync(Buffer.from(wikiTile));
+          tile = tile
+            ? await this.updateTile(tile.id, blob)
+            : await this.addTile(coords, blob);
         }
         if (!tile) {
-          console.error('cannot get wiki tile')
-          res.status(400).send("error")
-          return
+          console.error("cannot get wiki tile");
+          res.status(400).send("error");
+          return;
         }
 
         res.writeHead(200, {
@@ -43,22 +43,22 @@ export class Wikimapia implements CommonRoutesConfig {
         });
         res.end(tile.image, "binary");
       } catch (e) {
-        console.error('get wiki tile error', e)
-        res.status(400).send("error")
+        console.error("get wiki tile error", e);
+        res.status(400).send("error");
       }
     });
     return router;
   }
   async getTile(coords: Coord) {
-    const tile = await this.wikiRepo.findOne({ where: coords })
-    return tile
+    const tile = await this.wikiRepo.findOne({ where: coords });
+    return tile;
   }
   async addTile(coords: Coord, image: Buffer) {
-    return await this.wikiRepo.save({ ...coords, image, version: VERSION })
+    return await this.wikiRepo.save({ ...coords, image, version: VERSION });
   }
   async updateTile(id: string, image: Buffer) {
-    await this.wikiRepo.update(id, { image, version: VERSION })
-    return await this.wikiRepo.findOne(id)
+    await this.wikiRepo.update(id, { image, version: VERSION });
+    return await this.wikiRepo.findOne(id);
   }
 }
 
@@ -70,12 +70,12 @@ interface Coord {
   z: number;
 }
 interface Place {
-  "type": string;
-  "properties": any;
-  "geometry": {
-    "type": string;
-    "coordinates": number[][];
-  }
+  type: string;
+  properties: any;
+  geometry: {
+    type: string;
+    coordinates: number[][];
+  };
 }
 interface Tile {
   places: Place[];
@@ -89,25 +89,23 @@ interface Tile {
 }
 
 const getWikiTile = async (coords: Coord) => {
-  const url = makeTileUrl(coords)
-  const resp = await axios.get(url)
-  const features = await parseTile(resp.data, {})
+  const url = makeTileUrl(coords);
+  const resp = await axios.get(url);
+  const features = await parseTile(resp.data, {});
   const tileindex = geojsonVt({
     type: "FeatureCollection",
     features: features.places,
-  })
-  const tile = tileindex.getTile(coords.z, coords.x, coords.y)
-  const buff = vtpbf.fromGeojsonVt({ 'wikiLayer': tile }, { version: 2 })
-  console.log('getWikiTile', url.replace, resp.data.length, buff.length)
-  return buff
-}
-
-
+  });
+  const tile = tileindex.getTile(coords.z, coords.x, coords.y);
+  const buff = vtpbf.fromGeojsonVt({ wikiLayer: tile }, { version: 2 });
+  console.log("getWikiTile", url.replace, resp.data.length, buff.length);
+  return buff;
+};
 
 // (1233,130,5) -> "032203"
 /* tslint:disable:no-bitwise */
 function getTileId({ x, y, z }: Coord) {
-  let id = [];
+  const id = [];
   y = (1 << z) - y - 1;
   z += 1;
   while (z) {
@@ -116,24 +114,23 @@ function getTileId({ x, y, z }: Coord) {
     y >>= 1;
     z -= 1;
   }
-  return id.reverse().join('');
+  return id.reverse().join("");
 }
 /* tslint:enable:no-bitwise */
 
 function makeTileUrl(coords: Coord) {
-  const
-    tileId = getTileId(coords),
-    urlPath = tileId.replace(/(\d{3})(?!$)/gu, '$1/'); // "033331022" -> "033/331/022"
+  const tileId = getTileId(coords);
+  const urlPath = tileId.replace(/(\d{3})(?!$)/gu, "$1/"); // "033331022" -> "033/331/022"
   return `http://wikimapia.org/z1/itiles/${urlPath}.xy?998736`;
 }
 
 /* tslint:disable:no-bitwise */
 function tileIdToCoords(tileId: string) {
   const z = tileId.length - 1;
-  let x = 0,
-    y = 0;
-  for (let i = 0; i < tileId.length; i++) {
-    let c = parseInt(tileId[i], 10);
+  let x = 0;
+  let y = 0;
+  for (const id of tileId) {
+    const c = parseInt(id, 10);
     x <<= 1;
     y <<= 1;
     x += c & 1;
@@ -160,9 +157,9 @@ function tileIdToCoords(tileId: string) {
 
 function decodeTitles(s: string) {
   const titles: any = {};
-  for (let title of s.split('\x1f')) {
+  for (const title of s.split("\x1f")) {
     if (title.length > 2) {
-      let langCode = title.charCodeAt(0) - 32;
+      const langCode = title.charCodeAt(0) - 32;
       titles[langCode.toString()] = title.substring(1);
     }
   }
@@ -170,13 +167,24 @@ function decodeTitles(s: string) {
 }
 
 function chooseTitle(titles: any) {
-  var popularLanguages = ['1', '0', '3', '2', '5', '4', '9', '28', '17', '27'];
-  for (let langCode of popularLanguages) {
+  const popularLanguages = [
+    "1",
+    "0",
+    "3",
+    "2",
+    "5",
+    "4",
+    "9",
+    "28",
+    "17",
+    "27",
+  ];
+  for (const langCode of popularLanguages) {
     if (langCode in titles) {
       return titles[langCode];
     }
   }
-  for (let langCode of Object.keys(titles)) {
+  for (const langCode of Object.keys(titles)) {
     return titles[langCode];
   }
   return "";
@@ -184,14 +192,14 @@ function chooseTitle(titles: any) {
 
 /* tslint:disable:no-bitwise */
 function decodePolygon(s: string) {
-  var i = 0,
-    coords = [],
-    lat = 0,
-    lng = 0;
+  let i = 0;
+  const coords = [];
+  let lat = 0;
+  let lng = 0;
   while (i < s.length) {
-    var p,
-      l = 0,
-      c = 0;
+    let p
+    let  l = 0
+     let c = 0;
     do {
       p = s.charCodeAt(i++) - 63; // eslint-disable-line no-plusplus
       c |= (p & 31) << l;
@@ -212,27 +220,16 @@ function decodePolygon(s: string) {
 }
 /* tslint:enable:no-bitwise */
 
-function makeCoordsLocal(line: string, tileCoords: Coord, projectObj: any) {
-  const { x: tileX, y: tileY, z: tileZ } = tileCoords,
-    x0 = tileX * 1024,
-    y0 = tileY * 1024,
-    localCoords = [];
-  let latlon, p;
-  for (let i = 0; i < line.length; i++) {
-    latlon = line[i];
-    // p = projectObj.project(latlon, tileZ + 2);
-    // p.x -= x0;
-    // p.y -= y0;
-    localCoords.push(p);
-  }
-  return localCoords;
-}
-
 function asap() {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-function simplifyPolygon(latlngs: number[][], tileCoords: Coord, tileHasChildren: boolean, projectObj: any) {
+function simplifyPolygon(
+  latlngs: number[][],
+  tileCoords: Coord,
+  tileHasChildren: boolean,
+  projectObj: any
+) {
   // const
   //     x = tileCoords.x * 1024,
   //     y = tileCoords.y * 1024,
@@ -242,41 +239,44 @@ function simplifyPolygon(latlngs: number[][], tileCoords: Coord, tileHasChildren
   // if (!tileHasChildren && tileCoords.z < 15) {
   //     pixelDegSize /= (1 << (15 - tileCoords.z));
   // }
-  let points = [];
-  for (let i = 0; i < latlngs.length; i++) {
-    let ll = latlngs[i];
+  const points = [];
+  for (const ll of latlngs) {
     points.push({ x: ll[1], y: ll[0] });
   }
   //todo: investigate
   // points = L.LineUtil.simplify(points, pixelDegSize * 2);
   latlngs = [];
-  for (let i = 0; i < points.length; i++) {
-    let p = points[i];
+  for (const p of points) {
     latlngs.push([p.x, p.y]);
   }
   return latlngs;
 }
 
 async function parseTile(s: string, projectObj: any) {
-  const tile: Tile = { places: [], tileId: '', coords: { x: 0, y: 0, z: 0 }, hasChildren: false };
+  const tile: Tile = {
+    places: [],
+    tileId: "",
+    coords: { x: 0, y: 0, z: 0 },
+    hasChildren: false,
+  };
   const places = tile.places;
-  const lines = s.split('\n');
+  const lines = s.split("\n");
   if (lines.length < 1) {
-    throw new Error('No data in tile');
+    throw new Error("No data in tile");
   }
-  const fields = lines[0].split('|');
-  const tileId = fields[0];
+  const fields0 = lines[0].split("|");
+  const tileId = fields0[0];
   if (!tileId || !tileId.match(/^[0-3]+$/u)) {
-    throw new Error('Invalid tile header');
+    throw new Error("Invalid tile header");
   }
   tile.tileId = tileId;
   tile.coords = tileIdToCoords(tileId);
-  tile.hasChildren = fields[1] === '1';
+  tile.hasChildren = fields0[1] === "1";
 
   // FIXME: ignore some errors
   let prevTime = Date.now();
-  for (let line of lines.slice(2)) {
-    let curTime = Date.now();
+  for (const line of lines.slice(2)) {
+    const curTime = Date.now();
     if (curTime - prevTime > 20) {
       await asap();
       prevTime = Date.now();
@@ -287,37 +287,44 @@ async function parseTile(s: string, projectObj: any) {
       geometry: {
         // "type": "Polygon",
         type: "LineString",
-        coordinates: [[]]
-      }
+        coordinates: [[]],
+      },
     };
-    const fields = line.split('|');
+    const fields = line.split("|");
     if (fields.length < 6) {
       continue;
     }
-    let placeId = fields[0];
+    const placeId = fields[0];
     if (!placeId.match(/^\d+$/u)) {
       // throw new Error('Invalid place id');
       continue;
     }
     place.properties.id = parseInt(placeId, 10);
     place.properties.name = chooseTitle(decodeTitles(fields[5]));
-    if (fields[6] !== '1') {
-      throw new Error(`Unknown wikimapia polygon encoding type: "${fields[6]}"`);
+    if (fields[6] !== "1") {
+      throw new Error(
+        `Unknown wikimapia polygon encoding type: "${fields[6]}"`
+      );
     }
 
-    let bounds = fields[2].match(/^([-\d]+),([-\d]+),([-\d]+),([-\d]+)$/u);
+    const bounds = fields[2].match(/^([-\d]+),([-\d]+),([-\d]+),([-\d]+)$/u);
     if (!bounds) {
-      throw new Error('Invalid place bounds');
+      throw new Error("Invalid place bounds");
     }
     // place.boundsWESN = bounds.slice(1).map((x) => parseInt(x, 10) / 1e7);
 
-    let c = fields.slice(7).join('|');
+    const c = fields.slice(7).join("|");
 
     const coords = decodePolygon(c);
     if (coords.length < 3) {
       throw new Error(`Polygon has ${coords.length} points`);
     }
-    let polygon = simplifyPolygon(coords, tile.coords, tile.hasChildren, projectObj);
+    const polygon = simplifyPolygon(
+      coords,
+      tile.coords,
+      tile.hasChildren,
+      projectObj
+    );
     place.geometry.coordinates = polygon;
     // place.localPolygon = makeCoordsLocal(polygon, tile.coords, projectObj);
     places.push(place);

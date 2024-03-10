@@ -35,7 +35,7 @@ export const initDbConnection = async () => {
 }
 
 export const closeConnection = async () => {
-    let connection = await getConnection()
+    const connection = await getConnection()
     await connection.close()
 }
 

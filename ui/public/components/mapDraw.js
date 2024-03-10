@@ -1,39 +1,26 @@
-import { html, render, useState } from "../libs/htm.js";
-import { Button } from "./common.js";
-
-export const createMapDraw = ({ map, trackStore }) => {
-  trackStore.onRefresh(() => {
-    render(
-      html`<${MapDraw} map=${map} trackStore=${trackStore} />`,
-      document.getElementById("draw")
-    );
-  });
-  render(
-    html`<${MapDraw} map=${map} trackStore=${trackStore} />`,
-    document.getElementById("draw")
-  );
-};
+import { html, render, useState } from '../libs/htm.js';
+import { Button } from './common.js';
 
 const MapDraw = ({ map, trackStore }) => {
   const [active, setActive] = useState(false);
   const [draw, setDraw] = useState(false);
   const [path, setPath] = useState([]);
   const [geoJson, setGeoJson] = useState({
-    type: "FeatureCollection",
+    type: 'FeatureCollection',
     features: [],
   });
   const track = trackStore.selected;
   // const [clientRect, setClientRect] = useState({});
 
-  map.on("resize", (e) => {
-    console.log("resize", e);
+  map.on('resize', (e) => {
+    console.log('resize', e);
     const clientRect = e.target.getCanvasContainer().getClientRects()[0];
-    const overlayStyle = document.getElementById("draw").style;
+    const overlayStyle = document.getElementById('draw').style;
     overlayStyle.left = `${clientRect.left}px`;
   });
 
   const onToggle = () => setActive(!active);
-  const onSave = (e) => {
+  const onSave = () => {
     map.saveDraw(geoJson);
     setActive(false);
   };
@@ -42,12 +29,12 @@ const MapDraw = ({ map, trackStore }) => {
     setActive(false);
     map.closeDraw();
   };
-  const onMouseDown = (e) => {
+  const onMouseDown = () => {
     setDraw(true);
     const feature = {
-      type: "Feature",
+      type: 'Feature',
       geometry: {
-        type: "LineString",
+        type: 'LineString',
         coordinates: [],
       },
       properties: {
@@ -60,11 +47,11 @@ const MapDraw = ({ map, trackStore }) => {
     });
     setPath([]);
   };
-  const onMouseUp = (e) => {
+  const onMouseUp = () => {
     const feature = {
-      type: "Feature",
+      type: 'Feature',
       geometry: {
-        type: "LineString",
+        type: 'LineString',
         coordinates: path,
       },
       properties: {
@@ -111,7 +98,7 @@ const MapDraw = ({ map, trackStore }) => {
         onMouseMove=${onMouseMove}
       ></div>
       <${Button}
-        className=${active ? "draw-icon red" : "draw-icon"}
+        className=${active ? 'draw-icon red' : 'draw-icon'}
         icon="assets/draw.svg"
         onClick=${onToggle}
       /><${Button}
@@ -122,23 +109,36 @@ const MapDraw = ({ map, trackStore }) => {
   }
 
   return html`${active
-      ? html`<div
+    ? html`<div
           className="drawOverlay"
           onMouseDown=${onMouseDown}
           onMouseUp=${onMouseUp}
           onMouseMove=${onMouseMove}
         ></div>`
-      : null}
+    : null}
     <${Button}
-      className=${active ? "draw-icon red" : "draw-icon"}
+      className=${active ? 'draw-icon red' : 'draw-icon'}
       icon="assets/draw.svg"
       onClick=${onToggle}
     />
     ${active
-      ? html`<${Button}
+    ? html`<${Button}
           className="draw-save"
           icon="assets/save.svg"
           onClick=${onSave}
         />`
-      : null}`;
+    : null}`;
+};
+
+export const createMapDraw = ({ map, trackStore }) => {
+  trackStore.onRefresh(() => {
+    render(
+      html`<${MapDraw} map=${map} trackStore=${trackStore} />`,
+      document.getElementById('draw'),
+    );
+  });
+  render(
+    html`<${MapDraw} map=${map} trackStore=${trackStore} />`,
+    document.getElementById('draw'),
+  );
 };

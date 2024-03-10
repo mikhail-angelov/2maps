@@ -1,39 +1,31 @@
-import { html, render, Component } from "../libs/htm.js";
-import { isMobile } from "../utils.js";
-import { parseUrlParams } from "../urlParams.js";
-import { IconButton } from "./common.js";
-import { savePanelWidth, loadPanelWidth } from "../storage.js";
-import { Marks } from "./marks.js";
-import { Tracks } from "./tracks.js";
-// import "../libs/qrcode.js";
+import { html, render, Component } from '../libs/htm.js';
+import { isMobile } from '../utils.js';
+import { IconButton } from './common.js';
+import { Marks } from './marks.js';
+import { Tracks } from './tracks.js';
 
 export const createLeftPanel = ({
-  yandexMap,
-  secondMap,
+  map,
   markerStore,
   trackStore,
   authStore,
+  uiStore,
 }) => {
   const panel = { refresh: () => {}, addItems: () => {}, addTrack: () => {} };
-  const marks = new Marks(panel, markerStore);
-  const tracks = new Tracks({ yandexMap, secondMap, panel, trackStore });
+  const marks = new Marks({ map, panel, markerStore });
+  const tracks = new Tracks({ map, panel, trackStore });
   panel.addItems = (items) => marks.addItems(items);
   panel.addTrack = (track) => tracks.addTrack(track);
   let authenticated = authStore.isAuthenticated();
 
   authStore.subscribeAuth(() => {
     authenticated = authStore.isAuthenticated();
-    console.log("on auth update", authenticated);
+    console.log('on auth update', authenticated);
     panel.refresh();
   });
 
-  const { resetToken } = parseUrlParams();
-  if (resetToken) {
-    authStore.showPasswordReset();
-  }
-
-  const MARKS_TAB = "marks";
-  const TRACKS_TAB = "tracks";
+  const MARKS_TAB = 'marks';
+  const TRACKS_TAB = 'tracks';
   class LeftPanel extends Component {
     componentDidMount() {
       panel.refresh = this.refresh.bind(this);
@@ -41,22 +33,10 @@ export const createLeftPanel = ({
       this.setState({
         showPanel: !isMobile(),
         refresh: Date.now(),
-        mapUrl: "",
+        mapUrl: '',
         tab: MARKS_TAB,
-        panelWidth: loadPanelWidth(),
+        leftWidth: uiStore.leftWidth,
         sliderIsPressed: false,
-      });
-      document
-        .querySelector("body")
-        .addEventListener("mouseup", () =>
-          this.setState({ sliderIsPressed: false })
-        );
-      document.querySelector("body").addEventListener("mousemove", (e) => {
-        if (this.state.sliderIsPressed) {
-          const panelWidth = Math.max(e.clientX - 8, 50);
-          this.setState({ panelWidth });
-          savePanelWidth(panelWidth);
-        }
       });
     }
 
@@ -69,7 +49,8 @@ export const createLeftPanel = ({
     }
 
     onShowQR() {
-      location.href = "/admin";
+      window.location.href = '/admin';
+      console.log('onShowQR', this.state.mapUrl);
       // const typeNumber = 4;
       // const errorCorrectionLevel = 'L';
       // const qr = window.qrcode(typeNumber, errorCorrectionLevel);
@@ -80,87 +61,118 @@ export const createLeftPanel = ({
       // document.getElementById('qr').innerHTML = qr.createImgTag();
       // this.setState({ mapUrl })
     }
+
     onCloseQR() {
-      document.getElementById("qr").innerHTML = "";
-      this.setState({ mapUrl: "" });
+      window.document.getElementById('qr').innerHTML = '';
+      this.setState({ mapUrl: '' });
     }
 
-    render({}, { showPanel, mapUrl, tab, panelWidth }) {
-      if (showPanel) {
-        return html` <div class="placemark" style="width:${panelWidth}px">
-        <div class="header">
-          <button class="tab ${
-            tab === MARKS_TAB ? "active" : ""
-          }" onClick=${() => this.setState({ tab: MARKS_TAB })}>Метки</button>
-          <button class="tab ${
-            tab === TRACKS_TAB ? "active" : ""
-          }" onClick=${() => this.setState({ tab: TRACKS_TAB })}>Треки</button>
-          <${IconButton}
-            icon="assets/backArrow.svg"
-            onClick=${() => this.setShowPanel(false)}
-          />
-        </div>
-        ${tab === MARKS_TAB ? marks.render() : tracks.render()}
+    onStartMoveSlider() {
+      if (!this.state.sliderIsPressed) {
+        this.setState({ sliderIsPressed: true });
+        const onMoveSlider = this.onMoveSlider.bind(this);
+        const onUp = () => {
+          window.removeEventListener('mousemove', onMoveSlider);
+          window.removeEventListener('mouseup', onUp);
+          this.setState({ sliderIsPressed: false });
+        };
+        window.addEventListener('mousemove', onMoveSlider);
+        window.addEventListener('mouseup', onUp);
+      }
+    }
 
-        <div class="footer">
-        <div class="auth-sync">
-        ${
-          authenticated
-            ? html` <button
-                  class="icon-button footer-button"
-                  onClick=${() => this.onShowQR()}
-                >
-                  閙
-                </button>
-                <div class="qr">
-                  ${mapUrl
-                    ? html`<button
-                        class="icon-button footer-button qr-close"
-                        onClick=${() => this.onCloseQR()}
+    onMoveSlider(e) {
+      if (this.state.sliderIsPressed) {
+        console.log('onMoveSlider', e.clientX, e);
+        this.setState({ leftWidth: e.clientX });
+        uiStore.setLeftWidth(e.clientX);
+      }
+    }
+
+    render(_, { showPanel, tab, leftWidth }) {
+      if (showPanel) {
+        return html` 
+        <div class="h-100 row">
+          <div class="col h-100" style=${{ width: leftWidth }}>
+            <div class="row inverse-color center">
+              <img src="assets/logo.png" />
+              <h5>2 Карты</h5>
+            </div>
+            <div class="row inverse-color">
+              <div class="row col-sm-10">
+                  <button class="small inverse" style=${{
+    color: tab === MARKS_TAB ? 'darkseagreen' : 'white',
+  }} onClick=${() => this.setState({ tab: MARKS_TAB })}>Метки</button>
+                  <button class="small inverse" style=${{
+    color: tab === TRACKS_TAB ? 'darkseagreen' : 'white',
+  }} onClick=${() => this.setState({ tab: TRACKS_TAB })}>Треки</button>
+              </div>
+              <${IconButton}
+                icon="assets/backArrow.svg"
+                className="small inverse"
+                onClick=${() => this.setShowPanel(false)}
+              />
+            </div>
+            ${tab === MARKS_TAB ? marks.render() : tracks.render()}
+
+            <div class="col inverse-color">
+              <div class="row center">
+              ${
+  authenticated
+    ? html` <button
+                        class="col-sm-5 small inverse"
+                        onClick=${() => this.onShowQR()}
                       >
-                        ✕
+                        閙
+                      </button>
+
+                      <button
+                        class="col-sm-5 small inverse"
+                        onClick=${() => authStore.logout()}
+                      >
+                        Logout
                       </button>`
-                    : null}
-                  <div id="qr"></div>
-                </div>
-                <button
-                  class="icon-button footer-button"
-                  onClick=${() => authStore.logout()}
-                >
-                  Logout
-                </button>`
-            : html`<button
-                  class="icon-button footer-button"
-                  onClick=${() => authStore.showLogin()}
-                >
-                  Login</button
-                >/
-                <button
-                  class="icon-button footer-button"
-                  onClick=${() => authStore.showSignUp()}
-                >
-                  Sign Up
-                </button>`
-        }
+    : html`<button
+                        class="col-sm-5 small inverse"
+                        onClick=${() => authStore.showLogin()}
+                      >
+                        Login</button
+                      >/
+                      <button
+                        class="col-sm-5 small inverse"
+                        onClick=${() => authStore.showSignUp()}
+                      >
+                        Sign Up
+                      </button>`
+}
+              </div>
+              <div class="col center">
+                <a class="center" href="http://www.etomesto.ru/">карты c etomesto.ru</a>
+                <a class="center" href="https://github.com/mikhail-angelov/mapnn"><img src="assets/github.svg"></img>исходники</a>
+              </div>
+          </div>  
         </div>
-        <a class="link" href="http://www.etomesto.ru/">карты c etomesto.ru</a>
-        <a class="link" href="https://github.com/mikhail-angelov/mapnn">
-        <img src="assets/github.svg"></img>исходники
-        </a>
-        </div>
-        <div class="slider-panel"><div class="slider" onMouseDown=${() =>
-          this.setState({ sliderIsPressed: true })} /></div>
-      </div>`;
+        <div class="h-100" style=${{
+    borderRight: '2px solid gray',
+    width: '10px',
+    cursor: 'col-resize',
+    backgroundColor: 'transparent',
+    marginLeft: '-10px',
+  }}
+         onMouseDown=${() => this.onStartMoveSlider()}
+        ></div>
+      </div>
+      `;
       }
       return html`<${IconButton}
-        class="icon-button footer-button"
+        className="small"
         icon="assets/rightArrow.svg"
         onClick=${() => this.setShowPanel(true)}
       />`;
     }
   }
 
-  render(html`<${LeftPanel} />`, document.getElementById("left-panel"));
+  render(html`<${LeftPanel} />`, document.getElementById('left-panel'));
 
   return panel;
 };

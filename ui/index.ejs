@@ -5,8 +5,9 @@
     <title>2 Maps</title>
     <meta
       name="viewport"
-      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+      content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no"
     />
+    <link href="/styles/mini.css" rel="stylesheet" />
     <link
       rel="apple-touch-icon"
       sizes="180x180"
@@ -25,50 +26,25 @@
       href="assets/favicon/favicon-16x16.png"
     />
     <link rel="manifest" href="assets/favicon/site.webmanifest" />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js"></script>
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=<%= yandexMapKey %>"></script>
-    <link
-      href="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.css"
-      rel="stylesheet"
-    />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
     <%- metrica %>
-    <link rel="stylesheet/less" type="text/css" href="/styles/main.less" />
-    <script>
-      less = {
-        env: "development",
-        async: false,
-        fileAsync: false,
-        poll: 1000,
-        functions: {},
-        dumpLineNumbers: "comments",
-        relativeUrls: false,
-        rootpath: ":/a.com/",
-      };
-    </script>
-    <script src="/libs/less.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/styles/main.css" />
     <script>
       window.mapBoxKey = "<%= mapBoxKey %>";
     </script>
   </head>
   <body>
-    <div class="header">
-      <img src="assets/logo.png" />
-      <div class="title">Старые карты Нижегородской губернии</div>
-    </div>
-
-    <div class="main">
-      <div id="left-panel" class="side-bar"></div>
-      <div class="map-container">
-        <div id="map" class="map"></div>
-        <div id="ymap" class="map"></div>
-        <!-- <div id="placemarks"></div> -->
+    <div class="main row">
+      <div id="left-panel"></div>
+      <div id="map">
         <div id="slider" class="map-overlay"></div>
-        <div id="layers" class="layers-overlay"></div>
+        <div id="layers" class="map-overlay"></div>
         <div id="draw" class="draw-overlay"></div>
         <div id="wiki" class="wiki-overlay"></div>
       </div>
       <div id="auth"></div>
     </div>
-    <script type="module" src="/map.js"></script>
+    <script type="module" src="/main.js"></script>
   </body>
 </html>

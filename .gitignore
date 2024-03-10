@@ -5,7 +5,6 @@ dist/
 .env*
 env.json
 ui/public/index.html
-main.css
 info.txt
 .vercel
 *.dump

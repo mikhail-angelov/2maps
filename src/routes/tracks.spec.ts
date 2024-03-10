@@ -42,7 +42,7 @@ const TRACKS: Track[] = [
 ];
 
 describe("tracks", () => {
-  let db = new DbUnit();
+  const db = new DbUnit();
   let tracks: Tracks;
   beforeEach(async () => {
     const conn = await initDbConnectionTest(db);

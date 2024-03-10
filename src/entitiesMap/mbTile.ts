@@ -12,7 +12,7 @@ export class MbTile {
 
     @Column({name:'tile_row'})
     tileRow!: number;
-    
+
     @Column({name:'tile_data'})
     tileData!: Buffer;
 

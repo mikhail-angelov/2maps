@@ -32,7 +32,7 @@ const getConnection = async (name: string) => {
 }
 
 export const createDBConnection = async (name: string) => {
-    const connections = await createConnections([
+    const c = await createConnections([
         {
             name,
             type: "sqlite",
@@ -41,7 +41,7 @@ export const createDBConnection = async (name: string) => {
             synchronize: false,
             logger: 'debug'
         }]);
-    return connections[0]
+    return c[0]
 }
 
 export const closeConnections = async () => {

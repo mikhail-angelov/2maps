@@ -33,7 +33,7 @@ const MARKS: Mark[] = [{
 }]
 
 describe('marks', () => {
-    let db = new DbUnit({debug:true});
+    const db = new DbUnit({debug:true});
     let marks: Marks
     beforeEach(async () => {
         const conn = await initDbConnectionTest(db);

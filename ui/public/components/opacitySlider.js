@@ -1,8 +1,8 @@
-import { html, render } from "../libs/htm.js";
+import { html, render } from '../libs/htm.js';
 
 export const createOpacitySlider = (uiStore) => {
-  let opacity = uiStore.opacity;
-  
+  let { opacity } = uiStore;
+
   const onInput = (e) => {
     opacity = parseInt(e.target.value, 10);
     uiStore.setOpacity(opacity);
@@ -12,8 +12,9 @@ export const createOpacitySlider = (uiStore) => {
   };
 
   render(
-    html`<div class="map-overlay-inner">
+    html`<div class="row">
       <input
+        class="col-sm-12"
         type="range"
         min="0"
         max="100"
@@ -23,8 +24,6 @@ export const createOpacitySlider = (uiStore) => {
         onInput=${onInput}
       />
     </div>`,
-    document.getElementById("slider")
+    document.getElementById('slider'),
   );
-
-
 };
