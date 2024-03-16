@@ -1,7 +1,7 @@
-import { html } from "../libs/htm.js";
-import { get } from "../utils.js";
-import { IconButton } from "./common.js";
-import { kmlToJson } from "../libs/togeojson.js";
+import { html } from '../libs/htm.js';
+import { get } from '../utils.js';
+import { IconButton } from './common.js';
+import { kmlToJson } from '../libs/togeojson.js';
 
 const PItem = ({
   id,
@@ -12,7 +12,7 @@ const PItem = ({
   onSelect,
 }) => html`<li class="place-item" key="${id}" onClick=${onSelect}>
   <div class="title">
-    <div class=${selected ? "red" : ""}>${name}</div>
+    <div class=${selected ? 'red' : ''}>${name}</div>
   </div>
   <${IconButton}
     icon="assets/download.svg"
@@ -40,14 +40,14 @@ export class Tracks {
   }
 
   async onDownload(id) {
-    window.open(`/tracks/${id}/kml`, "__blank");
-    console.log("-", this.store.selected);
+    window.open(`/tracks/${id}/kml`, '__blank');
+    console.log('-', this.store.selected);
   }
 
   importKml(files) {
     const parser = new DOMParser();
     if (files.length === 0) {
-      console.log("No file is selected");
+      console.log('No file is selected');
       return;
     }
     const reader = new FileReader();
@@ -55,7 +55,7 @@ export class Tracks {
       try {
         const doc = parser.parseFromString(
           event.target.result,
-          "application/xml"
+          'application/xml',
         );
         const geoJson = kmlToJson.kml(doc);
         this.store.add({
@@ -65,7 +65,7 @@ export class Tracks {
           timestamp: Date.now(),
         });
       } catch (e) {
-        console.log("File content error:", e);
+        console.log('File content error:', e);
       }
     };
     reader.readAsText(files[0]);
@@ -91,7 +91,7 @@ export class Tracks {
         this.store.select(track);
         this.map.draw(track.geoJson);
       } else {
-        alert("track not found");
+        alert('track not found');
       }
     }
   }
@@ -104,19 +104,19 @@ export class Tracks {
         ? html`<div className="h-100 center">not tracks</div>`
         : html`<ul class="h-100">
             ${items.map(
-              ({ id, name }) => html`<${PItem}
+    ({ id, name }) => html`<${PItem}
                 ...${{ id, name, selected: id === this.store.selected?.id }}
                 onRemove=${(e) => {
-                  e.stopPropagation();
-                  this.onRemove(id, name);
-                }}
+    e.stopPropagation();
+    this.onRemove(id, name);
+  }}
                 onDownload=${(e) => {
-                  e.stopPropagation();
-                  this.onDownload(id);
-                }}
+    e.stopPropagation();
+    this.onDownload(id);
+  }}
                 onSelect=${() => this.onSelect(id)}
-              />`
-            )}
+              />`,
+  )}
           </ul>`
     }
     <div class="row inverse-color center">
@@ -124,8 +124,7 @@ export class Tracks {
     <label class="button small inverse" htmlFor="upload">
     Импорт
     </label>
-    <input type="file" id="upload" onChange=${(e) =>
-      this.importKml(e.target.files)} hidden></input>
+    <input type="file" id="upload" onChange=${(e) => this.importKml(e.target.files)} hidden></input>
     </div></div>`;
   }
 }
