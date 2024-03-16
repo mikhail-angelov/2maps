@@ -4,10 +4,11 @@ import multer from "multer";
 import _ from "lodash";
 import { v4 as uuid } from "@lukeed/uuid";
 import { Point } from "geojson";
-import { Connection, MoreThan } from "typeorm";
+import { DataSource, MoreThan } from "typeorm";
 import { Mark } from "../entities/mark";
 import { Auth } from "./auth";
 import dayjs from "dayjs";
+import { User } from "../entities/user";
 
 const isUUID = (id: string): boolean =>
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
@@ -64,9 +65,9 @@ export interface WebMark {
 }
 
 export class Marks implements CommonRoutesConfig {
-  db: Connection;
+  db: DataSource;
   auth: Auth;
-  constructor(db: Connection, auth: Auth) {
+  constructor(db: DataSource, auth: Auth) {
     this.db = db;
     this.auth = auth;
   }
@@ -234,7 +235,15 @@ export class Marks implements CommonRoutesConfig {
 
   async syncMarks(userId: string, clientMarks: WebMark[]) {
     const marks = _.uniqBy(clientMarks, "id");
-    const savedMarks = await this.db.getRepository(Mark).find({ userId });
+    console.log("syncMarks", userId, marks.length);
+    const a = await this.db
+      .getRepository(User)
+      .find();
+      console.log("syncMarks 1",  a);
+    const savedMarks = await this.db
+      .getRepository(Mark)
+      .find();
+      console.log("syncMarks 2",  savedMarks);
     const marksMap = _.keyBy(savedMarks, "id");
     const marksToAdd = marks
       .filter((mark) => !marksMap[mark.id])
@@ -271,11 +280,13 @@ export class Marks implements CommonRoutesConfig {
   }
 
   async getAll(userId: string): Promise<WebMark[]> {
-    const marks = await this.db.getRepository(Mark).find({ userId });
+    const marks = await this.db.getRepository(Mark).find({ where: { userId } });
     return marks.map(mapToDto);
   }
   async getById(userId: string, id: string): Promise<WebMark> {
-    const mark = await this.db.getRepository(Mark).findOne({ id, userId });
+    const mark = await this.db
+      .getRepository(Mark)
+      .findOne({ where: { id, userId } });
     if (!mark) throw new Error("mark not found");
     return mapToDto(mark);
   }
@@ -289,7 +300,7 @@ export class Marks implements CommonRoutesConfig {
     const patch = mapToEntity(webMark, userId);
     const mark = await this.db
       .getRepository(Mark)
-      .findOne({ id: webMark.id, userId });
+      .findOne({ where: { id: webMark.id, userId } });
     if (!mark) throw new Error("mark not found");
     const result = await this.db
       .getRepository(Mark)
@@ -298,14 +309,16 @@ export class Marks implements CommonRoutesConfig {
     return mapToDto(result);
   }
   async remove(userId: string, id: string): Promise<any> {
-    const mark = await this.db.getRepository(Mark).findOne({ id, userId });
+    const mark = await this.db
+      .getRepository(Mark)
+      .findOne({ where: { id, userId } });
     if (!mark) throw new Error("mark not found");
     await this.db.getRepository(Mark).delete(id);
     return { status: "ok" };
   }
   async getBatch(userId: string, timestamp: Date): Promise<WebMark[]> {
     const marks = await this.db.getRepository(Mark).find({
-      where: { userId, timestamp: MoreThan(dayjs(timestamp).toISOString()) },
+      where: { userId, timestamp: MoreThan(dayjs(timestamp).toDate()) },
     });
     return marks.map(mapToDto);
   }

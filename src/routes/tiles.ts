@@ -1,13 +1,13 @@
 import { CommonRoutesConfig, maxAge } from './common';
 import express from 'express';
 import fs from 'fs';
-import { Connection, In } from "typeorm";
+import { DataSource, In } from "typeorm";
 import { getTile } from "../tilesDb";
 import { TileSource } from '../entities/tileSource'
 
 export class Tiles implements CommonRoutesConfig {
-  db: Connection
-  constructor(db: Connection) {
+  db: DataSource
+  constructor(db: DataSource) {
     this.db = db;
     try {
       this.refineTileSourcesInDB()

@@ -1,20 +1,18 @@
 import { expect } from 'chai'
-import { DbUnit } from 'nestjs-db-unit';
-import { initDbConnectionTest } from '../db'
 import { Auth, JWT_COOKIES } from './auth'
 import { Request } from 'express'
+import { cleanDatabase, getDatabase } from '../../test/database-setup'
 
 describe('auth', () => {
-    const db = new DbUnit();
     let auth: Auth
     beforeEach(async () => {
-        const conn = await initDbConnectionTest(db);
+        const db = await getDatabase();
         const sender: any = { sendEmail: () => null }
-        auth = new Auth(conn, sender)
+        auth = new Auth(db, sender)
         // add user
         await auth.register({ name: 'test', email: 'test', password: 'test' })
     })
-    afterEach(() => db.closeDb());
+    afterEach(() => cleanDatabase());
 
     it('login', async () => {
         const token = await auth.login({ email: 'test', password: 'test' })
@@ -25,8 +23,8 @@ describe('auth', () => {
         try {
             await auth.login({ email: 'test', password: 'invalid' })
             expect(false).to.equal(true);
-        } catch (e) {
-            expect(e).to.equal('invalid login');
+        } catch (e: any) {
+            expect(e.message).to.equal('invalid login');
         }
     })
 

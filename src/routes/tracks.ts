@@ -4,7 +4,7 @@ import _ from "lodash";
 import { Readable } from "stream";
 import multer from "multer";
 import { v4 as uuid } from "@lukeed/uuid";
-import { Connection } from "typeorm";
+import { DataSource } from "typeorm";
 import { Track } from "../entities/track";
 import { TrackDto, TrackItemDto } from "../dto/track.dto";
 import { Auth } from "./auth";
@@ -39,9 +39,9 @@ const mapToDto = ({ id, name, image, geoJson, timestamp }: Track): TrackDto => {
 };
 
 export class Tracks implements CommonRoutesConfig {
-  db: Connection;
+  db: DataSource;
   auth: Auth;
-  constructor(db: Connection, auth: Auth) {
+  constructor(db: DataSource, auth: Auth) {
     this.db = db;
     this.auth = auth;
   }
@@ -54,12 +54,10 @@ export class Tracks implements CommonRoutesConfig {
       async (req: Request, res: express.Response) => {
         const user = req.user;
         try {
-          const tracks = await this.db
-            .getRepository(Track)
-            .find({
-              where: { userId: user?.id },
-              order: { timestamp: "DESC" },
-            });
+          const tracks = await this.db.getRepository(Track).find({
+            where: { userId: user?.id },
+            order: { timestamp: "DESC" },
+          });
           res.status(200).json(tracks.map(mapListToDto));
         } catch (e) {
           console.log("get error", e);
@@ -76,7 +74,7 @@ export class Tracks implements CommonRoutesConfig {
         try {
           const track = await this.db
             .getRepository(Track)
-            .findOne({ id, userId: user?.id });
+            .findOne({ where: { id, userId: user?.id } });
           if (!track) {
             return res.status(400).json({ error: `no tack request ${id}` });
           }
@@ -96,7 +94,7 @@ export class Tracks implements CommonRoutesConfig {
         try {
           const track = await this.db
             .getRepository(Track)
-            .findOne({ id, userId: user?.id });
+            .findOne({ where: { id, userId: user?.id } });
           if (!track) {
             return res.status(400).json({ error: `no tack request ${id}` });
           }

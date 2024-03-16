@@ -4,14 +4,14 @@ import axios from "axios";
 import { gzipSync } from "zlib";
 import * as vtpbf from "vt-pbf";
 import geojsonVt from "geojson-vt";
-import { Connection, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { WikiTile } from "../entities/wiki";
 
 const VERSION = 1;
 
 export class Wikimapia implements CommonRoutesConfig {
   wikiRepo: Repository<WikiTile>;
-  constructor(db: Connection) {
+  constructor(db: DataSource) {
     this.wikiRepo = db.getRepository(WikiTile);
   }
 
@@ -58,7 +58,7 @@ export class Wikimapia implements CommonRoutesConfig {
   }
   async updateTile(id: string, image: Buffer) {
     await this.wikiRepo.update(id, { image, version: VERSION });
-    return await this.wikiRepo.findOne(id);
+    return await this.wikiRepo.findOne({ where: { id } });
   }
 }
 
@@ -197,9 +197,9 @@ function decodePolygon(s: string) {
   let lat = 0;
   let lng = 0;
   while (i < s.length) {
-    let p
-    let  l = 0
-     let c = 0;
+    let p;
+    let l = 0;
+    let c = 0;
     do {
       p = s.charCodeAt(i++) - 63; // eslint-disable-line no-plusplus
       c |= (p & 31) << l;
