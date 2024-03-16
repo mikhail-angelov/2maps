@@ -136,7 +136,7 @@ const PItem = ({
 }) => html`<li
     class="row col-sm-12"
     key="${id}"
-    onDClick=${onCenter}
+    onDblClick=${onCenter}
     disabled=${removed}
     style=${{ cursor: 'pointer', borderBottom: '1px solid' }}
   >

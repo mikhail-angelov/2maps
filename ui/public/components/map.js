@@ -382,7 +382,7 @@ export const createMap = ({
           console.log('cancel');
           editPopup?.remove();
         },
-        pureHtml: false,
+        pureHtml: true,
       });
 
       editPopup
