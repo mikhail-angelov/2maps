@@ -8,6 +8,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: test server
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+        docker pull docker.pkg.github.com/mikhail-angelov/2maps/postgis:16-3.4-alpine
+
     - name: Use Node.js 21.x
       uses: actions/setup-node@v4
       with:
@@ -15,8 +23,6 @@ jobs:
 
     - name: test server
       run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
-        docker pull docker.pkg.github.com/mikhail-angelov/2maps/postgis:16-3.4-alpine
         npm ci
         npm test
 
