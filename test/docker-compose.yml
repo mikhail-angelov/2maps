@@ -1,7 +1,7 @@
 version: '3'
 services:
   database:
-    image: docker.pkg.github.com/mikhail-angelov/2maps/postgis:16-3.4-alpine
+    image: postgis/postgis:16-3.4-alpine
     # image: postgis
     command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c random_page_cost=1.0
     environment:
