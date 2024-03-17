@@ -3,10 +3,11 @@ import dockerCompose from "docker-compose";
 async function setup() {
   // eslint-disable-next-line no-console
   console.time("global-setup");
-  await dockerCompose.upAll({
+  let r = await dockerCompose.upAll({
     cwd: __dirname,
   });
-  await dockerCompose.exec(
+  console.log('step 1', r)
+  r = await dockerCompose.exec(
     "database",
     ["sh", "-c", "until pg_isready ; do sleep 1; done"],
     {
@@ -15,14 +16,15 @@ async function setup() {
   );
   // wait for database to be ready
   await new Promise((resolve) => setTimeout(resolve, 2000));
-  await dockerCompose.exec(
+  console.log('step 1', r)
+  r = await dockerCompose.exec(
     "database",
     ["sh", "-c", "createdb -U test test-db"],
     {
       cwd: __dirname,
     }
   );
-
+  console.log('step 1', r)
   // eslint-disable-next-line no-console
   console.timeEnd("global-setup");
 }
@@ -35,7 +37,7 @@ async function tearDown() {
 }
 
 before(async function () {
-  this.timeout(5000); // eslint-disable-line no-invalid-this
+  this.timeout(50000); // eslint-disable-line no-invalid-this
   await setup();
 });
 
