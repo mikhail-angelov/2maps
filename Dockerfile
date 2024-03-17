@@ -6,7 +6,7 @@ WORKDIR /opt/app
 COPY ./package*.json ./
 COPY ./ormconfig.js ./
 COPY ./dist dist
-COPY ./ui/public ui/public
+COPY ./ui ui
 # RUN chown -R node:node /opt/app
 # USER node
 RUN npm ci --only=production

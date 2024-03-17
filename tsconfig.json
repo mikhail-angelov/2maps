@@ -15,7 +15,9 @@
       },
       "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "test",
+        "**/*spec.ts"
       ],
       "ts-node": {  "files": true },
 }

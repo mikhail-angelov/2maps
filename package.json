@@ -4,7 +4,8 @@
   "description": "Maps app based on mapbox",
   "main": "src/index.js",
   "scripts": {
-    "start": "tsc; node --unhandled-rejections=strict ./dist/app.js",
+    "start": "node --unhandled-rejections=strict ./dist/app.js",
+    "build": "tsc",
     "dev": "node --env-file=.env --inspect -r ts-node/register ./src/app.ts",
     "debug": "export DEBUG=* && npm run start",
     "migration:generate": "ts-node node_modules/.bin/typeorm migration:generate",
