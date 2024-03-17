@@ -28,6 +28,7 @@ async function setup() {
     console.log("step 3", r);
   } catch (e) {
     console.log("error: ", e);
+    throw e;
   }
   // eslint-disable-next-line no-console
   console.timeEnd("global-setup");

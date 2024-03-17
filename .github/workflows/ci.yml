@@ -12,10 +12,11 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 21.x
-        
+
     - name: test server
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+        docker pull docker.pkg.github.com/mikhail-angelov/2maps/postgis:16-3.4-alpine
         npm ci
         npm test
 
