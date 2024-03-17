@@ -3,7 +3,6 @@ node_modules/
 logs/
 dist/
 .env*
-env.json
 ui/public/index.html
 info.txt
 .vercel

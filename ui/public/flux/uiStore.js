@@ -4,6 +4,11 @@ import {
   loadOpacity, saveOpacity, loadPanelWidth, savePanelWidth,
 } from '../storage.js';
 
+export const UI_EVENTS = {
+  OPACITY: 'OPACITY',
+  LEFT_WIDTH: 'LEFT_WIDTH',
+};
+
 export class UiStore extends Store {
   opacity = 50;
 
@@ -23,12 +28,12 @@ export class UiStore extends Store {
   setOpacity(value) {
     this.opacity = value;
     saveOpacity(value);
-    this.refresh();
+    this.emit(UI_EVENTS.OPACITY, value);
   }
 
   setLeftWidth(value) {
     this.leftWidth = value;
     savePanelWidth(value);
-    this.refresh();
+    this.emit(UI_EVENTS.LEFT_WIDTH, value);
   }
 }

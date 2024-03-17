@@ -6,24 +6,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Use Node.js 14.x
+    - name: Use Node.js 21.x
       uses: actions/setup-node@v1
       with:
-        node-version: 14.x
-    - name: build test server
+        node-version: 21.x
+    - name: test server
       run: |
         npm ci
-        npm run build
         npm test
-    - name: build ui
-      env:
-        MAPBOX_KEY: ${{ secrets.MAPBOX_KEY }}
-        YANDEX_KEY: ${{ secrets.YANDEX_KEY }}
-      run: |
-        cd ui
-        npm ci
-        echo \{\"mapBoxKey\":\"$MAPBOX_KEY\",\"metrica\":\"\"\} >> env.json
-        npm run build
 
      #Docker
     - name: Set up Docker Buildx
