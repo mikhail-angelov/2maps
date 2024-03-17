@@ -3,28 +3,32 @@ import dockerCompose from "docker-compose";
 async function setup() {
   // eslint-disable-next-line no-console
   console.time("global-setup");
-  let r = await dockerCompose.upAll({
-    cwd: __dirname,
-  });
-  console.log('step 1', r)
-  r = await dockerCompose.exec(
-    "database",
-    ["sh", "-c", "until pg_isready ; do sleep 1; done"],
-    {
+  try {
+    let r = await dockerCompose.upAll({
       cwd: __dirname,
-    }
-  );
-  // wait for database to be ready
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  console.log('step 1', r)
-  r = await dockerCompose.exec(
-    "database",
-    ["sh", "-c", "createdb -U test test-db"],
-    {
-      cwd: __dirname,
-    }
-  );
-  console.log('step 1', r)
+    });
+    console.log("step 1", r);
+    r = await dockerCompose.exec(
+      "database",
+      ["sh", "-c", "until pg_isready ; do sleep 1; done"],
+      {
+        cwd: __dirname,
+      }
+    );
+    // wait for database to be ready
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log("step 2", r);
+    r = await dockerCompose.exec(
+      "database",
+      ["sh", "-c", "createdb -U test test-db"],
+      {
+        cwd: __dirname,
+      }
+    );
+    console.log("step 3", r);
+  } catch (e) {
+    console.log("error: ", e);
+  }
   // eslint-disable-next-line no-console
   console.timeEnd("global-setup");
 }
