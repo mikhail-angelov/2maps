@@ -8,3 +8,4 @@ info.txt
 .vercel
 *.dump
 wikimapia.json
+.DS_Store

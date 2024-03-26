@@ -4,7 +4,7 @@ import * as winston from "winston";
 import * as expressWinston from "express-winston";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { Tiles } from "./routes/tiles";
+import { MapList } from "./routes/mapList";
 import { OsmTiles } from "./routes/osm";
 import { Auth } from "./routes/auth";
 import { initDbConnection } from "./db";
@@ -50,7 +50,7 @@ app.get("/", function (req, res) {
 
 const run = async () => {
   const db = await initDbConnection();
-  const tiles = new Tiles(db);
+  const tiles = new MapList(db);
   const osm = new OsmTiles();
   const auth = new Auth(db, sender);
   const marks = new Marks(db, auth);

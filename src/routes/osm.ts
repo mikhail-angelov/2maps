@@ -1,6 +1,6 @@
-import { CommonRoutesConfig, maxAge } from './common';
 import express from 'express';
-import { getOSMTile } from "../tilesDb";
+import { CommonRoutesConfig, maxAge } from './common';
+import { getOSMTile } from '../mbTilesDb';
 
 export class OsmTiles implements CommonRoutesConfig {
 

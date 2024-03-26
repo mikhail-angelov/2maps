@@ -1,14 +1,16 @@
-include .env
+include .env.prod
 
 postgres: 
 	docker-compose -f ./docker-compose-postgres.yml up -d
 	
 dump-db: DUMP_FILE=$(shell date +%s).dump
 dump-db:
-	docker exec postgres bash -c 'pg_dump -Fc --dbname=postgresql://${DB_USERNAME}:${DB_PASSWORD}@127.0.0.1:5432/${DB_DATABASE} | gzip >/var/lib/postgresql/data/${DUMP_FILE}.tar.gz'
+	ssh root@2maps.xyz "docker exec postgres-2map bash -c 'pg_dump -Fc --dbname=postgresql://${DB_USERNAME}:${DB_PASSWORD}@127.0.0.1:5432/${DB_DATABASE} | gzip >/var/lib/postgresql/data/${DUMP_FILE}.gz'"
+	ssh root@2maps.xyz "mv /opt/postgresdb/${DUMP_FILE}.tar.gz /opt/2maps/${DUMP_FILE}.gz"
+	scp -r root@2maps.xyz:/opt/2maps/${DUMP_FILE}.gz ./${DUMP_FILE}.gz
 
-restore-db:
-	pg_restore --dbname=${DB_URL} --clean --if-exists --verbose dump.tar
+restore-local-db:
+	pg_restore --dbname=postgresql://postgres:postgres@localhost:5432/2maps --clean --if-exists --verbose ${file}
 
 build:
 	npm run build

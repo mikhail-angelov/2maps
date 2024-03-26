@@ -25,7 +25,7 @@ services:
         - webnet
   postgres-2map:
     container_name: postgres-2map
-    image: postgis/postgis:16-3.4-alpine
+    image: postgis/postgis:12-3.1
     networks:
       - webnet
     env_file:

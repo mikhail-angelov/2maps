@@ -5,7 +5,7 @@ import { DataSource, In } from "typeorm";
 import { getTile } from "../tilesDb";
 import { TileSource } from '../entities/tileSource'
 
-export class Tiles implements CommonRoutesConfig {
+export class MapList implements CommonRoutesConfig {
   db: DataSource
   constructor(db: DataSource) {
     this.db = db;

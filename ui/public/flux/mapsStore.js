@@ -19,6 +19,12 @@ export class MapsStore extends Store {
       type: 'raster',
     },
     {
+      id: 'osm-local',
+      name: 'osm-local',
+      url: `${location.origin}/osm-tiles/nn/{z}/{x}/{y}.pbf`,
+      type: 'vector',
+    },
+    {
       id: 'cyclosm',
       name: 'cyclosm',
       url: 'https://c.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',

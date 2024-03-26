@@ -4,6 +4,10 @@ import { debounce } from "../utils.js";
 import { render } from "../libs/htm.js";
 import { EditMarker, ViewMarker } from "./marks.js";
 import { UI_EVENTS } from "../flux/uiStore.js";
+import {
+  addVectorTileLayer,
+  removeVectorTileLayer,
+} from "./vectorTileStiles.js";
 
 window.mapboxgl.accessToken = window.mapBoxKey;
 
@@ -67,7 +71,33 @@ export const createMap = ({
     });
   });
   mapsStore.on(MAPS.SET_PRIMARY, () => {
-    map.getSource(PRIMARY_SOURCE_ID).setTiles([mapsStore.primary.url]);
+    const source = map.getSource(PRIMARY_SOURCE_ID);
+    if (source?.type === mapsStore.primary.type) {
+      source.setTiles([mapsStore.primary.url]);
+      return;
+    }
+    if (map.getLayer(PRIMARY_SOURCE_ID)) map.removeLayer(PRIMARY_SOURCE_ID);
+    removeVectorTileLayer(map);
+    if (source) map.removeSource(PRIMARY_SOURCE_ID);
+    if (mapsStore.primary.type === "vector") {
+      map.addSource(PRIMARY_SOURCE_ID, {
+        ...RASTER_SOURCE,
+        tiles: [mapsStore.primary.url],
+        type: "vector",
+        tileSize: 512,
+      });
+      addVectorTileLayer(map, PRIMARY_SOURCE_ID);
+    } else {
+      map.addSource(PRIMARY_SOURCE_ID, {
+        ...RASTER_SOURCE,
+        tiles: [mapsStore.primary.url],
+      });
+      map.addLayer({
+        ...RASTER_LAYER,
+        source: PRIMARY_SOURCE_ID,
+        id: PRIMARY_SOURCE_ID,
+      });
+    }
   });
   mapsStore.on(MAPS.SET_SECONDARY, () => {
     if (map.getLayer(SECONDARY_SOURCE_ID)) {
@@ -219,15 +249,25 @@ export const createMap = ({
       maxWidth: 440,
     });
 
-    map.addSource(PRIMARY_SOURCE_ID, {
-      ...RASTER_SOURCE,
-      tiles: [mapsStore.primary.url],
-    });
-    map.addLayer({
-      ...RASTER_LAYER,
-      source: PRIMARY_SOURCE_ID,
-      id: PRIMARY_SOURCE_ID,
-    });
+    if (mapsStore.primary.type === "vector") {
+      map.addSource(PRIMARY_SOURCE_ID, {
+        ...RASTER_SOURCE,
+        tiles: [mapsStore.primary.url],
+        type: "vector",
+        tileSize: 512,
+      });
+      addVectorTileLayer(map, PRIMARY_SOURCE_ID);
+    } else {
+      map.addSource(PRIMARY_SOURCE_ID, {
+        ...RASTER_SOURCE,
+        tiles: [mapsStore.primary.url],
+      });
+      map.addLayer({
+        ...RASTER_LAYER,
+        source: PRIMARY_SOURCE_ID,
+        id: PRIMARY_SOURCE_ID,
+      });
+    }
     if (mapsStore.secondary) {
       if (map.getLayer(SECONDARY_SOURCE_ID)) {
         map.removeLayer(SECONDARY_SOURCE_ID);
