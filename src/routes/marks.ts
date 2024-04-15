@@ -205,7 +205,7 @@ export class Marks implements CommonRoutesConfig {
             return res.status(400).json({ error: "invalid request" });
           }
           console.log("get for: ", user.email, req.params.id);
-          const mark = await this.remove(user.id, req.body);
+          const mark = await this.remove(user.id, req.params.id);
           res.status(200).json(mark);
         } catch (e) {
           console.log("delete error", e);

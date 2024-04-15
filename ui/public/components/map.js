@@ -392,7 +392,8 @@ export const createMap = ({
         onSave: (data) => {
           markerStore.update({
             ...data,
-            point: { lat: coordinates[1], lng: coordinates[0] },
+            lat: coordinates[1],
+            lng: coordinates[0],
           });
           editPopup?.remove();
         },
@@ -431,7 +432,8 @@ export const createMap = ({
         onSave: (data) => {
           markerStore.add({
             ...data,
-            point: { lat: e.lngLat.lat, lng: e.lngLat.lng },
+            lat: e.lngLat.lat,
+            lng: e.lngLat.lng,
           });
           editPopup?.remove();
         },

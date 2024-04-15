@@ -147,8 +147,8 @@ export const createLeftPanel = ({
 }
               </div>
               <div class="col center">
-                <a class="center" href="http://www.etomesto.ru/">карты c etomesto.ru</a>
-                <a class="center" href="https://github.com/mikhail-angelov/mapnn"><img src="assets/github.svg"></img>исходники</a>
+                <a class="center" href="http://www.etomesto.ru/" target="__blank">карты c etomesto.ru</a>
+                <a class="center" href="https://github.com/mikhail-angelov/2maps" target="__blank"><img src="assets/github.svg"></img>исходники</a>
               </div>
           </div>  
         </div>

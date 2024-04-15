@@ -41,7 +41,8 @@ export const EditMarker = ({
         name: formData.get('name'),
         description: formData.get('description'),
         rate: +formData.get('rate') ? +formData.get('rate') : 0,
-        point: marker.point,
+        lat: marker.lat,
+        lng: marker.lng,
         timestamp: Date.now(),
       });
     } else {
@@ -50,7 +51,8 @@ export const EditMarker = ({
         name,
         description,
         rate,
-        point: marker.point,
+        lat: marker.lat,
+        lng: marker.lng,
         timestamp: Date.now(),
       });
     }
@@ -134,11 +136,11 @@ const PItem = ({
   copyUrl,
   onCenter,
 }) => html`<li
-    class="row col-sm-12"
+    class="row col-sm-12 mh-[200px]"
     key="${id}"
     onDblClick=${onCenter}
     disabled=${removed}
-    style=${{ cursor: 'pointer', borderBottom: '1px solid' }}
+    style=${{ cursor: 'pointer', borderBottom: '1px solid', flexBasis:'auto' }}
   >
     <div class="col-sm-8">
       <div>${name}</div>
@@ -235,8 +237,8 @@ export class Marks {
     );
   }
 
-  onCenter(point) {
-    this.map.flyTo({ center: point });
+  onCenter(center) {
+    this.map.flyTo({ center });
   }
 
   formatPlacemarks(placemarks) {
@@ -245,7 +247,7 @@ export class Marks {
     const items = placemarks
       .map((item) => {
         const distance = current.distanceTo(
-          new window.mapboxgl.LngLat(item.point.lng, item.point.lat),
+          new window.mapboxgl.LngLat(item.lng, item.lat),
         );
         return { ...item, distance };
       })
@@ -266,7 +268,8 @@ export class Marks {
       name,
       description,
       rate,
-      point,
+      lat,
+      lng,
       distance,
       removed,
       mapItem,
@@ -283,10 +286,13 @@ export class Marks {
       name,
       description,
       rate,
-      point,
+      lat,
+      lng,
     }),
-    onCenter: () => this.onCenter.bind(this)(point),
-    copyUrl: () => this.copyUrl([{ id, name, point }]),
+    onCenter: () => this.onCenter.bind(this)({lat,
+      lng}),
+    copyUrl: () => this.copyUrl([{ id, name, lat,
+      lng, }]),
   }}
         />`,
   )}
