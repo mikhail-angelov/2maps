@@ -1,7 +1,0 @@
-FROM node:21-alpine
-
-WORKDIR /opt/app
-COPY ./package*.json ./
-COPY ./ormconfig.js ./
-COPY ./src/migrations ./src/migrations
-RUN npm ci
