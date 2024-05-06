@@ -1,12 +1,10 @@
-import {
-  html, render, useState, useEffect,
-} from '../libs/htm.js';
-import { getId } from '../utils.js';
-import { SmallIconButton } from './common.js';
-import { composeUrlLink } from '../urlParams.js';
+import { html, render, useState, useEffect } from "../libs/htm.js";
+import { getId } from "../utils.js";
+import { SmallIconButton } from "./common.js";
+import { composeUrlLink } from "../urlParams.js";
 
-const blackStars = '★★★★★';
-const whiteStars = '☆☆☆☆☆';
+const blackStars = "★★★★★";
+const whiteStars = "☆☆☆☆☆";
 
 const Rate = (value = 0) => html`<div class="rate">
   ${blackStars.substr(0, value) + whiteStars.substr(0, 5 - value)}
@@ -17,19 +15,17 @@ const formatDistance = (distance) => {
   return d > 800 ? `${(d / 1000).toFixed(2)} км` : `${d} м`;
 };
 
-export const EditMarker = ({
-  marker = {}, onSave, onCancel, pureHtml,
-}) => {
+export const EditMarker = ({ marker = {}, onSave, onCancel, pureHtml }) => {
   const { id } = marker;
-  console.log('-e--', pureHtml, marker);
-  const [name, setName] = useState(marker.name || '');
-  const [description, setDescription] = useState(marker.description || '');
+  console.log("-e--", pureHtml, marker);
+  const [name, setName] = useState(marker.name || "");
+  const [description, setDescription] = useState(marker.description || "");
   const [rate, setRate] = useState(marker.rate || 0);
   useEffect(() => {
-    setName(marker.name || '');
-    setDescription(marker.description || '');
+    setName(marker.name || "");
+    setDescription(marker.description || "");
     setRate(marker.rate || 0);
-    console.log('-eff--', pureHtml, marker);
+    console.log("-eff--", pureHtml, marker);
   }, [marker]);
 
   const onSubmit = (e) => {
@@ -38,9 +34,9 @@ export const EditMarker = ({
       const formData = new FormData(e.target);
       onSave({
         id: id || getId(),
-        name: formData.get('name'),
-        description: formData.get('description'),
-        rate: +formData.get('rate') ? +formData.get('rate') : 0,
+        name: formData.get("name"),
+        description: formData.get("description"),
+        rate: +formData.get("rate") ? +formData.get("rate") : 0,
         lat: marker.lat,
         lng: marker.lng,
         timestamp: Date.now(),
@@ -60,23 +56,23 @@ export const EditMarker = ({
 
   return html`<form
     class="card"
-    style=${{ maxWidth: '400px', margin: pureHtml ? 0 : 'auto' }}
+    style=${{ maxWidth: "400px", margin: pureHtml ? 0 : "auto" }}
     onSubmit=${onSubmit}
   >
     <label class="modal-close"></label>
     <button
       style=${{
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: 0,
-    top: '-4px',
-  }}
+        backgroundColor: "transparent",
+        position: "absolute",
+        right: 0,
+        top: "-4px",
+      }}
       onClick=${onCancel}
     >
       ✕
     </button>
     <fieldset>
-      <legend>${id ? 'Обновить метку' : 'Добавить метку?'}</legend>
+      <legend>${id ? "Обновить метку" : "Добавить метку?"}</legend>
       <div class="input-group vertical">
         <label for="name">Название</label>
         <input
@@ -107,7 +103,7 @@ export const EditMarker = ({
       </div>
       <div class="row">
         <button class="form-button primary">
-          ${id ? 'Сохранить' : 'Добавить'}
+          ${id ? "Сохранить" : "Добавить"}
         </button>
         <button class="form-button" onClick=${onCancel}>Отмена</button>
       </div>
@@ -117,9 +113,9 @@ export const EditMarker = ({
 
 export const ViewMarker = ({ marker = {} }) => html`<div
   class="col center"
-  style=${{ 'min-width': '100px' }}
+  style=${{ "min-width": "100px" }}
 >
-  <b class="label">${marker.name || '-'}</b>
+  <b class="label">${marker.name || "-"}</b>
   ${marker.description
     ? html`<p class="label">${marker.description}</p>`
     : null}
@@ -136,40 +132,40 @@ const PItem = ({
   copyUrl,
   onCenter,
 }) => html`<li
-    class="row col-sm-12 mh-[200px]"
-    key="${id}"
-    onDblClick=${onCenter}
-    disabled=${removed}
-    style=${{ cursor: 'pointer', borderBottom: '1px solid', flexBasis:'auto' }}
-  >
-    <div class="col-sm-8">
-      <div>${name}</div>
-      <div class="sub-title">${Rate(rate)} ${formatDistance(distance)}</div>
-    </div>
-    <div class="row col-sm-4 end">
-      <${SmallIconButton}
-        icon="assets/link.svg"
-        tooltips="Скопировать линк"
-        className="small"
-        onClick=${copyUrl}
-        disabled=${removed}
-      />
-      <${SmallIconButton}
-        icon="assets/edit.svg"
-        tooltips="Редактировать линк"
-        className="small"
-        onClick=${onEdit}
-        disabled=${removed}
-      />
-      <${SmallIconButton}
-        icon="assets/remove.svg"
-        tooltips="Удалить все"
-        className="small"
-        onClick=${onRemove}
-        disabled=${removed}
-      />
-    </div>
-  </li>`;
+  class="row col-sm-12 mh-[200px]"
+  key="${id}"
+  onDblClick=${onCenter}
+  disabled=${removed}
+  style=${{ cursor: "pointer", borderBottom: "1px solid", flexBasis: "auto" }}
+>
+  <div class="col-sm-8">
+    <div>${name}</div>
+    <div class="sub-title">${Rate(rate)} ${formatDistance(distance)}</div>
+  </div>
+  <div class="row col-sm-4 end">
+    <${SmallIconButton}
+      icon="assets/link.svg"
+      tooltips="Скопировать линк"
+      className="small"
+      onClick=${copyUrl}
+      disabled=${removed}
+    />
+    <${SmallIconButton}
+      icon="assets/edit.svg"
+      tooltips="Редактировать линк"
+      className="small"
+      onClick=${onEdit}
+      disabled=${removed}
+    />
+    <${SmallIconButton}
+      icon="assets/remove.svg"
+      tooltips="Удалить все"
+      className="small"
+      onClick=${onRemove}
+      disabled=${removed}
+    />
+  </div>
+</li>`;
 
 export class Marks {
   constructor({ map, panel, markerStore }) {
@@ -216,11 +212,11 @@ export class Marks {
   }
 
   onEdit(marker) {
-    const modal = document.getElementById('marker-modal');
-    modal.style.display = 'flex';
+    const modal = document.getElementById("marker-modal");
+    modal.style.display = "flex";
     const onCancel = () => {
-      modal.style.display = 'none';
-      modal.innerHTML = '';
+      modal.style.display = "none";
+      modal.innerHTML = "";
     };
     const onSave = (mark) => {
       this.markerStore.update(mark);
@@ -233,7 +229,7 @@ export class Marks {
         onCancel=${onCancel}
         onSave=${onSave}
       />`,
-      modal,
+      modal
     );
   }
 
@@ -246,9 +242,10 @@ export class Marks {
     const current = new window.mapboxgl.LngLat(lng, lat);
     const items = placemarks
       .map((item) => {
-        const distance = current.distanceTo(
-          new window.mapboxgl.LngLat(item.lng, item.lat),
-        );
+        const distance =
+        item && item.lng && item.lat
+            ? current.distanceTo(new window.mapboxgl.LngLat(item.lng, item.lat))
+            : 0;
         return { ...item, distance };
       })
       .sort((a, b) => a.distance - b.distance);
@@ -258,57 +255,58 @@ export class Marks {
   render() {
     const items = this.formatPlacemarks(this.markerStore.markers);
     return html` <ul class="col h-100" style=${{
-      overflow: 'hidden auto',
-      backgroundColor: 'aliceblue',
-      margin: '0 5px 0 0',
+      overflow: "hidden auto",
+      backgroundColor: "aliceblue",
+      margin: "0 5px 0 0",
     }}>
       ${items.map(
-    ({
-      id,
-      name,
-      description,
-      rate,
-      lat,
-      lng,
-      distance,
-      removed,
-      mapItem,
-    }) => html`<${PItem}
+        ({
+          id,
+          name,
+          description,
+          rate,
+          lat,
+          lng,
+          distance,
+          removed,
+          mapItem,
+        }) => html`<${PItem}
           ...${{
-    id,
-    name,
-    rate,
-    distance,
-    removed,
-    onRemove: () => this.removeItem.bind(this)(id, mapItem),
-    onEdit: () => this.onEdit.bind(this)({
-      id,
-      name,
-      description,
-      rate,
-      lat,
-      lng,
-    }),
-    onCenter: () => this.onCenter.bind(this)({lat,
-      lng}),
-    copyUrl: () => this.copyUrl([{ id, name, lat,
-      lng, }]),
-  }}
-        />`,
-  )}
+            id,
+            name,
+            rate,
+            distance,
+            removed,
+            onRemove: () => this.removeItem.bind(this)(id, mapItem),
+            onEdit: () =>
+              this.onEdit.bind(this)({
+                id,
+                name,
+                description,
+                rate,
+                lat,
+                lng,
+              }),
+            onCenter: () => this.onCenter.bind(this)({ lat, lng }),
+            copyUrl: () => this.copyUrl([{ id, name, lat, lng }]),
+          }}
+        />`
+      )}
     </ul>
     <div class="row inverse-color center">
       <label class="button small inverse" htmlFor="upload">
       Импорт
       </label>
-      <input type="file" id="upload" onChange=${(e) => this.importPlacemarks(e.target.files)} hidden></input>
-      <button class="col-sm-3 small inverse" onClick=${() => this.downloadPlacemarks()}>
+      <input type="file" id="upload" onChange=${(e) =>
+        this.importPlacemarks(e.target.files)} hidden></input>
+      <button class="col-sm-3 small inverse" onClick=${() =>
+        this.downloadPlacemarks()}>
         Экспорт
       </button>
       <button class="col-sm-3 small inverse" onClick=${() => this.syncMarks()}>
         Синхр.
       </button>
     </div>
-    <div id="marker-modal" class="modal" style=${{ display: 'none' }}></div>`;
+    <div id="marker-modal" class="modal" style=${{ display: "none" }}></div>`;
   }
 }
