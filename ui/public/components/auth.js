@@ -1,13 +1,9 @@
-import {
-  html, Component, render, useState,
-} from '../libs/htm.js';
-import { parseUrlParams } from '../urlParams.js';
+import { html, Component, render, useState } from "../libs/htm.js";
+import { parseUrlParams } from "../urlParams.js";
 
-const Login = ({
-  onLogin, onClose, toSignUp, toForgetPassword, error,
-}) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const Login = ({ onLogin, onClose, toSignUp, toForgetPassword, error }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const login = (e) => {
     e.preventDefault();
@@ -15,15 +11,15 @@ const Login = ({
   };
 
   return html`
-    <form class="card" style=${{ maxWidth: '400px' }} onSubmit=${login}>
+    <form class="card" style=${{ maxWidth: "400px" }} onSubmit=${login}>
       <label class="modal-close"></label>
       <button
         style=${{
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: 0,
-    top: '-4px',
-  }}
+          backgroundColor: "transparent",
+          position: "absolute",
+          right: 0,
+          top: "-4px",
+        }}
         onClick=${onClose}
       >
         ✕
@@ -49,7 +45,7 @@ const Login = ({
         </div>
 
         <div class="row">
-          ${error && html`<div style=${{ color: 'red' }}>${error}</div>`}
+          ${error && html`<div style=${{ color: "red" }}>${error}</div>`}
         </div>
         <div class="row">
           <button class="primary">Login</button>
@@ -61,12 +57,10 @@ const Login = ({
   `;
 };
 
-const SignUp = ({
-  onSignUp, onClose, toLogin, error,
-}) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const SignUp = ({ onSignUp, onClose, toLogin, error }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const signUp = (e) => {
     e.preventDefault();
@@ -77,11 +71,11 @@ const SignUp = ({
     <label class="modal-close"></label>
     <button
       style=${{
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: 0,
-    top: '-4px',
-  }}
+        backgroundColor: "transparent",
+        position: "absolute",
+        right: 0,
+        top: "-4px",
+      }}
       onClick=${onClose}
     >
       ✕
@@ -123,10 +117,8 @@ const SignUp = ({
   </form>`;
 };
 
-const ForgetPassword = ({
-  onForgetPassword, toLogin, onClose, error,
-}) => {
-  const [email, setEmail] = useState('');
+const ForgetPassword = ({ onForgetPassword, toLogin, onClose, error }) => {
+  const [email, setEmail] = useState("");
 
   const passwordReset = (e) => {
     e.preventDefault();
@@ -137,11 +129,11 @@ const ForgetPassword = ({
     <label class="modal-close"></label>
     <button
       style=${{
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: 0,
-    top: '-4px',
-  }}
+        backgroundColor: "transparent",
+        position: "absolute",
+        right: 0,
+        top: "-4px",
+      }}
       onClick=${onClose}
     >
       ✕
@@ -167,8 +159,8 @@ const ForgetPassword = ({
 
 const ResetPassword = ({ onPasswordReset, onClose, error }) => {
   const { resetToken } = parseUrlParams();
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
 
   const passwordReset = (e) => {
     e.preventDefault();
@@ -179,11 +171,11 @@ const ResetPassword = ({ onPasswordReset, onClose, error }) => {
     <label class="modal-close"></label>
     <button
       style=${{
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    right: 0,
-    top: '-4px',
-  }}
+        backgroundColor: "transparent",
+        position: "absolute",
+        right: 0,
+        top: "-4px",
+      }}
       onClick=${onClose}
     >
       ✕
@@ -238,29 +230,29 @@ class Auth extends Component {
     const { show, ui, error } = authStore.getUi();
     const onClose = () => authStore.setUi(false);
     let content = null;
-    if (ui === 'login') {
+    if (ui === "login") {
       content = html`<${Login}
         onLogin=${this.onLogin.bind(this)}
         onClose=${onClose.bind(this)}
-        toSignUp=${() => authStore.setUi(true, 'signUp')}
-        toForgetPassword=${() => authStore.setUi(true, 'forgetPassword')}
+        toSignUp=${() => authStore.setUi(true, "signUp")}
+        toForgetPassword=${() => authStore.setUi(true, "forgetPassword")}
         error=${error}
       />`;
-    } else if (ui === 'signUp') {
+    } else if (ui === "signUp") {
       content = html`<${SignUp}
         onSignUp=${this.onSignUp.bind(this)}
         onClose=${onClose.bind(this)}
-        toLogin=${() => authStore.setUi(true, 'login')}
+        toLogin=${() => authStore.setUi(true, "login")}
         error=${error}
       />`;
-    } else if (ui === 'forgetPassword') {
+    } else if (ui === "forgetPassword") {
       content = html`<${ForgetPassword}
         onForgetPassword=${(data) => authStore.forgetPassword(data)}
         onClose=${onClose.bind(this)}
-        toLogin=${() => authStore.setUi(true, 'login')}
+        toLogin=${() => authStore.setUi(true, "login")}
         error=${error}
       />`;
-    } else if (ui === 'resetPassword') {
+    } else if (ui === "resetPassword") {
       content = html`<${ResetPassword}
         onPasswordReset=${(data) => authStore.resetPassword(data)}
         onClose=${onClose.bind(this)}
@@ -276,8 +268,14 @@ class Auth extends Component {
 
 export const createAuth = (authStore) => {
   authStore.onRefresh(() => {
-    render(html`<${Auth} authStore=${authStore}/>`, document.getElementById('auth'));
+    render(
+      html`<${Auth} authStore=${authStore} />`,
+      document.getElementById("auth")
+    );
   });
 
-  render(html`<${Auth} authStore=${authStore}/>`, document.getElementById('auth'));
+  render(
+    html`<${Auth} authStore=${authStore} />`,
+    document.getElementById("auth")
+  );
 };

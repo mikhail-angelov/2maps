@@ -179,13 +179,13 @@ export class Marks {
   }
 
   async syncMarks() {
-    this.markerStore.loadAll();
+    this.markerStore.syncAllMarkers();
   }
 
-  async copyUrl({ items }) {
+  async copyUrl(items) {
     const text = composeUrlLink({
-      zoom: this.map.getZoom() - 1,
-      center: this.map.getCenter().reverse(),
+      zoom: this.map.getZoom(),
+      center: this.map.getCenter(),
       opacity: 100,
       placemarks: items,
     });
@@ -243,7 +243,7 @@ export class Marks {
     const items = placemarks
       .map((item) => {
         const distance =
-        item && item.lng && item.lat
+          item && item.lng && item.lat
             ? current.distanceTo(new window.mapboxgl.LngLat(item.lng, item.lat))
             : 0;
         return { ...item, distance };

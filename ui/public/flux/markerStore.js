@@ -1,6 +1,7 @@
 import { Store } from "./store.js";
 import { post, remove, put, postLarge } from "../utils.js";
 import { loadPlacemarksLocal, savePlacemarksLocal } from "../storage.js";
+import { parseUrlParams } from "../urlParams.js";
 
 export const MARKER = {
   ADD: "ADD",
@@ -18,10 +19,14 @@ export class MarkerStore extends Store {
 
   constructor(authStore) {
     super();
-    // todo implement url params
 
     this.authStore = authStore;
-    this.markers = loadPlacemarksLocal();
+    const urlParams = parseUrlParams();
+    if (urlParams && urlParams.placemarks && urlParams.placemarks.length > 0) {
+      this.markers = urlParams.placemarks;
+    } else {
+      this.markers = loadPlacemarksLocal();
+    }
   }
 
   getFeatures() {
@@ -40,14 +45,16 @@ export class MarkerStore extends Store {
     }));
   }
 
-  async loadAll() {
+  async syncAllMarkers() {
     if (!this.authStore.authenticated) {
       // eslint-disable-next-line no-console
       console.log("not authenticated");
       return;
     }
+    //sync valid markers
+    const markers = this.markers.filter((item) => !!item.lat && !!item.lng);
     // it returns all synced markers
-    const res = await postLarge("/marks/sync", this.markers);
+    const res = await postLarge("/marks/sync", markers);
     this.markers = res.filter((item) => !!item.id);
     savePlacemarksLocal(this.markers);
     this.refresh();

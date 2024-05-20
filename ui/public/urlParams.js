@@ -53,7 +53,5 @@ export const composeUrlLink = ({
   const placemarksParma = placemarks && placemarks.length > 0
     ? `${PLACEMARKS}=${encodePlacemarks(placemarks)}`
     : '';
-  return `${window.location.origin}?${ZOOM}=${zoom}&${CENTER}=${center.join(
-    ',',
-  )}&${OPACITY}=${opacity}&${placemarksParma}`;
+  return `${window.location.origin}?${ZOOM}=${zoom}&${CENTER}=${center.lng},${center.lat}&${OPACITY}=${opacity}&${placemarksParma}`;
 };
