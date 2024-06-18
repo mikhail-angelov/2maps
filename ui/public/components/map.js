@@ -388,6 +388,7 @@ export const createMap = ({
           name: title,
           description,
           rate,
+          coordinates,
         },
         onSave: (data) => {
           markerStore.update({
@@ -411,7 +412,7 @@ export const createMap = ({
       const { title, description = "", rate } = e.features[0].properties;
       console.log("mouseenter", title);
       const view = ViewMarker({
-        marker: { name: title, description, rate },
+        marker: { name: title, description, rate, coordinates },
         onCancel: () => {
           viewPopup?.remove();
         },
@@ -442,6 +443,9 @@ export const createMap = ({
           editPopup?.remove();
         },
         pureHtml: true,
+        marker:{
+          coordinates: [e.lngLat.lng, e.lngLat.lat],
+        }
       });
 
       editPopup

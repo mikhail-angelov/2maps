@@ -16,7 +16,7 @@ const formatDistance = (distance) => {
 };
 
 export const EditMarker = ({ marker = {}, onSave, onCancel, pureHtml }) => {
-  const { id } = marker;
+  const { id, coordinates } = marker;
   console.log("-e--", pureHtml, marker);
   const [name, setName] = useState(marker.name || "");
   const [description, setDescription] = useState(marker.description || "");
@@ -108,6 +108,7 @@ export const EditMarker = ({ marker = {}, onSave, onCancel, pureHtml }) => {
         <button class="form-button" onClick=${onCancel}>Отмена</button>
       </div>
     </fieldset>
+    <div class="row"><a href="https://app.onesoil.ai/@${coordinates[1]},${coordinates[0]},14z" target="__blank">OneSoil link</a></div>
   </form> `;
 };
 
