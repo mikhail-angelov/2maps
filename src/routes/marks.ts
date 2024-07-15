@@ -237,14 +237,10 @@ export class Marks implements CommonRoutesConfig {
   async syncMarks(userId: string, clientMarks: WebMark[]) {
     const marks = _.uniqBy(clientMarks, "id");
     console.log("syncMarks", userId, marks.length);
-    const a = await this.db
-      .getRepository(User)
-      .find();
-      console.log("syncMarks 1",  a);
-    const savedMarks = await this.db
-      .getRepository(Mark)
-      .find();
-      console.log("syncMarks 2",  savedMarks);
+    const a = await this.db.getRepository(User).find();
+    console.log("syncMarks 1", a);
+    const savedMarks = await this.db.getRepository(Mark).find();
+    console.log("syncMarks 2", savedMarks);
     const marksMap = _.keyBy(savedMarks, "id");
     const marksToAdd = marks
       .filter((mark) => !marksMap[mark.id])
@@ -282,7 +278,13 @@ export class Marks implements CommonRoutesConfig {
 
   async getAll(userId: string): Promise<WebMark[]> {
     const marks = await this.db.getRepository(Mark).find({ where: { userId } });
-    return marks.map(mapToDto);
+    const validMarks = marks.filter(
+      (mark) =>
+        mark.location &&
+        mark.location.coordinates &&
+        !!mark.location.coordinates[0]
+    );
+    return validMarks.map(mapToDto);
   }
   async getById(userId: string, id: string): Promise<WebMark> {
     const mark = await this.db
