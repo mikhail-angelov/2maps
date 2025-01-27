@@ -10,7 +10,7 @@ dump-db:
 	scp -r root@2maps.xyz:/opt/2maps/${DUMP_FILE}.gz ./${DUMP_FILE}.gz
 
 restore-db:
-	docker exec postgres-2map bash -c 'pg_restore --dbname=postgresql://postgres:postgres@localhost:5432/2maps --clean --if-exists --verbose /var/lib/postgresql/data/1710755741.dump'
+	docker exec -i postgres-2map pg_restore --dbname=postgresql://postgres:postgres@localhost:5432/2maps --clean --if-exists --verbose < '$(name)'
 
 restore-local-db:
 	pg_restore --dbname=postgresql://postgres:postgres@localhost:5432/2maps --clean --if-exists --verbose ${file}

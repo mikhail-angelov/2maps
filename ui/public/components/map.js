@@ -379,7 +379,7 @@ export const createMap = ({
     });
 
     map.on("click", MARKERS_SOURCE_ID, (e) => {
-      const coordinates = e.features[0].geometry.coordinates.slice();
+      const coordinates = e.features[0].geometry.coordinates;
       const { id, title, description = "", rate } = e.features[0].properties;
       console.log("click", title, coordinates);
       const editForm = EditMarker({
@@ -388,7 +388,8 @@ export const createMap = ({
           name: title,
           description,
           rate,
-          coordinates,
+          lat: coordinates[1],
+          lng: coordinates[0],
         },
         onSave: (data) => {
           markerStore.update({
@@ -408,7 +409,7 @@ export const createMap = ({
       render(editForm, editPopup.getElement().childNodes[1]);
     });
     map.on("mouseenter", MARKERS_SOURCE_ID, (e) => {
-      const coordinates = e.features[0].geometry.coordinates.slice();
+      const coordinates = e.features[0].geometry.coordinates;
       const { title, description = "", rate } = e.features[0].properties;
       console.log("mouseenter", title);
       const view = ViewMarker({
@@ -444,7 +445,8 @@ export const createMap = ({
         },
         pureHtml: true,
         marker:{
-          coordinates: [e.lngLat.lng, e.lngLat.lat],
+          lat: e.lngLat.lat,
+          lng: e.lngLat.lng,
         }
       });
 

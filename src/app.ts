@@ -13,6 +13,7 @@ import { Tracks } from "./routes/tracks";
 import { Maps } from "./routes/maps";
 import { Users } from "./routes/users";
 import { Wikimapia } from "./routes/wikimapia";
+import { Navigation } from "./routes/navigation";
 import sender from "./routes/mailer";
 
 const app: express.Application = express();
@@ -22,7 +23,7 @@ const port = process.env.PORT || 3000;
 //static ui
 app.use(express.static("ui/public"));
 
-app.use(express.json({limit: '10mb'}));
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(cors());
 
@@ -58,6 +59,7 @@ const run = async () => {
   const maps = new Maps(db, auth);
   const users = new Users(db, auth);
   const wikimapia = new Wikimapia(db);
+  const navigation = new Navigation();
   app.use("/auth", auth.getRoutes());
   app.use("/user", users.getRoutes());
   app.use("/marks", marks.getRoutes());
@@ -67,6 +69,7 @@ const run = async () => {
   app.use("/osm-tiles", osm.getRoutes());
   app.use("/download", marks.getRoutes()); //todo: remove it
   app.use("/wikimapia", wikimapia.getRoutes());
+  app.use("/navigation", navigation.getRoutes());
 
   server.listen(port, () => {
     console.log(`Server running at port: ${port}`);
