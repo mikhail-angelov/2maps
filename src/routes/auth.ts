@@ -4,8 +4,8 @@ import { JwtPayloadBase } from "../types";
 import { DataSource } from "typeorm";
 import jwt, { VerifyErrors } from "jsonwebtoken";
 import bcrypt from "bcrypt-nodejs";
-import { User } from "../entities/user";
-import { Role } from "../entities/enums";
+import { User } from "../entities.sqlite/user";
+import { Role } from "../entities.sqlite/enums";
 import { Sender } from "./mailer";
 
 const HOST = process.env.HOST || "";

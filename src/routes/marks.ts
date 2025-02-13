@@ -3,12 +3,11 @@ import express, { Request } from "express";
 import multer from "multer";
 import _ from "lodash";
 import { v4 as uuid } from "@lukeed/uuid";
-import { Point } from "geojson";
 import { DataSource, MoreThan } from "typeorm";
-import { Mark } from "../entities/mark";
+import { Mark } from "../entities.sqlite/mark";
 import { Auth } from "./auth";
 import dayjs from "dayjs";
-import { User } from "../entities/user";
+import { User } from "../entities.sqlite/user";
 
 const isUUID = (id: string): boolean =>
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
@@ -22,12 +21,11 @@ const mapToEntity = (
   userId: string
 ): Mark => {
   const markId = isUUID(id.toString()) ? id : uuid();
-  const location: Point = { type: "Point", coordinates: [lng, lat] };
   return {
     id: markId,
     name,
     description: description || "",
-    location,
+    lng, lat,
     userId,
     timestamp: new Date(timestamp) || Date.now(),
     rate,
@@ -37,11 +35,11 @@ const mapToDto = ({
   id,
   name,
   description,
-  location,
+  lng,
+  lat,
   timestamp,
   rate,
 }: Mark): WebMark => {
-  const [lng, lat] = location.coordinates;
   return {
     id,
     name,
@@ -279,10 +277,7 @@ export class Marks implements CommonRoutesConfig {
   async getAll(userId: string): Promise<WebMark[]> {
     const marks = await this.db.getRepository(Mark).find({ where: { userId } });
     const validMarks = marks.filter(
-      (mark) =>
-        mark.location &&
-        mark.location.coordinates &&
-        !!mark.location.coordinates[0]
+      (mark) => mark.lat && mark.lng
     );
     return validMarks.map(mapToDto);
   }

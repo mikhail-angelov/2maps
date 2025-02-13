@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Request } from "express";
 import { Tracks } from "./tracks";
-import { Track } from "../entities/track";
+import { Track } from "../entities.sqlite/track";
 import {
   cleanDatabase,
   getDatabase,

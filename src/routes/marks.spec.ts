@@ -2,13 +2,13 @@ import { expect } from "chai";
 import dayjs from "dayjs";
 import { Marks, WebMark } from "./marks";
 import { Point } from "geojson";
-import { Mark } from "../entities/mark";
+import { Mark } from "../entities.sqlite/mark";
 import {
   cleanDatabase,
   getDatabase,
   loadDatabase,
 } from "../../test/database-setup";
-import { User } from "../entities/user";
+import { User } from "../entities.sqlite/user";
 
 const USER = {
   id: "aaade243-0fb7-480f-801c-bc64566209cc",
@@ -16,17 +16,15 @@ const USER = {
   email: "test",
   password: "test",
 };
-const location = {
-  type: "Point",
-  coordinates: [43.989515211547825, 56.32323794803307],
-} as Point;
+const lat = 56.32323794803307
+const lng = 43.989515211547825
 const MARKS: Mark[] = [
   {
     id: "014acc56-cb26-41a6-b995-1266157f3c07",
     userId: USER.id,
     name: "test",
     description: "",
-    location,
+    lat,lng,
     timestamp: new Date(1626944504856),
   },
   {
@@ -35,7 +33,7 @@ const MARKS: Mark[] = [
     name: "test2",
     description: "none",
     rate: 2,
-    location,
+    lat,lng,
     timestamp: new Date(1626944504857),
   },
   {
@@ -43,7 +41,7 @@ const MARKS: Mark[] = [
     userId: USER.id,
     name: "to remove",
     description: "none",
-    location,
+    lat,lng,
     timestamp: new Date(1626944504858),
   },
 ];

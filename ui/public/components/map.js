@@ -382,6 +382,9 @@ export const createMap = ({
       const coordinates = e.features[0].geometry.coordinates;
       const { id, title, description = "", rate } = e.features[0].properties;
       console.log("click", title, coordinates);
+      map.flyTo({
+        center: coordinates
+    });
       const editForm = EditMarker({
         marker: {
           id,

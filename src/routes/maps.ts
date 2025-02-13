@@ -4,8 +4,8 @@ import _ from "lodash";
 import * as aws from "aws-sdk";
 import { DataSource, Repository } from "typeorm";
 import { Auth, JwtPayload } from "./auth";
-import { MapFile } from "../entities/mapFile";
-import { MapType, Role } from "../entities/enums";
+import { MapFile } from "../entities.sqlite/mapFile";
+import { MapType, Role } from "../entities.sqlite/enums";
 
 export interface WebMap {
   id: string;

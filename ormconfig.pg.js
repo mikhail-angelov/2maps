@@ -2,8 +2,10 @@ const url = process.env.DB_URL || 'postgresql://postgres:postgres@localhost:5432
 console.log('connecting DB: ', url.split('@')[1], process.env.NODE_ENV);
 
 module.exports = {
-  type: 'postgres',
-  url,
+  // type: 'postgres',
+  type: 'sqlite',
+  // url,
+  database: __dirname + '/data/main.db',
   extra: {
     // Ref.: https://github.com/brianc/node-postgres/issues/2009
     rejectUnauthorized: false,

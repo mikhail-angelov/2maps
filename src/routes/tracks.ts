@@ -5,7 +5,7 @@ import { Readable } from "stream";
 import multer from "multer";
 import { v4 as uuid } from "@lukeed/uuid";
 import { DataSource } from "typeorm";
-import { Track } from "../entities/track";
+import { Track } from "../entities.sqlite/track";
 import { TrackDto, TrackItemDto } from "../dto/track.dto";
 import { Auth } from "./auth";
 import { kmlToJson, jsonToKml } from "./kmlUtils";

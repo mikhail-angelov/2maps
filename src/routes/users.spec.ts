@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Auth, JWT_COOKIES } from "./auth";
 import { Users } from "./users";
 import { Request } from "express";
-import { Role } from "../entities/enums";
+import { Role } from "../entities.sqlite/enums";
 import { cleanDatabase, getDatabase } from "../../test/database-setup";
 
 describe("users", () => {

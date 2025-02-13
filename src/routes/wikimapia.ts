@@ -5,7 +5,7 @@ import { gzipSync } from "zlib";
 import * as vtpbf from "vt-pbf";
 import geojsonVt from "geojson-vt";
 import { DataSource, Repository } from "typeorm";
-import { WikiTile } from "../entities/wiki";
+import { WikiTile } from "../entities.sqlite/wiki";
 
 const VERSION = 1;
 

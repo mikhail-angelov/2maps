@@ -2,8 +2,8 @@ import { CommonRoutesConfig } from "./common";
 import express from "express";
 import { DataSource, Repository } from "typeorm";
 import { Auth } from "./auth";
-import { User } from "../entities/user";
-import { Role } from "../entities/enums";
+import { User } from "../entities.sqlite/user";
+import { Role } from "../entities.sqlite/enums";
 
 interface UserDto {
   id: string;
