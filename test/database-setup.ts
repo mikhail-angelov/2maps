@@ -1,13 +1,9 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 
 const testDatabaseConfig: DataSourceOptions = {
-  type: "postgres",
-  host: "localhost",
-  port: 54_311,
-  username: "test",
-  password: "test",
-  database: "test-db",
-  entities: [`${__dirname}/../src/entities/*{.ts,.js}`],
+  type: 'sqlite',
+  database: ':memory:',
+  entities: [`${__dirname}/../src/entities.sqlite/*{.ts,.js}`],
   synchronize: true,
   // logging: 'all',
 };
