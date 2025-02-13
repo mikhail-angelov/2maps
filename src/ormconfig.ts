@@ -1,9 +1,11 @@
 import { DataSource } from 'typeorm';
 
-console.log('connecting sqlite DB');
+const database = __dirname + '/../data/main.db'
+
+console.log('connecting sqlite DB', database);
 export default new DataSource({
   type: 'sqlite',
-  database: __dirname + '/data/main.db',
+  database,
   entities: [
     'src/entities.sqlite/**/*.{ts,js}',
   ],
