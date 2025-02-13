@@ -4,7 +4,6 @@ ENV NODE_ENV=production
 
 WORKDIR /opt/app
 COPY ./package*.json ./
-COPY ./ormconfig.js ./
 COPY ./dist dist
 COPY ./ui ui
 # RUN chown -R node:node /opt/app

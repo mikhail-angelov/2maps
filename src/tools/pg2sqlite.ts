@@ -1,5 +1,5 @@
-import { Mark } from "./src/entities/mark";
-import { Mark as Mark2 } from "./src/entities.sqlite/mark";
+import { Mark } from "../entities/mark";
+import { Mark as Mark2 } from "../entities.sqlite/mark";
 import { DataSource } from "typeorm";
 
 const pgSource = new DataSource({
