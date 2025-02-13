@@ -7,8 +7,8 @@ export default new DataSource({
   type: 'sqlite',
   database,
   entities: [
-    'src/entities.sqlite/**/*.{ts,js}',
+    __dirname +'/entities.sqlite/**/*.{ts,js}',
   ],
-  migrations: [`${__dirname}/src/m/*{.ts,.js}`],
+  migrations: [`${__dirname}/m/*{.ts,.js}`],
   logging: false,
 });

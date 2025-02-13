@@ -16,7 +16,8 @@ export class MapList implements CommonRoutesConfig {
     }
   }
   async refineTileSourcesInDB() {
-    const files = fs.readdirSync('./data')
+    const files = fs.readdirSync(`${__dirname}/../../data`)
+    console.log('files', files)
     const mapFiles = files.filter(f => f.endsWith('.sqlitedb') && !f.startsWith('user')).map(f => f.replace('.sqlitedb', ''))
 
     const existingSources = await this.db.getRepository(TileSource).find()

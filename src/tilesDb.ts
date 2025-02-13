@@ -30,7 +30,7 @@ export const createDBConnection = async (name: string) => {
   const c = new DataSource({
     name,
     type: "sqlite",
-    database: `./data/${name}.sqlitedb`,
+    database: `${__dirname}/../data/${name}.sqlitedb`,
     entities: [Tile, Info],
     synchronize: false,
     logger: "debug",

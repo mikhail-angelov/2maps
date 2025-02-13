@@ -32,13 +32,13 @@ const getConnection = async (name: string) => {
 };
 
 export const createDBConnection = async (name: string) => {
-  if (!existsSync(`./data/${name}.mbtiles`)) {
+  if (!existsSync(`${__dirname}/../data/${name}.mbtiles`)) {
     throw new Error(`Database ${name} not found`);
   }
   const c = new DataSource({
     name,
     type: "sqlite",
-    database: `./data/${name}.mbtiles`,
+    database: `${__dirname}/../data/${name}.mbtiles`,
     entities: [MbTile],
     synchronize: false,
   });
