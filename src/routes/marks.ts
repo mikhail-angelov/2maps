@@ -248,7 +248,7 @@ export class Marks implements CommonRoutesConfig {
         (mark) =>
           marksMap[mark.id] &&
           !mark.removed &&
-          mark.timestamp > marksMap[mark.id].timestamp.getTime()
+          (mark.timestamp > marksMap[mark.id].timestamp.getTime() || mark.lat !== marksMap[mark.id].lat || mark.lng !== marksMap[mark.id].lng)
       )
       .map((mark) => mapToEntity(mark, userId));
     const marksIdsToRemove = marks

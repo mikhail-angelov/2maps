@@ -25,10 +25,10 @@ export class Mark {
     @Column({ nullable: true })
     rate?: number;
     
-    @Column()
+    @Column({type:'real'})
     lat!: number;
     
-    @Column()
+    @Column({type:'real'})
     lng!: number;
 
     @Column()

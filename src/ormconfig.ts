@@ -1,6 +1,7 @@
+import { join } from 'path';
 import { DataSource } from 'typeorm';
 
-const database = __dirname + '/../data/main.db'
+const database = join(__dirname, '/../data/main.db')
 
 console.log('connecting sqlite DB', database);
 export default new DataSource({
