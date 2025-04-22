@@ -23,16 +23,18 @@ push:
 	docker push mangelov/2maps:latest
 
 scp:
+	-ssh root@2maps.xyz "mkdir -p /opt/2maps"
 	scp -r ./.env.prod root@2maps.xyz:/opt/2maps/.env
 	scp -r Makefile root@2maps.xyz:/opt/2maps/Makefile
 	scp -r docker-compose.yml root@2maps.xyz:/opt/2maps/docker-compose.yml
 
 scp-map:
+	-ssh root@2maps.xyz "mkdir -p /opt/2maps/data"
 	scp -r ./data/mende-nn.sqlitedb root@2maps.xyz:/opt/2maps/data/mende-nn.sqlitedb
 	scp -r ./data/volga.sqlitedb root@2maps.xyz:/opt/2maps/data/volga.sqlitedb
 
 deploy: 
-	ssh root@2maps.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker-compose down --remove-orphans;docker-compose up -d'
+	ssh root@2maps.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker compose down --remove-orphans;docker compose up -d'
 
 clean:
 	docker system prune -a
