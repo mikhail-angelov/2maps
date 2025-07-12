@@ -6,9 +6,10 @@ import { composeUrlLink } from "../urlParams.js";
 const blackStars = "★★★★★";
 const whiteStars = "☆☆☆☆☆";
 
-const Rate = (value = 0) => html`<div class="rate">
-  ${blackStars.substr(0, value) + whiteStars.substr(0, 5 - value)}
-</div>`;
+const Rate = (value = 0) =>
+  html`<div class="rate">
+    ${blackStars.substr(0, value) + whiteStars.substr(0, 5 - value)}
+  </div>`;
 
 const formatDistance = (distance) => {
   const d = Math.round(+distance || 0);
@@ -106,19 +107,21 @@ export const EditMarker = ({ marker = {}, onSave, onCancel, pureHtml }) => {
         <button class="form-button" onClick=${onCancel}>Отмена</button>
       </div>
     </fieldset>
-    <div class="row"><a href="https://app.onesoil.ai/@${lng},${lat},14z" target="__blank">OneSoil link</a></div>
+    <div class="row">
+      <a href="https://app.onesoil.ai/@${lat},${lng},14z" target="__blank"
+        >OneSoil link</a
+      >
+    </div>
   </form> `;
 };
 
-export const ViewMarker = ({ marker = {} }) => html`<div
-  class="col center"
-  style=${{ "min-width": "100px" }}
->
-  <b class="label">${marker.name || "-"}</b>
-  ${marker.description
-    ? html`<p class="label">${marker.description}</p>`
-    : null}
-</div>`;
+export const ViewMarker = ({ marker = {} }) =>
+  html`<div class="col center" style=${{ "min-width": "100px" }}>
+    <b class="label">${marker.name || "-"}</b>
+    ${marker.description
+      ? html`<p class="label">${marker.description}</p>`
+      : null}
+  </div>`;
 
 const PItem = ({
   id,
@@ -130,41 +133,42 @@ const PItem = ({
   onEdit,
   copyUrl,
   onCenter,
-}) => html`<li
-  class="row col-sm-12 mh-[200px]"
-  key="${id}"
-  onDblClick=${onCenter}
-  disabled=${removed}
-  style=${{ cursor: "pointer", borderBottom: "1px solid", flexBasis: "auto" }}
->
-  <div class="col-sm-8">
-    <div>${name}</div>
-    <div class="sub-title">${Rate(rate)} ${formatDistance(distance)}</div>
-  </div>
-  <div class="row col-sm-4 end">
-    <${SmallIconButton}
-      icon="assets/link.svg"
-      tooltips="Скопировать линк"
-      className="small"
-      onClick=${copyUrl}
-      disabled=${removed}
-    />
-    <${SmallIconButton}
-      icon="assets/edit.svg"
-      tooltips="Редактировать линк"
-      className="small"
-      onClick=${onEdit}
-      disabled=${removed}
-    />
-    <${SmallIconButton}
-      icon="assets/remove.svg"
-      tooltips="Удалить все"
-      className="small"
-      onClick=${onRemove}
-      disabled=${removed}
-    />
-  </div>
-</li>`;
+}) =>
+  html`<li
+    class="row col-sm-12 mh-[200px]"
+    key="${id}"
+    onDblClick=${onCenter}
+    disabled=${removed}
+    style=${{ cursor: "pointer", borderBottom: "1px solid", flexBasis: "auto" }}
+  >
+    <div class="col-sm-8">
+      <div>${name}</div>
+      <div class="sub-title">${Rate(rate)} ${formatDistance(distance)}</div>
+    </div>
+    <div class="row col-sm-4 end">
+      <${SmallIconButton}
+        icon="assets/link.svg"
+        tooltips="Скопировать линк"
+        className="small"
+        onClick=${copyUrl}
+        disabled=${removed}
+      />
+      <${SmallIconButton}
+        icon="assets/edit.svg"
+        tooltips="Редактировать линк"
+        className="small"
+        onClick=${onEdit}
+        disabled=${removed}
+      />
+      <${SmallIconButton}
+        icon="assets/remove.svg"
+        tooltips="Удалить все"
+        className="small"
+        onClick=${onRemove}
+        disabled=${removed}
+      />
+    </div>
+  </li>`;
 
 export class Marks {
   constructor({ map, panel, markerStore }) {
@@ -228,7 +232,7 @@ export class Marks {
         onCancel=${onCancel}
         onSave=${onSave}
       />`,
-      modal
+      modal,
     );
   }
 
@@ -269,27 +273,28 @@ export class Marks {
           distance,
           removed,
           mapItem,
-        }) => html`<${PItem}
-          ...${{
-            id,
-            name,
-            rate,
-            distance,
-            removed,
-            onRemove: () => this.removeItem.bind(this)(id, mapItem),
-            onEdit: () =>
-              this.onEdit.bind(this)({
-                id,
-                name,
-                description,
-                rate,
-                lat,
-                lng,
-              }),
-            onCenter: () => this.onCenter.bind(this)({ lat, lng }),
-            copyUrl: () => this.copyUrl([{ id, name, lat, lng }]),
-          }}
-        />`
+        }) =>
+          html`<${PItem}
+            ...${{
+              id,
+              name,
+              rate,
+              distance,
+              removed,
+              onRemove: () => this.removeItem.bind(this)(id, mapItem),
+              onEdit: () =>
+                this.onEdit.bind(this)({
+                  id,
+                  name,
+                  description,
+                  rate,
+                  lat,
+                  lng,
+                }),
+              onCenter: () => this.onCenter.bind(this)({ lat, lng }),
+              copyUrl: () => this.copyUrl([{ id, name, lat, lng }]),
+            }}
+          />`,
       )}
     </ul>
     <div class="row inverse-color center">
