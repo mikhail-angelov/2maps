@@ -12,3 +12,12 @@ It gets map tiles from sqlite db and provides the over http
     - run converter `docker run --rm -it -v .:/srv tilemaker --input=/srv/RU-NIZ.pbf --output=/srv/nn.mbtiles`
 - now you can use `nn.mbtiles` as sqlite DB
 
+- or you cal load mbtiles for your district form here [https://data.maptiler.com/downloads/dataset/osm/russia/volga-fed-district](https://data.maptiler.com/downloads/dataset/osm/russia/volga-fed-district)
+
+# limit mbtiles files for given lat/long rect
+
+this script is designed to filter some region from mbtiles sqlite db
+
+```
+node copy_mbtiles.js
+```
