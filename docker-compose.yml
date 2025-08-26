@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 
 services:
   2maps:
@@ -14,11 +14,31 @@ services:
       options:
         max-size: "10k"
         max-file: "10"
+    depends_on:
+      - valhalla
     env_file:
       - .env
     command: npm start
     volumes:
-        - ./data:/opt/app/data:rw
+      - ./data:/opt/app/data:rw
+  valhalla:
+    image: ghcr.io/nilsnolde/docker-valhalla/valhalla:latest
+    container_name: "valhalla"
+    restart: unless-stopped
+    networks:
+      - webnet
+    ports:
+      - "127.0.0.1:8002:8002"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10k"
+        max-file: "10"
+    environment:
+      build_elevation: "True"
+    command: npm start
+    volumes:
+      - ./osm:/custom_files:rw
 
 networks:
   webnet:

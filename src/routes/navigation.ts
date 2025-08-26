@@ -1,44 +1,36 @@
 import express from "express";
-import axios from "axios";
 import { CommonRoutesConfig } from "./common";
 
-interface NavigationLocation {
-  lat: number;
-  lon: number;
-}
+const secret = process.env.VALHALLA_SECRET; //temp solution
 
 export class Navigation implements CommonRoutesConfig {
   getRoutes() {
     const router = express.Router();
-    router.get("/route", async (req, res) => {
+    router.post(`/${secret}`, async (req, res) => {
       try {
-        const { from, to } = req.body;
-        const route = await this.getNavigationRoute(from, to);
-        if (!route) {
-          console.log("cannot get route", req.body);
-          return res.status(400).send("cannot get route");
+        console.log("Navigation request: ", req.body);
+        const response = await fetch("http://valhalla:8002/route", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(req.body),
+        });
+
+        // Forward status and headers
+        res.status(response.status);
+        for (const [key, value] of response.headers.entries()) {
+          res.setHeader(key, value);
         }
-        const track = this.parseShape(route.trip.legs[0].shape);
-        res.json(track);
-      } catch (e) {
-        console.error(e);
-        res.status(400).send(`cannot get route: ${e}`);
+
+        // Forward response body
+        const data = await response.json();
+        res.json(data);
+      } catch (error) {
+        res.status(500).send("Proxy error: " + error.message);
       }
     });
     return router;
-  }
-
-  async getNavigationRoute(from: NavigationLocation, to: NavigationLocation) {
-    const response = await axios.post(`${process.env.VALHALLA_HOST}/route`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: {
-        locations: [from, to],
-        costing: "auto",
-      },
-    });
-    return response.data;
   }
 
   //from https://valhalla.github.io/valhalla/decoding/

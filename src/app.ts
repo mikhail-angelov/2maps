@@ -32,7 +32,7 @@ const loggerOptions: expressWinston.LoggerOptions = {
   format: winston.format.combine(
     winston.format.json(),
     winston.format.prettyPrint(),
-    winston.format.colorize({ all: true })
+    winston.format.colorize({ all: true }),
   ),
 };
 
