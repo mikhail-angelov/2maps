@@ -4,16 +4,15 @@ import { Entity, Index, Column, PrimaryColumn, Generated } from "typeorm";
 @Index(["z", "y","x"])
 export class Tile {
 
-    @Column()
+    @PrimaryColumn()
     x!: number;
 
-    @Column()
+    @PrimaryColumn()
     y!: number;
 
-    @Column()
+    @PrimaryColumn()
     z!: number;
 
-    @PrimaryColumn()
     @Generated()
     s!: number;
 

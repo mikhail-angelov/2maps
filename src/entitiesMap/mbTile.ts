@@ -7,10 +7,10 @@ export class MbTile {
     @PrimaryColumn({name:'zoom_level'})
     zoomLevel!: number;
 
-    @Column({name:'tile_column'})
+    @PrimaryColumn({name:'tile_column'})
     tileColumn!: number;
 
-    @Column({name:'tile_row'})
+    @PrimaryColumn({name:'tile_row'})
     tileRow!: number;
 
     @Column({name:'tile_data'})

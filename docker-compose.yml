@@ -36,7 +36,6 @@ services:
         max-file: "10"
     environment:
       build_elevation: "True"
-    command: npm start
     volumes:
       - ./osm:/custom_files:rw
 
