@@ -31,8 +31,7 @@ scp:
 
 scp-map:
 	-ssh root@$(HOST) "mkdir -p /opt/2maps/data"
-	scp -r ./data/mende-nn.sqlitedb root@$(HOST):/opt/2maps/data/mende-nn.sqlitedb
-	scp -r ./data/volga.sqlitedb root@$(HOST):/opt/2maps/data/volga.sqlitedb
+	scp -r ./data/mende-nn.mbtiles root@$(HOST):/opt/2maps/data/mende-nn.mbtiles
 
 deploy:
 	ssh root@$(HOST) 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker compose down --remove-orphans;docker compose up -d'

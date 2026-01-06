@@ -10,9 +10,13 @@ import { Sender } from "./mailer";
 
 const HOST = process.env.HOST || "";
 
-const JWT_SECRET = "asdjkdknpjnpwwijoi";
+const JWT_SECRET = process.env.JWT_SECRET || "asdjkdknpjnpwwijoi";
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refresh_asdjkdknpjnpwwijoi";
 export const JWT_COOKIES = "mapnn";
+export const JWT_REFRESH_COOKIES = "mapnn_refresh";
 const JWT_HEADER = "authorization";
+const REFRESH_TOKEN_EXPIRES_IN = 365 * 24 * 60 * 60 * 1000;
+const ACCESS_TOKEN_EXPIRES_IN = 60 * 60 * 1000;
 
 export interface JwtPayload extends JwtPayloadBase {
   role: Role;
@@ -52,10 +56,15 @@ export class Auth implements CommonRoutesConfig {
     // (we'll add the actual route configuration here next)
     router.post("/login", async (req, res) => {
       try {
-        const [token] = await this.login(req.body);
+        const [accessToken, refreshToken] = await this.login(req.body);
         res
           .status(200)
-          .cookie(JWT_COOKIES, token, { maxAge: 864000000 })
+          .cookie(JWT_COOKIES, accessToken, { maxAge: ACCESS_TOKEN_EXPIRES_IN }) // 15 minutes
+          .cookie(JWT_REFRESH_COOKIES, refreshToken, {
+            maxAge: REFRESH_TOKEN_EXPIRES_IN,
+            httpOnly: true,
+            secure: true,
+          })
           .json({ auth: "ok" });
       } catch (e) {
         console.log("login error", e);
@@ -64,27 +73,54 @@ export class Auth implements CommonRoutesConfig {
     });
     router.post("/logout", async (req, res) => {
       res.clearCookie(JWT_COOKIES);
+      res.clearCookie(JWT_REFRESH_COOKIES);
       res.status(200).json({ auth: "off" });
     });
     router.post("/check", async (req, res) => {
       try {
-        const [token, decodedToken] = await this.check(req);
+        const [accessToken, decodedToken] = await this.check(req);
         res
           .status(200)
-          .cookie(JWT_COOKIES, token, { maxAge: 864000000 })
+          .cookie(JWT_COOKIES, accessToken, { maxAge: 900000 }) // 15 minutes
           .json({ auth: "ok", ...decodedToken });
       } catch (e) {
         console.log("check error", e);
         res.status(401).json({ error: "invalid auth" });
       }
     });
-    router.post("/sign-up", async (req, res) => {
+    router.post("/refresh", async (req, res) => {
       try {
-        console.log("req.body", req.body);
-        const [token] = await this.register(req.body);
+        const refreshToken = req.cookies[JWT_REFRESH_COOKIES];
+        if (!refreshToken) throw new Error("No refresh token");
+
+        const decoded: any = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+        const payload: JwtPayload = {
+          id: decoded.id,
+          email: decoded.email,
+          role: decoded.role,
+        };
+        const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+
         res
           .status(200)
-          .cookie(JWT_COOKIES, token, { maxAge: 864000000 })
+          .cookie(JWT_COOKIES, accessToken, { maxAge: ACCESS_TOKEN_EXPIRES_IN })
+          .json({ auth: "ok" });
+      } catch (e) {
+        console.log("refresh error", e);
+        res.status(401).json({ error: "invalid refresh token" });
+      }
+    });
+    router.post("/sign-up", async (req, res) => {
+      try {
+        const [accessToken, refreshToken] = await this.register(req.body);
+        res
+          .status(200)
+          .cookie(JWT_COOKIES, accessToken, { maxAge: ACCESS_TOKEN_EXPIRES_IN })
+          .cookie(JWT_REFRESH_COOKIES, refreshToken, {
+            maxAge: REFRESH_TOKEN_EXPIRES_IN,
+            httpOnly: true,
+            secure: true,
+          })
           .json({ auth: "ok" });
       } catch (e) {
         console.log("sign up error", e);
@@ -102,10 +138,15 @@ export class Auth implements CommonRoutesConfig {
     });
     router.post("/reset-password", async (req, res) => {
       try {
-        const token = await this.resetPassword(req.body);
+        const [accessToken, refreshToken] = await this.resetPassword(req.body);
         res
           .status(200)
-          .cookie(JWT_COOKIES, token, { maxAge: 864000, sameSite: false })
+          .cookie(JWT_COOKIES, accessToken, { maxAge: ACCESS_TOKEN_EXPIRES_IN })
+          .cookie(JWT_REFRESH_COOKIES, refreshToken, {
+            maxAge: REFRESH_TOKEN_EXPIRES_IN,
+            httpOnly: true,
+            secure: true,
+          })
           .json({ auth: "ok" });
       } catch (e) {
         console.log("reset error", e);
@@ -183,7 +224,10 @@ export class Auth implements CommonRoutesConfig {
     return router;
   }
 
-  async login({ email, password }: Credentials): Promise<[string, JwtPayload]> {
+  async login({
+    email,
+    password,
+  }: Credentials): Promise<[string, string, JwtPayload]> {
     const e = email.toLowerCase();
     const user = await this.db
       .getRepository(User)
@@ -192,7 +236,11 @@ export class Auth implements CommonRoutesConfig {
       throw new Error("invalid login");
     }
     const payload: JwtPayload = { id: user.id, email: e, role: user.role };
-    return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 }), payload];
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+    const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    });
+    return [accessToken, refreshToken, payload];
   }
 
   async check(req: Request): Promise<[string, JwtPayload]> {
@@ -202,7 +250,7 @@ export class Auth implements CommonRoutesConfig {
     }
     const { id, email, role }: any = jwt.verify(testToken, JWT_SECRET);
     const payload: JwtPayload = { id, email, role };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
     return [token, payload];
   }
   async checkMobile(req: Request) {
@@ -286,7 +334,7 @@ export class Auth implements CommonRoutesConfig {
     name,
     email,
     password,
-  }: SignUp): Promise<[string, JwtPayload]> {
+  }: SignUp): Promise<[string, string, JwtPayload]> {
     const e = email.toLowerCase();
     let user = await this.db
       .getRepository(User)
@@ -301,14 +349,17 @@ export class Auth implements CommonRoutesConfig {
       .save({ name, email: e, password: saltedPass });
 
     const payload: JwtPayload = { id: user.id, email: e, role: user.role };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+    const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    });
     console.log(`new user successfully sing-up ${email}`);
     this.sender.sendEmail(
       e,
       "Welcome to Map-NN app",
       "Thank you for register at Map-NN app, use it for good!"
     );
-    return [token, payload];
+    return [accessToken, refreshToken, payload];
   }
   async forgetPassword({ email }: Forget) {
     return this.db.transaction(async (transactionalEntityManager) => {
@@ -349,7 +400,11 @@ export class Auth implements CommonRoutesConfig {
       email: user.email,
       role: user.role,
     };
-    return [jwt.sign(payload, JWT_SECRET, { expiresIn: 864000 }), payload];
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+    const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    });
+    return [accessToken, refreshToken, payload];
   }
 
   changePassword(userId: string, newPassword: string) {

@@ -16,14 +16,14 @@ describe("users", () => {
     auth = new Auth(db, sender);
     users = new Users(db, auth);
     // add user
-    const [a, payload] = await auth.register({
+    const [a,b, payload] = await auth.register({
       name: "test",
       email: "test",
       password: "test",
     });
     userId = payload.id;
     await users.userRepo.update(userId, { role: Role.admin }); //promote to admin
-    const [token, p] = await auth.login({ email: "test", password: "test" });
+    const [token, refreshToken, p] = await auth.login({ email: "test", password: "test" });
     authToken = token;
   });
   afterEach(() => cleanDatabase());
