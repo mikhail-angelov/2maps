@@ -1,6 +1,7 @@
 import { DataSource } from "typeorm";
 import { Tile } from "./entitiesMap/tile";
 import { Info } from "./entitiesMap/info";
+import { MbTile } from "./entitiesMap/mbTile";
 
 interface TileRequest {
   name: string;
@@ -11,11 +12,12 @@ interface TileRequest {
 
 const connections: { [key: string]: DataSource } = {};
 
-export const getTile = async ({ name, x, y, z }: TileRequest) => {
+export const getTile = async  ({name, x, y, z}: {name: string, x: number, y: number, z: number}) => {
   const connection = await getConnection(name);
+  const tileRow = 2 ** z - y - 1;
   const tile = await connection
-    .getRepository(Tile)
-    .findOne({ where: { x, y, z } });
+    .getRepository(MbTile)
+    .findOne({ where: { tileRow, tileColumn: x, zoomLevel: z } });
   return tile;
 };
 
@@ -30,8 +32,8 @@ export const createDBConnection = async (name: string) => {
   const c = new DataSource({
     name,
     type: "sqlite",
-    database: `${__dirname}/../data/${name}.sqlitedb`,
-    entities: [Tile, Info],
+    database: `${__dirname}/../data/${name}.mbtiles`,
+    entities: [MbTile],
     synchronize: false,
     logger: "debug",
   });

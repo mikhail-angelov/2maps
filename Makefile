@@ -1,13 +1,14 @@
 include .env.prod
+HOST=2maps.xyz
 
-postgres: 
+postgres:
 	docker-compose -f ./docker-compose-postgres.yml up -d
-	
+
 dump-db: DUMP_FILE=$(shell date +%s).dump
 dump-db:
-	ssh root@2maps.xyz "docker exec postgres-2map bash -c 'pg_dump -Fc --dbname=postgresql://${DB_USERNAME}:${DB_PASSWORD}@127.0.0.1:5432/${DB_DATABASE} | gzip >/var/lib/postgresql/data/${DUMP_FILE}.gz'"
-	ssh root@2maps.xyz "mv /opt/postgresdb/${DUMP_FILE}.tar.gz /opt/2maps/${DUMP_FILE}.gz"
-	scp -r root@2maps.xyz:/opt/2maps/${DUMP_FILE}.gz ./${DUMP_FILE}.gz
+	ssh root@$(HOST) "docker exec postgres-2map bash -c 'pg_dump -Fc --dbname=postgresql://${DB_USERNAME}:${DB_PASSWORD}@127.0.0.1:5432/${DB_DATABASE} | gzip >/var/lib/postgresql/data/${DUMP_FILE}.gz'"
+	ssh root@$(HOST) "mv /opt/postgresdb/${DUMP_FILE}.tar.gz /opt/2maps/${DUMP_FILE}.gz"
+	scp -r root@$(HOST):/opt/2maps/${DUMP_FILE}.gz ./${DUMP_FILE}.gz
 
 restore-db:
 	docker exec -i 2maps-postgres-1 pg_restore --dbname=postgresql://postgres:postgres@localhost:5432/2maps --clean --if-exists --verbose < '$(name)'
@@ -23,18 +24,18 @@ push:
 	docker push mangelov/2maps:latest
 
 scp:
-	-ssh root@2maps.xyz "mkdir -p /opt/2maps"
-	scp -r ./.env.prod root@2maps.xyz:/opt/2maps/.env
-	scp -r Makefile root@2maps.xyz:/opt/2maps/Makefile
-	scp -r docker-compose.yml root@2maps.xyz:/opt/2maps/docker-compose.yml
+	-ssh root@$(HOST) "mkdir -p /opt/2maps"
+	scp -r ./.env.prod root@$(HOST):/opt/2maps/.env
+	scp -r Makefile root@$(HOST):/opt/2maps/Makefile
+	scp -r docker-compose.yml root@$(HOST):/opt/2maps/docker-compose.yml
 
 scp-map:
-	-ssh root@2maps.xyz "mkdir -p /opt/2maps/data"
-	scp -r ./data/mende-nn.sqlitedb root@2maps.xyz:/opt/2maps/data/mende-nn.sqlitedb
-	scp -r ./data/volga.sqlitedb root@2maps.xyz:/opt/2maps/data/volga.sqlitedb
+	-ssh root@$(HOST) "mkdir -p /opt/2maps/data"
+	scp -r ./data/mende-nn.sqlitedb root@$(HOST):/opt/2maps/data/mende-nn.sqlitedb
+	scp -r ./data/volga.sqlitedb root@$(HOST):/opt/2maps/data/volga.sqlitedb
 
-deploy: 
-	ssh root@2maps.xyz 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker compose down --remove-orphans;docker compose up -d'
+deploy:
+	ssh root@$(HOST) 'docker pull docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker compose down --remove-orphans;docker compose up -d'
 
 clean:
 	docker system prune -a

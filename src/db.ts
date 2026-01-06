@@ -1,4 +1,3 @@
-import { DataSource, DefaultNamingStrategy } from "typeorm";
 import appDataSource from './ormconfig'
 // const baseOptions = require("../ormconfig.js");
 

@@ -18,7 +18,7 @@ export class MapList implements CommonRoutesConfig {
   async refineTileSourcesInDB() {
     const files = fs.readdirSync(`${__dirname}/../../data`)
     console.log('files', files)
-    const mapFiles = files.filter(f => f.endsWith('.sqlitedb') && !f.startsWith('user')).map(f => f.replace('.sqlitedb', ''))
+    const mapFiles = files.filter(f => f.endsWith('.mbtiles') && !f.startsWith('user')).map(f => f.replace('.mbtiles', ''))
 
     const existingSources = await this.db.getRepository(TileSource).find()
     const existingKeys = existingSources.map(({ key }) => key)
@@ -45,7 +45,7 @@ export class MapList implements CommonRoutesConfig {
           "Content-Type": "image/jpeg",
           "Cache-Control": `max-age=${maxAge}`
         });
-        res.end(tile.image, "binary");
+        res.end(tile.tileData, "binary");
       } catch (e) {
         console.error(e)
         res.status(404).send("error")
@@ -67,10 +67,10 @@ export class MapList implements CommonRoutesConfig {
 
   async onTile(name: string, x: number, y: number, z: number) {
     try {
-      if (!name || !x || !y || z > 17 || z < 3) {
+      if (!name || !x || !y || !z || z < 3) {
         return null;
       }
-      const tile = await getTile({ name, x, y, z: 17-z })
+      const tile = await getTile({ name, x, y, z })
       return tile;
 
     } catch (e) {
