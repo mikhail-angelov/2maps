@@ -55,6 +55,14 @@ export const createMap = ({
     zoom,
   });
 
+  map.addControl(
+    new window.mapboxgl.ScaleControl({
+      maxWidth: 120,
+      unit: "metric",
+    }),
+    "bottom-right"
+  );
+
   const setOpacity = () => {
     if (map.getLayer(SECONDARY_SOURCE_ID)) {
       map.setPaintProperty(
