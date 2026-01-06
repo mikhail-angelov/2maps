@@ -3,6 +3,7 @@ import { createOpacitySlider } from './components/opacitySlider.js';
 import { createLeftPanel } from './components/leftPanel.js';
 import { createMap } from './components/map.js';
 import { createMapLayer } from './components/mapLayers.js';
+import { createMapRuler } from './components/mapRuler.js';
 import { createAuth } from './components/auth.js';
 import { AuthStore } from './flux/authStore.js';
 import { MarkerStore } from './flux/markerStore.js';
@@ -41,4 +42,5 @@ createLeftPanel({
   uiStore,
 });
 // createMapDraw({ map, trackStore });
+createMapRuler({ map });
 createMapLayer(mapsStore);

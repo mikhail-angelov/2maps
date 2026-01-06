@@ -44,6 +44,7 @@ body {
   right: 20px;
 }
 #draw {
+  display: block; /* added some property to avoid empty ruleset */
 }
 
 .h-100 {
@@ -104,6 +105,7 @@ body {
   height: 60px;
   padding: 0;
   -webkit-appearance: none;
+  appearance: none;
   background-color: transparent;
   border: none;
   font-size: 48px;
@@ -127,6 +129,38 @@ body {
 }
 
 /* hack for mapbox popup */
-.mapboxgl-popup-content{
-  padding: 0;
+/* ruler styles */
+.ruler-icon, .ruler-clear {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 5px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
+.ruler-icon img, .ruler-clear img {
+  width: 24px;
+  height: 24px;
+}
+
+.ruler-icon.red {
+  background-color: #ffcccc;
+  border-color: red;
+}
+
+.ruler-total {
+    background: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
