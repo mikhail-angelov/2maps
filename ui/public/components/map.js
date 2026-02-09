@@ -4,10 +4,8 @@ import { debounce } from "../utils.js";
 import { render } from "../libs/htm.js";
 import { EditMarker, ViewMarker } from "./marks.js";
 import { UI_EVENTS } from "../flux/uiStore.js";
-import {
-  addVectorTileLayer,
-  removeVectorTileLayer,
-} from "./vectorTileStiles.js";
+import { removeVectorTileLayer, vectorMapStyle } from "./vectorMapStyles.js";
+import { removeRasterTileLayer, rasterMapStyle } from "./rasterMapStyles.js";
 
 window.mapboxgl.accessToken = window.mapBoxKey;
 
@@ -26,14 +24,7 @@ const RASTER_SOURCE = {
   attribution: "Map tiles",
 };
 
-export const createMap = ({
-  center,
-  zoom,
-  trackStore,
-  markerStore,
-  mapsStore,
-  uiStore,
-}) => {
+export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, uiStore }) => {
   const drawData = {
     type: "geojson",
     data: {
@@ -42,34 +33,41 @@ export const createMap = ({
     },
   };
 
-  const map = new window.mapboxgl.Map({
-    container: "map",
-
-    style: {
-      version: 8,
-      sources: {},
-      layers: [],
-      glyphs: "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
-    },
+  const map = new mapboxgl.Map({
+    container: "map", // container ID
     center,
     zoom,
   });
 
+  const style = mapsStore.primary.type === "vector" ? vectorMapStyle : rasterMapStyle;
+  style.sources["mapbox-satellite"].data.tiles = [mapsStore.primary.url];
+  map.setStyle(style);
   map.addControl(
     new window.mapboxgl.ScaleControl({
       maxWidth: 120,
       unit: "metric",
     }),
-    "bottom-right"
+    "bottom-right",
+  );
+
+  map.addControl(
+    new window.MapboxGeocoder({
+      accessToken: window.mapBoxKey,
+      marker: !1,
+      collapsed: !0,
+      clearAndBlurOnEsc: !0,
+      clearOnBlur: !0,
+      origin: "https://api.mapbox.com",
+      flyTo: {
+        duration: 0,
+      },
+    }),
+    "top-right",
   );
 
   const setOpacity = () => {
     if (map.getLayer(SECONDARY_SOURCE_ID)) {
-      map.setPaintProperty(
-        SECONDARY_SOURCE_ID,
-        "raster-opacity",
-        1 - uiStore.opacity / 100
-      );
+      map.setPaintProperty(SECONDARY_SOURCE_ID, "raster-opacity", 1 - uiStore.opacity / 100);
     }
   };
   markerStore.onRefresh(() => {
@@ -79,33 +77,22 @@ export const createMap = ({
     });
   });
   mapsStore.on(MAPS.SET_PRIMARY, () => {
-    const source = map.getSource(PRIMARY_SOURCE_ID);
-    if (source?.type === mapsStore.primary.type) {
-      source.setTiles([mapsStore.primary.url]);
-      return;
-    }
-    if (map.getLayer(PRIMARY_SOURCE_ID)) map.removeLayer(PRIMARY_SOURCE_ID);
     removeVectorTileLayer(map);
-    if (source) map.removeSource(PRIMARY_SOURCE_ID);
-    if (mapsStore.primary.type === "vector") {
-      map.addSource(PRIMARY_SOURCE_ID, {
-        ...RASTER_SOURCE,
-        tiles: [mapsStore.primary.url],
-        type: "vector",
-        tileSize: 512,
-      });
-      addVectorTileLayer(map, PRIMARY_SOURCE_ID);
-    } else {
-      map.addSource(PRIMARY_SOURCE_ID, {
-        ...RASTER_SOURCE,
-        tiles: [mapsStore.primary.url],
-      });
-      map.addLayer({
-        ...RASTER_LAYER,
-        source: PRIMARY_SOURCE_ID,
-        id: PRIMARY_SOURCE_ID,
-      });
+    removeRasterTileLayer(map);
+    if (map.getSource("mapbox-satellite")) {
+      map.removeSource("mapbox-satellite");
     }
+    if (map.getSource("composite")) {
+      map.removeSource("composite");
+    }
+
+    let style = rasterMapStyle;
+    style.sources["mapbox-satellite"].data.tiles = [mapsStore.primary.url];
+    if (mapsStore.primary.type === "vector") {
+      style = vectorMapStyle;
+      style.sources["composite"].data.tiles = [mapsStore.primary.url];
+    }
+    map.setStyle(style);
   });
   mapsStore.on(MAPS.SET_SECONDARY, () => {
     if (map.getLayer(SECONDARY_SOURCE_ID)) {
@@ -176,7 +163,7 @@ export const createMap = ({
         window.open(
           `https://wikimapia.org/${e.features[0].properties.id}`,
           "wiki",
-          "popup,right=10,top=10,width=440,height=640"
+          "popup,right=10,top=10,width=440,height=640",
         );
         new window.mapboxgl.Popup()
           .setLngLat(e.lngLat)
@@ -205,31 +192,17 @@ export const createMap = ({
   });
   mapsStore.on(MAPS.SET_TERRAIN, (hasTerrain) => {
     if (hasTerrain) {
-      map.addSource("mapbox-terrain", {
-        type: "vector",
-        // Use any Mapbox-hosted tileset using its tileset id.
-        // Learn more about where to find a tileset id:
-        // https://docs.mapbox.com/help/glossary/tileset-id/
-        url: "mapbox://mapbox.mapbox-terrain-v2",
-        index: 2,
+      map.addSource("mapbox-dem", {
+        type: "raster-dem",
+        url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+        tileSize: 512,
+        maxzoom: 14,
       });
-      map.addLayer({
-        id: "terrain-data",
-        type: "line",
-        source: "mapbox-terrain",
-        "source-layer": "contour",
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
-        },
-        paint: {
-          "line-color": "#0000ff",
-          "line-width": 1,
-        },
-      });
+      // add the DEM source as a terrain layer with exaggerated height
+      map.setTerrain({ source: "mapbox-dem", exaggeration: 2.5 });
     } else {
-      map.removeLayer("terrain-data");
-      map.removeSource("mapbox-terrain");
+      // map.removeLayer("terrain-data");
+      map.removeSource("mapbox-dem");
     }
   });
 
@@ -257,25 +230,29 @@ export const createMap = ({
       maxWidth: 440,
     });
 
+    console.log("url", mapsStore.primary.url);
     if (mapsStore.primary.type === "vector") {
-      map.addSource(PRIMARY_SOURCE_ID, {
-        ...RASTER_SOURCE,
-        tiles: [mapsStore.primary.url],
-        type: "vector",
-        tileSize: 512,
-      });
-      addVectorTileLayer(map, PRIMARY_SOURCE_ID);
+      // map.addSource(PRIMARY_SOURCE_ID, {
+      //   ...RASTER_SOURCE,
+      //   tiles: [mapsStore.primary.url],
+      //   type: "vector",
+      //   tileSize: 512,
+      // });
+      // addVectorTileLayer(map, PRIMARY_SOURCE_ID);
     } else {
-      map.addSource(PRIMARY_SOURCE_ID, {
-        ...RASTER_SOURCE,
-        tiles: [mapsStore.primary.url],
-      });
-      map.addLayer({
-        ...RASTER_LAYER,
-        source: PRIMARY_SOURCE_ID,
-        id: PRIMARY_SOURCE_ID,
-      });
+      // map.addSource(PRIMARY_SOURCE_ID, {
+      //   ...RASTER_SOURCE,
+      //   tiles: [mapsStore.primary.url],
+      // });
+      // map.addLayer({
+      //   ...RASTER_LAYER,
+      //   source: PRIMARY_SOURCE_ID,
+      //   id: PRIMARY_SOURCE_ID,
+      // });
+      // addRasterTileLayer(map, PRIMARY_SOURCE_ID);
+      // console.log("l", map.getLayer(PRIMARY_SOURCE_ID));
     }
+
     if (mapsStore.secondary) {
       if (map.getLayer(SECONDARY_SOURCE_ID)) {
         map.removeLayer(SECONDARY_SOURCE_ID);
@@ -340,15 +317,7 @@ export const createMap = ({
         //   * Blue, 20px circles when point count is less than 100
         //   * Yellow, 30px circles when point count is between 100 and 750
         //   * Pink, 40px circles when point count is greater than or equal to 750
-        "circle-color": [
-          "step",
-          ["get", "point_count"],
-          "#51bbd6",
-          5,
-          "#f1f075",
-          10,
-          "#f28cb1",
-        ],
+        "circle-color": ["step", ["get", "point_count"], "#51bbd6", 5, "#f1f075", 10, "#f28cb1"],
         "circle-radius": ["step", ["get", "point_count"], 20, 100, 30, 750, 40],
       },
     });
@@ -374,16 +343,14 @@ export const createMap = ({
         layers: ["clusters"],
       });
       const clusterId = features[0].properties.cluster_id;
-      map
-        .getSource(MARKERS_SOURCE_ID)
-        .getClusterExpansionZoom(clusterId, (err, z) => {
-          if (err) return;
+      map.getSource(MARKERS_SOURCE_ID).getClusterExpansionZoom(clusterId, (err, z) => {
+        if (err) return;
 
-          map.easeTo({
-            center: features[0].geometry.coordinates,
-            zoom: z,
-          });
+        map.easeTo({
+          center: features[0].geometry.coordinates,
+          zoom: z,
         });
+      });
     });
 
     map.on("click", MARKERS_SOURCE_ID, (e) => {
@@ -391,8 +358,8 @@ export const createMap = ({
       const { id, title, description = "", rate } = e.features[0].properties;
       console.log("click", title, coordinates);
       map.flyTo({
-        center: coordinates
-    });
+        center: coordinates,
+      });
       const editForm = EditMarker({
         marker: {
           id,
@@ -455,16 +422,13 @@ export const createMap = ({
           editPopup?.remove();
         },
         pureHtml: true,
-        marker:{
+        marker: {
           lat: e.lngLat.lat,
           lng: e.lngLat.lng,
-        }
+        },
       });
 
-      editPopup
-        .setLngLat(e.lngLat)
-        .setHTML('<div id="mapMenu"></div>')
-        .addTo(map);
+      editPopup.setLngLat(e.lngLat).setHTML('<div id="mapMenu"></div>').addTo(map);
       render(editForm, editPopup.getElement().childNodes[1]);
     });
 
