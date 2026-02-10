@@ -230,29 +230,6 @@ export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, ui
       maxWidth: 440,
     });
 
-    console.log("url", mapsStore.primary.url);
-    if (mapsStore.primary.type === "vector") {
-      // map.addSource(PRIMARY_SOURCE_ID, {
-      //   ...RASTER_SOURCE,
-      //   tiles: [mapsStore.primary.url],
-      //   type: "vector",
-      //   tileSize: 512,
-      // });
-      // addVectorTileLayer(map, PRIMARY_SOURCE_ID);
-    } else {
-      // map.addSource(PRIMARY_SOURCE_ID, {
-      //   ...RASTER_SOURCE,
-      //   tiles: [mapsStore.primary.url],
-      // });
-      // map.addLayer({
-      //   ...RASTER_LAYER,
-      //   source: PRIMARY_SOURCE_ID,
-      //   id: PRIMARY_SOURCE_ID,
-      // });
-      // addRasterTileLayer(map, PRIMARY_SOURCE_ID);
-      // console.log("l", map.getLayer(PRIMARY_SOURCE_ID));
-    }
-
     if (mapsStore.secondary) {
       if (map.getLayer(SECONDARY_SOURCE_ID)) {
         map.removeLayer(SECONDARY_SOURCE_ID);
@@ -438,6 +415,38 @@ export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, ui
     map.on("mouseleave", "clusters", () => {
       map.getCanvas().style.cursor = "";
     });
+
+    const canvas = map.getCanvas();
+
+    canvas.addEventListener(
+      "wheel",
+      (e) => {
+        // Check if Shift key is pressed
+        if (e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Calculate opacity change based on wheel delta
+          // Invert the delta so scrolling up increases opacity
+          const delta = -e.deltaY;
+
+          // Adjust sensitivity - smaller values for trackpad, larger for mouse wheel
+          const sensitivity = e.deltaMode === 0 ? 0.5 : 2; // 0 = pixels, 1 = lines, 2 = pages
+
+          // Calculate new opacity
+          let newOpacity = uiStore.opacity + delta * sensitivity;
+
+          // Clamp between 0 and 100
+          newOpacity = Math.max(0, Math.min(100, newOpacity));
+
+          // Update opacity if it changed
+          if (Math.abs(newOpacity - uiStore.opacity) >= 1) {
+            uiStore.setOpacity(Math.round(newOpacity));
+          }
+        }
+      },
+      { passive: false },
+    );
 
     // this is hack to solve incorrect map scale on init
     map.resize();
