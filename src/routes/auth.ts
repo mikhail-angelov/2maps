@@ -17,6 +17,7 @@ export const JWT_REFRESH_COOKIES = "mapnn_refresh";
 const JWT_HEADER = "authorization";
 const REFRESH_TOKEN_EXPIRES_IN = 365 * 24 * 60 * 60 * 1000;
 const ACCESS_TOKEN_EXPIRES_IN = 60 * 60 * 1000;
+const MOBILE_TOKEN_EXPIRES_IN = 365 * 10 * 24 * 60 * 60 * 1000; // 10 years for mobile clients
 
 export interface JwtPayload extends JwtPayloadBase {
   role: Role;
@@ -157,7 +158,7 @@ export class Auth implements CommonRoutesConfig {
     //mobile
     router.post("/m/login", async (req, res) => {
       try {
-        const [token, user] = await this.login(req.body);
+        const [token, user] = await this.loginMobile(req.body);
         res.status(200).json({ token, user });
       } catch (e) {
         console.log("login error", e);
@@ -176,10 +177,26 @@ export class Auth implements CommonRoutesConfig {
         res.status(401).json({ error: "invalid auth" });
       }
     });
+    router.post("/m/refresh", async (req, res) => {
+      try {
+        const authHeader = req.headers ? req.headers[JWT_HEADER] || "" : "";
+        const testToken: string = authHeader ? authHeader.slice(7) : "";
+        if (!testToken) {
+          return res.status(401).json({ error: "invalid auth" });
+        }
+        const { id, email, role }: any = jwt.verify(testToken, JWT_SECRET);
+        const payload: JwtPayload = { id, email, role };
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: MOBILE_TOKEN_EXPIRES_IN });
+        res.status(200).json({ token, user: payload });
+      } catch (e) {
+        console.log("refresh error", e);
+        res.status(401).json({ error: "invalid auth" });
+      }
+    });
     router.post("/m/sign-up", async (req, res) => {
       try {
         console.log("req.body", req.body);
-        const [token, user] = await this.register(req.body);
+        const [token, user] = await this.registerMobile(req.body);
         res.status(200).json({ token, user });
       } catch (e) {
         console.log("sign up error", e);
@@ -197,7 +214,7 @@ export class Auth implements CommonRoutesConfig {
     });
     router.post("/m/reset-password", async (req, res) => {
       try {
-        const [token, user] = await this.resetPassword(req.body);
+        const [token, user] = await this.resetPasswordMobile(req.body);
         res.status(200).json({ token, user });
       } catch (e) {
         console.log("reset error", e);
@@ -253,6 +270,67 @@ export class Auth implements CommonRoutesConfig {
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
     return [token, payload];
   }
+  async loginMobile({ email, password }: Credentials): Promise<[string, JwtPayload]> {
+    const e = email.toLowerCase();
+    const user = await this.db
+      .getRepository(User)
+      .findOne({ where: { email: e } });
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      throw new Error("invalid login");
+    }
+    const payload: JwtPayload = { id: user.id, email: e, role: user.role };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: MOBILE_TOKEN_EXPIRES_IN });
+    return [token, payload];
+  }
+
+  async registerMobile({ name, email, password }: SignUp): Promise<[string, JwtPayload]> {
+    const e = email.toLowerCase();
+    let user = await this.db
+      .getRepository(User)
+      .findOne({ where: { email: e } });
+    if (user || !name || !password) {
+      throw new Error("invalid user");
+    }
+    const salt = bcrypt.genSaltSync(10);
+    const saltedPass = bcrypt.hashSync(password, salt);
+    user = await this.db
+      .getRepository(User)
+      .save({ name, email: e, password: saltedPass });
+
+    const payload: JwtPayload = { id: user.id, email: e, role: user.role };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: MOBILE_TOKEN_EXPIRES_IN });
+    console.log(`new user successfully sing-up ${email}`);
+    this.sender.sendEmail(
+      e,
+      "Welcome to Map-NN app",
+      "Thank you for register at Map-NN app, use it for good!"
+    );
+    return [token, payload];
+  }
+
+  async resetPasswordMobile({ resetToken, password }: Reset): Promise<[string, JwtPayload]> {
+    const user = await this.db
+      .getRepository(User)
+      .findOne({ where: { resetToken: decodeURIComponent(resetToken) } });
+    if (!user || !resetToken) {
+      throw new Error("invalid user");
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const saltedPass = bcrypt.hashSync(password, salt);
+    await this.db
+      .getRepository(User)
+      .update(user.id, { password: saltedPass, resetToken: undefined });
+
+    const payload: JwtPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: MOBILE_TOKEN_EXPIRES_IN });
+    return [token, payload];
+  }
+
   async checkMobile(req: Request) {
     const authHeader = req.headers ? req.headers[JWT_HEADER] || "" : "";
     const testToken: string = authHeader ? authHeader.slice(7) : "";
@@ -261,7 +339,7 @@ export class Auth implements CommonRoutesConfig {
     }
     const { id, email, role }: any = jwt.verify(testToken, JWT_SECRET);
     const payload: JwtPayload = { id, email, role };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 864000000 });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: MOBILE_TOKEN_EXPIRES_IN });
     return [token, payload];
   }
   async authMiddleware(
