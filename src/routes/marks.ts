@@ -232,25 +232,58 @@ export class Marks implements CommonRoutesConfig {
     return router;
   }
 
+  /**
+   * Haversine distance in meters between two lat/lng points.
+   */
+  private distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
   async syncMarks(userId: string, clientMarks: WebMark[]) {
     const marks = _.uniqBy(clientMarks, "id");
     console.log("syncMarks", userId, marks.length);
-    const a = await this.db.getRepository(User).find();
-    console.log("syncMarks 1", a);
-    const savedMarks = await this.db.getRepository(Mark).find();
-    console.log("syncMarks 2", savedMarks);
+    const savedMarks = await this.db.getRepository(Mark).find({ where: { userId } });
     const marksMap = _.keyBy(savedMarks, "id");
-    const marksToAdd = marks
-      .filter((mark) => !marksMap[mark.id])
-      .map((mark) => mapToEntity(mark, userId));
-    const marksToUpdate = marks
-      .filter(
-        (mark) =>
-          marksMap[mark.id] &&
-          !mark.removed &&
-          (mark.timestamp > marksMap[mark.id].timestamp.getTime() || mark.lat !== marksMap[mark.id].lat || mark.lng !== marksMap[mark.id].lng)
-      )
-      .map((mark) => mapToEntity(mark, userId));
+
+    const DUP_THRESHOLD_METERS = 10;
+
+    const marksToAdd: Mark[] = [];
+    const marksToUpdate: Mark[] = [];
+
+    for (const mark of marks) {
+      const existing = marksMap[mark.id];
+      if (existing) {
+        // Known ID: update if newer or coordinates changed
+        if (!mark.removed &&
+            (mark.timestamp > existing.timestamp.getTime() ||
+             mark.lat !== existing.lat ||
+             mark.lng !== existing.lng)) {
+          marksToUpdate.push(mapToEntity(mark, userId));
+        }
+      } else {
+        // Unknown ID: check for duplicate by location
+        const dup = savedMarks.find(
+          (s) =>
+            s.userId === userId &&
+            this.distanceMeters(mark.lat, mark.lng, s.lat, s.lng) <= DUP_THRESHOLD_METERS
+        );
+        if (dup) {
+          // Found a nearby existing mark — treat as update, keeping server ID
+          marksToUpdate.push(mapToEntity({ ...mark, id: dup.id }, userId));
+          console.log("dedup: merged client mark into existing", dup.id, mark.name);
+        } else {
+          marksToAdd.push(mapToEntity(mark, userId));
+        }
+      }
+    }
+
     const marksIdsToRemove = marks
       .filter((mark) => marksMap[mark.id] && mark.removed)
       .map(({ id }) => id);

@@ -72,8 +72,8 @@ describe("marks", () => {
       {
         id: "014acc56-cb26-41a6-b995-1266157f3c07",
         name: "test-ignore",
-        lat: 56.32323794803307,
-        lng: 43.989515211547825,
+        lat: 56.434,
+        lng: 43.989,
         timestamp: 1626944504856,
       },
       {
@@ -88,15 +88,15 @@ describe("marks", () => {
       {
         id: "014acc56-cb26-41a6-b995-1266157f3c00",
         name: "test-good",
-        lat: 56.32323794803307,
-        lng: 43.989515211547825,
+        lat: 56.423,
+        lng: 43.979,
         timestamp: 1626944504856,
       },
       {
         id: "014acc56-cb26-41a6-b995-1266157f3c00",
         name: "test-dropped",
-        lat: 56.32323794803307,
-        lng: 43.989515211547825,
+        lat: 56.423,
+        lng: 43.979,
         timestamp: 1626944504856,
       },
       {
@@ -111,6 +111,51 @@ describe("marks", () => {
     await marks.syncMarks(USER.id, webMarks);
     const syncedMarks = await marks.getAll(USER.id);
     expect(syncedMarks.length).to.equal(3);
+  });
+
+  it("should dedup by location within threshold", async () => {
+    // Mark with same ID — regular update
+    const webMarks: WebMark[] = [{
+      id: "new-id-1",
+      name: "same-spot",
+      lat: 56.323238,
+      lng: 43.989515,
+      timestamp: 1626944504900,
+    }];
+    await marks.syncMarks(USER.id, webMarks);
+    let synced = await marks.getAll(USER.id);
+    // Should have been merged into existing f3c07 (~3.4m away)
+    expect(synced.length).to.equal(3);
+    const merged = synced.find(m => m.id === "014acc56-cb26-41a6-b995-1266157f3c07");
+    expect(merged).to.not.be.undefined;
+    expect(merged!.name).to.equal("same-spot");
+  });
+
+  it("should not dedup if mark is far away", async () => {
+    const webMarks: WebMark[] = [{
+      id: "00000000-0000-0000-0000-0000000000aa",
+      name: "far-place",
+      lat: 60.0,
+      lng: 50.0,
+      timestamp: 1626944504900,
+    }];
+    await marks.syncMarks(USER.id, webMarks);
+    const synced = await marks.getAll(USER.id);
+    expect(synced.length).to.equal(4);
+    const far = synced.find(m => m.lat === 60.0 && m.lng === 50.0);
+    expect(far).to.not.be.undefined;
+    expect(far!.name).to.equal("far-place");
+  });
+
+  it("should not create duplicate on re-sync of same data", async () => {
+    const webMarks: WebMark[] = [
+      { id: "sync-dup-a", name: "point-a", lat: 56.5, lng: 44.0, timestamp: 1626944504900 },
+    ];
+    await marks.syncMarks(USER.id, webMarks);
+    // Same data again
+    await marks.syncMarks(USER.id, webMarks);
+    const synced = await marks.getAll(USER.id);
+    expect(synced.length).to.equal(4);
   });
 
   it("should return fresh batch", async () => {
