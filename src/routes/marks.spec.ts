@@ -133,7 +133,7 @@ describe("marks", () => {
 
   it("should not dedup if mark is far away", async () => {
     const webMarks: WebMark[] = [{
-      id: "far-away-id",
+      id: "00000000-0000-0000-0000-0000000000aa",
       name: "far-place",
       lat: 60.0,
       lng: 50.0,
@@ -142,7 +142,7 @@ describe("marks", () => {
     await marks.syncMarks(USER.id, webMarks);
     const synced = await marks.getAll(USER.id);
     expect(synced.length).to.equal(4);
-    const far = synced.find(m => m.id === "far-away-id");
+    const far = synced.find(m => m.lat === 60.0 && m.lng === 50.0);
     expect(far).to.not.be.undefined;
     expect(far!.name).to.equal("far-place");
   });
