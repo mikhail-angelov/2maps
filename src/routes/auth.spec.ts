@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken"
+const jwt = require('jsonwebtoken')
 import { expect } from 'chai'
 import { Auth, JWT_COOKIES } from './auth'
 import { Request } from 'express'
