@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken"
 import { expect } from 'chai'
 import { Auth, JWT_COOKIES } from './auth'
 import { Request } from 'express'
@@ -58,7 +59,7 @@ describe('auth', () => {
         expect(!!token).to.equal(true)
         expect(payload.email).to.equal('test')
         // verify token expiry is roughly 10 years (in ms: 10*365*24*60*60*1000)
-        const decoded: any = require('jsonwebtoken').verify(token, 'asdjkdknpjnpwwijoi')
+        const decoded: any = jwt.verify(token, 'asdjkdknpjnpwwijoi')
         const tenYearsMs = 10 * 365 * 24 * 60 * 60 * 1000
         const issuedAt = decoded.iat * 1000
         const expiresAt = decoded.exp * 1000
@@ -111,7 +112,7 @@ describe('auth', () => {
         expect(payload.email).to.equal('test')
 
         // New token should also be long-lived
-        const decoded: any = require('jsonwebtoken').verify(newToken, 'asdjkdknpjnpwwijoi')
+        const decoded: any = jwt.verify(newToken, 'asdjkdknpjnpwwijoi')
         const tenYearsMs = 10 * 365 * 24 * 60 * 60 * 1000
         const actualExpiry = (decoded.exp - decoded.iat) * 1000
         expect(actualExpiry).to.be.within(tenYearsMs - 3600000, tenYearsMs + 3600000)
@@ -156,7 +157,6 @@ describe('auth', () => {
     })
 
     it('mobile refresh re-issues token with long expiry', async () => {
-        const jwt = require('jsonwebtoken')
         const [oldToken] = await auth.loginMobile({ email: 'test', password: 'test' })
 
         // Simulate /auth/m/refresh logic: verify old token, sign new one
