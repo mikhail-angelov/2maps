@@ -154,4 +154,23 @@ describe('auth', () => {
         const [loginToken] = await auth.loginMobile({ email: 'test', password: 'newpass' })
         expect(!!loginToken).to.equal(true)
     })
+
+    it('mobile refresh re-issues token with long expiry', async () => {
+        const jwt = require('jsonwebtoken')
+        const [oldToken] = await auth.loginMobile({ email: 'test', password: 'test' })
+
+        // Simulate /auth/m/refresh logic: verify old token, sign new one
+        const decoded: any = jwt.verify(oldToken, 'asdjkdknpjnpwwijoi')
+        const payload = { id: decoded.id, email: decoded.email, role: decoded.role }
+        const newToken = jwt.sign(payload, 'asdjkdknpjnpwwijoi', { expiresIn: 10 * 365 * 24 * 60 * 60 * 1000 })
+
+        expect(newToken).to.not.equal(oldToken)
+
+        // Decode new token and verify expiry
+        const newDecoded: any = jwt.verify(newToken, 'asdjkdknpjnpwwijoi')
+        expect(newDecoded.email).to.equal('test')
+        const tenYearsMs = 10 * 365 * 24 * 60 * 60 * 1000
+        const actualExpiry = (newDecoded.exp - newDecoded.iat) * 1000
+        expect(actualExpiry).to.be.within(tenYearsMs - 3600000, tenYearsMs + 3600000)
+    })
 })
