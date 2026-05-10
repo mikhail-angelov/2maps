@@ -1,5 +1,4 @@
-include .env.prod
-HOST=2maps.xyz
+HOST ?= $(shell grep '^HOST=' .env 2>/dev/null | cut -d '=' -f 2)
 
 postgres:
 	docker-compose -f ./docker-compose-postgres.yml up -d
@@ -34,7 +33,9 @@ scp-map:
 	scp -r ./data/mende-nn.mbtiles root@$(HOST):/opt/2maps/data/mende-nn.mbtiles
 
 deploy:
-	ssh root@$(HOST) 'docker pull ghcr.io/mikhail-angelov/2maps/2maps:latest; cd /opt/2maps;docker compose down --remove-orphans;docker compose up -d'
-
+	ssh root@$(HOST) 'docker pull ghcr.io/mikhail-angelov/2maps/2maps:latest'
+	-ssh root@$(HOST) "cd /opt/2maps && docker compose down --remove-orphans"
+	ssh root@$(HOST) "cd /opt/2maps && docker compose up -d"
+	
 clean:
 	docker system prune -a
