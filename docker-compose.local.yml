@@ -20,7 +20,7 @@ services:
       - ~/postgresdb:/var/lib/postgresql/data
 
   2map:
-    image: docker.pkg.github.com/mikhail-angelov/2maps/2maps:latest
+    image: ghcr.io/mikhail-angelov/2maps/2maps:latest
     container_name: "mapnn"
     restart: unless-stopped
     networks:
