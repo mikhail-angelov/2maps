@@ -25,7 +25,7 @@ export class Wikimapia implements CommonRoutesConfig {
         let tile = await this.getTile(coords);
         if (!tile || tile.version < VERSION) {
           const wikiTile = await getWikiTile(coords);
-          const blob = gzipSync(Buffer.from(wikiTile));
+          const blob = gzipSync(new Uint8Array(Buffer.from(wikiTile)));
           tile = tile
             ? await this.updateTile(tile.id, blob)
             : await this.addTile(coords, blob);

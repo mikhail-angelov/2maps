@@ -5,7 +5,7 @@ export const removeVectorTileLayer = (map) => {
 };
 
 export const vectorMapStyle = {
-  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  glyphs: "/fonts/{fontstack}/{range}.pbf",
   center: [9.1, 42.2],
   zoom: 7.5,
   version: 8,

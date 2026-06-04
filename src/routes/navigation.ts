@@ -27,7 +27,7 @@ export class Navigation implements CommonRoutesConfig {
         const data = await response.json();
         res.json(data);
       } catch (error) {
-        res.status(500).send("Proxy error: " + error.message);
+        res.status(500).send("Proxy error: " + (error instanceof Error ? error.message : String(error)));
       }
     });
     return router;

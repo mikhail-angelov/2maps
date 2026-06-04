@@ -5,7 +5,7 @@ export const removeRasterTileLayer = (map) => {
 };
 
 export const rasterMapStyle = {
-  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  glyphs: "/fonts/{fontstack}/{range}.pbf",
   center: [55.13, 25.12],
   zoom: 12,
   version: 8,
