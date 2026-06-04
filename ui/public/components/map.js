@@ -7,11 +7,11 @@ import { UI_EVENTS } from "../flux/uiStore.js";
 import { removeVectorTileLayer, vectorMapStyle } from "./vectorMapStyles.js";
 import { removeRasterTileLayer, rasterMapStyle } from "./rasterMapStyles.js";
 
-window.mapboxgl.accessToken = window.mapBoxKey;
 
 const PRIMARY_SOURCE_ID = "primary-tiles";
 const SECONDARY_SOURCE_ID = "secondary-tiles";
 const MARKERS_SOURCE_ID = "markers";
+const MARKERS_LABELS_SOURCE_ID = "markers-labels";
 const RASTER_LAYER = {
   type: "raster",
   source: "raster-tiles",
@@ -33,37 +33,68 @@ export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, ui
     },
   };
 
-  const map = new mapboxgl.Map({
+  const style = mapsStore.primary.type === "vector" ? vectorMapStyle : rasterMapStyle;
+  const sourceId = mapsStore.primary.type === "vector" ? "composite" : "mapbox-satellite";
+  style.sources[sourceId].tiles = [mapsStore.primary.url];
+
+  const map = new maplibregl.Map({
     container: "map", // container ID
     center,
     zoom,
+    projection: "globe",
+    style,
   });
-
-  const style = mapsStore.primary.type === "vector" ? vectorMapStyle : rasterMapStyle;
-  style.sources["mapbox-satellite"].data.tiles = [mapsStore.primary.url];
-  map.setStyle(style);
   map.addControl(
-    new window.mapboxgl.ScaleControl({
+    new maplibregl.ScaleControl({
       maxWidth: 120,
       unit: "metric",
     }),
     "bottom-right",
   );
 
-  map.addControl(
-    new window.MapboxGeocoder({
-      accessToken: window.mapBoxKey,
-      marker: !1,
-      collapsed: !0,
-      clearAndBlurOnEsc: !0,
-      clearOnBlur: !0,
-      origin: "https://api.mapbox.com",
-      flyTo: {
-        duration: 0,
-      },
-    }),
-    "top-right",
-  );
+  const nominatimGeocoder = {
+    forwardGeocode: async (config) => {
+      const features = [];
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(config.query)}&format=geojson&polygon_geojson=1&addressdetails=1`;
+        const response = await fetch(url);
+        const geojson = await response.json();
+        for (const feature of geojson.features) {
+          const center = [
+            feature.bbox[0] + (feature.bbox[2] - feature.bbox[0]) / 2,
+            feature.bbox[1] + (feature.bbox[3] - feature.bbox[1]) / 2,
+          ];
+          features.push({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: center },
+            place_name: feature.properties.display_name,
+            properties: feature.properties,
+            text: feature.properties.display_name,
+            place_type: ["place"],
+            center,
+          });
+        }
+      } catch (e) {
+        console.error("Nominatim geocode error", e);
+      }
+      return { features };
+    },
+  };
+  try {
+    map.addControl(
+      new window.MaplibreGeocoder(nominatimGeocoder, {
+        maplibregl,
+        marker: false,
+        collapsed: true,
+        clearAndBlurOnEsc: true,
+        clearOnBlur: true,
+        flyTo: { duration: 0 },
+      }),
+      "top-right",
+    );
+  } catch (e) {
+    console.warn("Geocoder failed to load", e);
+  }
 
   const setOpacity = () => {
     if (map.getLayer(SECONDARY_SOURCE_ID)) {
@@ -71,46 +102,99 @@ export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, ui
     }
   };
   markerStore.onRefresh(() => {
-    map.getSource(MARKERS_SOURCE_ID).setData({
-      type: "FeatureCollection",
-      features: markerStore.getFeatures(),
-    });
+    const data = { type: "FeatureCollection", features: markerStore.getFeatures() };
+    map.getSource(MARKERS_SOURCE_ID)?.setData(data);
+    map.getSource(MARKERS_LABELS_SOURCE_ID)?.setData(data);
   });
-  mapsStore.on(MAPS.SET_PRIMARY, () => {
-    removeVectorTileLayer(map);
-    removeRasterTileLayer(map);
-    if (map.getSource("mapbox-satellite")) {
-      map.removeSource("mapbox-satellite");
+  const addSecondaryLayer = (beforeId) => {
+    if (map.getLayer(SECONDARY_SOURCE_ID)) map.removeLayer(SECONDARY_SOURCE_ID);
+    if (map.getSource(SECONDARY_SOURCE_ID)) map.removeSource(SECONDARY_SOURCE_ID);
+    const sec = mapsStore.secondary;
+    if (!sec?.url) return;
+    if (sec.type === "vector") {
+      map.addSource(SECONDARY_SOURCE_ID, { type: "vector", tiles: [sec.url], minzoom: 0, maxzoom: 22 });
+    } else {
+      map.addSource(SECONDARY_SOURCE_ID, { ...RASTER_SOURCE, tiles: [sec.url] });
+      const insertBefore = beforeId ?? (map.getLayer(MARKERS_SOURCE_ID) ? MARKERS_SOURCE_ID : undefined);
+      map.addLayer({ ...RASTER_LAYER, source: SECONDARY_SOURCE_ID, id: SECONDARY_SOURCE_ID }, insertBefore);
     }
-    if (map.getSource("composite")) {
-      map.removeSource("composite");
-    }
+  };
 
+  const initMarkersAndSecondary = () => {
+    if (map.getSource(MARKERS_SOURCE_ID)) return;
+    const data = { type: "FeatureCollection", features: markerStore.getFeatures() };
+    const clusterOpts = { cluster: true, clusterMaxZoom: 14, clusterRadius: 50 };
+
+    // Circle-only source: no symbol layers here so glyph errors never block circle rendering
+    map.addSource(MARKERS_SOURCE_ID, { type: "geojson", data, ...clusterOpts });
+    map.addLayer({
+      id: MARKERS_SOURCE_ID,
+      type: "circle",
+      source: MARKERS_SOURCE_ID,
+      filter: ["!", ["has", "point_count"]],
+      paint: {
+        "circle-color": "#4264fb",
+        "circle-radius": 7,
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffffff",
+      },
+    });
+    map.addLayer({
+      id: "clusters",
+      type: "circle",
+      source: MARKERS_SOURCE_ID,
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-color": ["step", ["get", "point_count"], "#51bbd6", 5, "#f1f075", 10, "#f28cb1"],
+        "circle-radius": ["step", ["get", "point_count"], 20, 100, 30, 750, 40],
+      },
+    });
+
+    // Separate labels source: symbol layers here are isolated from the circle source
+    map.addSource(MARKERS_LABELS_SOURCE_ID, { type: "geojson", data, ...clusterOpts });
+    map.addLayer({
+      id: `${MARKERS_SOURCE_ID}-label`,
+      source: MARKERS_LABELS_SOURCE_ID,
+      type: "symbol",
+      filter: ["!", ["has", "point_count"]],
+      layout: {
+        "text-field": ["get", "title"],
+        "text-font": ["Noto Sans Bold"],
+        "text-offset": [0, 1.2],
+        "text-anchor": "top",
+      },
+      paint: { "text-color": "#2244cc", "text-halo-color": "#ffffff", "text-halo-width": 1 },
+    });
+    map.addLayer({
+      id: "cluster-count",
+      type: "symbol",
+      source: MARKERS_LABELS_SOURCE_ID,
+      filter: ["has", "point_count"],
+      layout: {
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": 12,
+      },
+    });
+
+    addSecondaryLayer(MARKERS_SOURCE_ID);
+    setOpacity();
+  };
+
+  mapsStore.on(MAPS.SET_PRIMARY, () => {
     let style = rasterMapStyle;
-    style.sources["mapbox-satellite"].data.tiles = [mapsStore.primary.url];
+    let sourceId = "mapbox-satellite";
     if (mapsStore.primary.type === "vector") {
       style = vectorMapStyle;
-      style.sources["composite"].data.tiles = [mapsStore.primary.url];
+      sourceId = "composite";
     }
+    style.sources[sourceId].tiles = [mapsStore.primary.url];
     map.setStyle(style);
+    map.once("style.load", initMarkersAndSecondary);
   });
   mapsStore.on(MAPS.SET_SECONDARY, () => {
-    if (map.getLayer(SECONDARY_SOURCE_ID)) {
-      map.removeLayer(SECONDARY_SOURCE_ID);
-      map.removeSource(SECONDARY_SOURCE_ID);
-    }
-    if (mapsStore.secondary?.url) {
-      console.log("add secondary", mapsStore.secondary.url);
-      map.addSource(SECONDARY_SOURCE_ID, {
-        ...RASTER_SOURCE,
-        tiles: [mapsStore.secondary.url],
-      });
-      map.addLayer({
-        ...RASTER_LAYER,
-        source: SECONDARY_SOURCE_ID,
-        id: SECONDARY_SOURCE_ID,
-      });
-    }
+    if (!map.isStyleLoaded()) return;
+    addSecondaryLayer();
     setOpacity();
   });
   mapsStore.on(MAPS.SET_WIKIMAPIA, (hasWiki) => {
@@ -165,7 +249,7 @@ export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, ui
           "wiki",
           "popup,right=10,top=10,width=440,height=640",
         );
-        new window.mapboxgl.Popup()
+        new maplibregl.Popup()
           .setLngLat(e.lngLat)
           .setHTML(e.features[0].properties.name)
           .addTo(map);
@@ -194,14 +278,13 @@ export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, ui
     if (hasTerrain) {
       map.addSource("mapbox-dem", {
         type: "raster-dem",
-        url: "mapbox://mapbox.mapbox-terrain-dem-v1",
-        tileSize: 512,
+        url: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+        encoding: "terrarium",
+        tileSize: 256,
         maxzoom: 14,
       });
-      // add the DEM source as a terrain layer with exaggerated height
       map.setTerrain({ source: "mapbox-dem", exaggeration: 2.5 });
     } else {
-      // map.removeLayer("terrain-data");
       map.removeSource("mapbox-dem");
     }
   });
@@ -221,96 +304,16 @@ export const createMap = ({ center, zoom, trackStore, markerStore, mapsStore, ui
   }, 1000);
 
   map.on("load", () => {
-    const viewPopup = new window.mapboxgl.Popup({
+    const viewPopup = new maplibregl.Popup({
       closeButton: false,
       maxWidth: 400,
     });
-    const editPopup = new window.mapboxgl.Popup({
+    const editPopup = new maplibregl.Popup({
       closeButton: false,
       maxWidth: 440,
     });
 
-    if (mapsStore.secondary) {
-      if (map.getLayer(SECONDARY_SOURCE_ID)) {
-        map.removeLayer(SECONDARY_SOURCE_ID);
-        map.removeSource(SECONDARY_SOURCE_ID);
-      }
-      map.addSource(SECONDARY_SOURCE_ID, {
-        ...RASTER_SOURCE,
-        tiles: [mapsStore.secondary.url],
-      });
-      map.addLayer({
-        ...RASTER_LAYER,
-        source: SECONDARY_SOURCE_ID,
-        id: SECONDARY_SOURCE_ID,
-      });
-    }
-    map.addSource(MARKERS_SOURCE_ID, {
-      type: "geojson",
-      data: {
-        type: "FeatureCollection",
-        features: markerStore.getFeatures(),
-      },
-      cluster: true,
-      clusterMaxZoom: 14, // Max zoom to cluster points on
-      clusterRadius: 50, // Radius of each cluster when clustering points (defaults to 50)
-    });
-
-    map.addLayer({
-      id: MARKERS_SOURCE_ID,
-      type: "circle",
-      source: MARKERS_SOURCE_ID,
-      filter: ["!", ["has", "point_count"]],
-      paint: {
-        "circle-color": "#4264fb",
-        "circle-radius": 7,
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#ffffff",
-      },
-    });
-    map.addLayer({
-      id: `${MARKERS_SOURCE_ID}-label`,
-      source: MARKERS_SOURCE_ID,
-      type: "symbol",
-      layout: {
-        "icon-image": "custom-marker",
-        "text-field": ["get", "title"],
-        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-        "text-offset": [0, 1],
-        "text-anchor": "top",
-      },
-      paint: {
-        "text-color": "blue",
-      },
-    });
-    map.addLayer({
-      id: "clusters",
-      type: "circle",
-      source: MARKERS_SOURCE_ID,
-      filter: ["has", "point_count"],
-      paint: {
-        // Use step expressions (https://docs.mapbox.com/style-spec/reference/expressions/#step)
-        // with three steps to implement three types of circles:
-        //   * Blue, 20px circles when point count is less than 100
-        //   * Yellow, 30px circles when point count is between 100 and 750
-        //   * Pink, 40px circles when point count is greater than or equal to 750
-        "circle-color": ["step", ["get", "point_count"], "#51bbd6", 5, "#f1f075", 10, "#f28cb1"],
-        "circle-radius": ["step", ["get", "point_count"], 20, 100, 30, 750, 40],
-      },
-    });
-    map.addLayer({
-      id: "cluster-count",
-      type: "symbol",
-      source: MARKERS_SOURCE_ID,
-      filter: ["has", "point_count"],
-      layout: {
-        "text-field": ["get", "point_count_abbreviated"],
-        "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-        "text-size": 12,
-      },
-    });
-
-    setOpacity();
+    initMarkersAndSecondary();
     map.on("zoom", onLocationUpdate);
     map.on("moveend", onLocationUpdate);
 

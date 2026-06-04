@@ -13,10 +13,11 @@ export const MAPS = {
 export class MapsStore extends Store {
   maps = [
     {
-      id: "mapbox",
-      name: "mapbox",
-      // url: `https://api.mapbox.com/styles/v1/mikhailangelov/cmleu6h0300eo01qq0sqd7x22/tiles/{z}/{x}/{y}?access_token=${window.mapBoxKey}`,
-      url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${window.mapBoxKey}`,
+      id: "osm",
+      name: "OSM",
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       type: "raster",
     },
     {
@@ -29,14 +30,6 @@ export class MapsStore extends Store {
       id: "cyclosm",
       name: "cyclosm",
       url: "https://c.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
-      type: "raster",
-    },
-    {
-      id: "OSM",
-      name: "OSM",
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       type: "raster",
     },
     {
@@ -68,9 +61,11 @@ export class MapsStore extends Store {
       type: "raster",
     },
     {
-      id: "terrain1",
-      name: "terrain",
-      url: `https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=${window.mapBoxKey}`,
+      id: "osm-topo",
+      name: "OSM Topo",
+      url: "https://tile.opentopomap.org/{z}/{x}/{y}.png",
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors',
       type: "raster",
     },
   ];
@@ -101,10 +96,14 @@ export class MapsStore extends Store {
       if (list?.length > 0) {
         this.secondaryMaps = [
           ...this.secondaryMaps,
-          ...list.map(({ name, key }) => ({
+          ...list.map(({ name, key, format }) => ({
             id: key,
             name,
-            url: `/tiles/${name}/{z}/{x}/{y}.jpg`,
+            format: format || 'jpg',
+            type: format === 'pbf' ? 'vector' : 'raster',
+            url: format === 'pbf'
+              ? `/tiles/${name}/{z}/{x}/{y}.pbf`
+              : `/tiles/${name}/{z}/{x}/{y}.${format || 'jpg'}`,
           })),
         ];
         this.secondary = this.secondaryMaps.find(({ id }) => id === secondary);

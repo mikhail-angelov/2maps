@@ -28,7 +28,7 @@ export const savePanelWidth = (width) => {
 export const loadPanelWidth = () => {
   const o = localStorage.getItem("panel-width");
   console.log("loadPanelWidth", o);
-  return o ? +o : 200;
+  return o !== null ? +o : 200;
 };
 
 export const getLocal = () => {

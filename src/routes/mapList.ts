@@ -4,6 +4,21 @@ import fs from 'fs';
 import { DataSource, In } from "typeorm";
 import { getTile } from "../tilesDb";
 import { TileSource } from '../entities.sqlite/tileSource'
+import sqlite3 from 'sqlite3';
+
+const getTileFormat = (name: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const path = `${__dirname}/../../data/${name}.mbtiles`;
+    const db = new sqlite3.Database(path, sqlite3.OPEN_READONLY, (err) => {
+      if (err) return resolve('jpg');
+    });
+    db.get("SELECT value FROM metadata WHERE name='format' LIMIT 1", (err, row: any) => {
+      db.close();
+      if (err || !row) return resolve('jpg');
+      resolve(row.value || 'jpg');
+    });
+  });
+};
 
 export class MapList implements CommonRoutesConfig {
   db: DataSource
@@ -33,34 +48,43 @@ export class MapList implements CommonRoutesConfig {
   }
   getRoutes() {
     const router = express.Router();
-    router.get("/:name/:z/:x/:y.jpg", async (req, res) => {
+
+    const serveTile = async (req: express.Request, res: express.Response, contentType: string) => {
       try {
         const { name, x, y, z } = req.params;
         const tile = await this.onTile(name, +x, +y, +z);
         if (!tile) {
-          console.log("tile out of range", req.params);
           return res.status(404).send("out of range");
         }
         res.writeHead(200, {
-          "Content-Type": "image/jpeg",
+          "Content-Type": contentType,
           "Cache-Control": `max-age=${maxAge}`
         });
         res.end(tile.tileData, "binary");
       } catch (e) {
-        console.error(e)
-        res.status(404).send("error")
+        console.error(e);
+        res.status(404).send("error");
       }
-    });
+    };
+
+    router.get("/:name/:z/:x/:y.jpg", (req, res) => serveTile(req, res, "image/jpeg"));
+    router.get("/:name/:z/:x/:y.png", (req, res) => serveTile(req, res, "image/png"));
+    router.get("/:name/:z/:x/:y.pbf", (req, res) => serveTile(req, res, "application/x-protobuf"));
+
     router.get("/list", async (req, res) => {
       try {
         const list = await this.db.getRepository(TileSource).find();
-        const result = list.map(({ key, name, description }) => ({ key, name, description }));
-        res.status(200).json(result)
+        const result = await Promise.all(
+          list.map(async ({ key, name, description }) => {
+            const format = await getTileFormat(key);
+            return { key, name, description, format };
+          })
+        );
+        res.status(200).json(result);
       } catch (e) {
-        console.log('get list error', e)
-        res.status(400).json({ error: 'invalid request' })
+        console.log('get list error', e);
+        res.status(400).json({ error: 'invalid request' });
       }
-
     });
     return router;
   }

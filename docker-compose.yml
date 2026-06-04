@@ -13,7 +13,7 @@ services:
       monic.enabled: "true"
       monic.check: "http"
       monic.check_http_url: "https://2maps.xyz"
-      monic.name: "js2go"
+      monic.name: "2maps"
     logging:
       driver: "json-file"
       options:

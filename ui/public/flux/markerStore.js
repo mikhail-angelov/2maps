@@ -30,19 +30,21 @@ export class MarkerStore extends Store {
   }
 
   getFeatures() {
-    return this.markers.map((mark) => ({
-      type: "Feature",
-      properties: {
-        id: mark.id,
-        description: mark.description,
-        title: mark.name,
-        rate: mark.rate,
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [mark.lng, mark.lat],
-      },
-    }));
+    return this.markers
+      .filter((mark) => mark.lat != null && mark.lng != null && !isNaN(+mark.lat) && !isNaN(+mark.lng))
+      .map((mark) => ({
+        type: "Feature",
+        properties: {
+          id: mark.id,
+          description: mark.description ?? "",
+          title: mark.name ?? "",
+          rate: mark.rate ?? 0,
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [+mark.lng, +mark.lat],
+        },
+      }));
   }
 
   async syncAllMarkers() {

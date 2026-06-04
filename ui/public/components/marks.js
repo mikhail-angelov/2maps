@@ -242,12 +242,12 @@ export class Marks {
 
   formatPlacemarks(placemarks) {
     const { lng, lat } = this.map.getCenter();
-    const current = new window.mapboxgl.LngLat(lng, lat);
+    const current = new maplibregl.LngLat(lng, lat);
     const items = placemarks
       .map((item) => {
         const distance =
           item && item.lng && item.lat
-            ? current.distanceTo(new window.mapboxgl.LngLat(item.lng, item.lat))
+            ? current.distanceTo(new maplibregl.LngLat(item.lng, item.lat))
             : 0;
         return { ...item, distance };
       })

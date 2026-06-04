@@ -58,7 +58,7 @@ const MapRuler = ({ map }) => {
           "line-color": "#ff0000",
           "line-width": 3,
         },
-        filter: ["==", "$type", "LineString"],
+        filter: ["==", ["geometry-type"], "LineString"],
       });
 
       map.addLayer({
@@ -71,7 +71,7 @@ const MapRuler = ({ map }) => {
           "circle-stroke-width": 2,
           "circle-stroke-color": "#ff0000",
         },
-        filter: ["==", "$type", "Point"],
+        filter: ["==", ["geometry-type"], "Point"],
       });
 
       map.addLayer({
@@ -90,7 +90,7 @@ const MapRuler = ({ map }) => {
           "text-halo-color": "#ffffff",
           "text-halo-width": 2,
         },
-        filter: ["==", "$type", "Point"],
+        filter: ["==", ["geometry-type"], "Point"],
       });
     }
 
