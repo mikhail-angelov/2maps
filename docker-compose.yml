@@ -6,7 +6,7 @@ services:
     container_name: "2maps"
     restart: unless-stopped
     networks:
-      - webnet
+      - proxy-net
     ports:
       - "127.0.0.1:3001:3000"
     labels:
@@ -14,6 +14,9 @@ services:
       monic.check: "http"
       monic.check_http_url: "https://2maps.xyz"
       monic.name: "2maps"
+      redoproxy.enabled: "true"
+      redoproxy.domain: "2maps.xyz"
+      redoproxy.port: 3000
     logging:
       driver: "json-file"
       options:
@@ -44,4 +47,5 @@ services:
 
 
 networks:
-  webnet:
+  proxy-net:
+    external: true
